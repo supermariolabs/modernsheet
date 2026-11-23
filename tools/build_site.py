@@ -32,9 +32,9 @@ REPO = "https://github.com/supermariolabs/modernsheet"
 LANGS = {"it": "Italiano", "en": "English"}
 UI = {
     "it": {"repo": "Codice su GitHub", "lang": "English", "menu": "Menu", "license": "Software libero, licenza GPL-3.0",
-           "privacy": "Privacy", "skip": "Vai al contenuto", "notfound": "Pagina non trovata", "home": "Torna alla home"},
+           "privacy": "Privacy", "skip": "Vai al contenuto", "beta": "Software in versione beta: può contenere errori", "notfound": "Pagina non trovata", "home": "Torna alla home"},
     "en": {"repo": "Code on GitHub", "lang": "Italiano", "menu": "Menu", "license": "Free software, GPL-3.0 license",
-           "privacy": "Privacy", "skip": "Skip to content", "notfound": "Page not found", "home": "Back to home"},
+           "privacy": "Privacy", "skip": "Skip to content", "beta": "Beta software: it may contain bugs", "notfound": "Page not found", "home": "Back to home"},
 }
 
 
@@ -71,7 +71,7 @@ def render(template: str, lang: str, meta: dict, body: str, nav: list[tuple[str,
         "content": content, "menu": menu, "home": url(lang, ""), "repo": REPO,
         "other_url": url(other, meta.get("other", slug)), "other_lang": other, "ui_lang": UI[lang]["lang"],
         "ui_repo": UI[lang]["repo"], "ui_license": UI[lang]["license"], "ui_menu": UI[lang]["menu"],
-        "ui_skip": UI[lang]["skip"], "privacy": url(lang, "privacy"), "ui_privacy": UI[lang]["privacy"],
+        "ui_skip": UI[lang]["skip"], "ui_beta": UI[lang]["beta"], "privacy": url(lang, "privacy"), "ui_privacy": UI[lang]["privacy"],
         "canonical": f"https://{DOMAIN}{url(lang, slug)}", "page_class": "home" if not slug else "doc",
     }
     return re.sub(r"\{\{(\w+)\}\}", lambda m: str(values[m.group(1)]), template)
