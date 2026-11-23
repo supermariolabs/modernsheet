@@ -1,0 +1,40 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "App (Flet, desktop)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/src/main.py",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "CLI: PDF del demo",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/modernsheet_cli.py",
+      "args": ["src/examples/demo.chs", "-o", "out/demo.pdf"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "CLI: PDF del file aperto (.chs)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/modernsheet_cli.py",
+      "args": ["${file}", "-o", "out/"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "CLI: importa da chordsheet.com (file .txt aperto)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/modernsheet_cli.py",
+      "args": ["--from-chordsheet", "--pdf", "${file}"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    }
+  ]
+}

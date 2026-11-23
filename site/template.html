@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="{{lang}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{full_title}}</title>
+<meta name="description" content="{{description}}">
+<link rel="canonical" href="{{canonical}}">
+<link rel="alternate" hreflang="{{other_lang}}" href="https://modernsheet.app{{other_url}}">
+<link rel="icon" href="/assets/img/favicon.png">
+<link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+<meta property="og:title" content="{{full_title}}">
+<meta property="og:description" content="{{description}}">
+<meta property="og:image" content="https://modernsheet.app/assets/img/sheet-demo.png">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body class="{{page_class}}">
+<a class="skip" href="#main">{{ui_skip}}</a>
+<header class="top">
+  <div class="wrap bar">
+    <a class="brand" href="{{home}}"><img src="/assets/img/logo.png" alt="" width="36" height="36">Modern Sheet</a>
+    <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="{{ui_menu}}">
+    <label for="nav-toggle" class="nav-button" aria-hidden="true"><span></span><span></span><span></span></label>
+    <nav class="menu">
+      {{menu}}
+      <a class="lang" href="{{other_url}}" hreflang="{{other_lang}}">{{ui_lang}}</a>
+      <a class="gh" href="{{repo}}">GitHub</a>
+    </nav>
+  </div>
+</header>
+<main id="main" class="wrap">
+{{content}}
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <p>Modern Sheet · {{ui_license}} · <a href="{{repo}}">{{ui_repo}}</a> · <a href="{{privacy}}">{{ui_privacy}}</a></p>
+  </div>
+</footer>
+</body>
+</html>

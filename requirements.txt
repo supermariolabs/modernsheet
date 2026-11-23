@@ -1,0 +1,7 @@
+# Runtime: engine + PDF + app (desktop, CLI and flet build)
+flet[all]>=1.1.2
+reportlab>=4.0
+fonttools>=4.40
+# Development
+pytest>=8
+markdown>=3.5        # tools/build_site.py (website in docs/)

@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guida all&#x27;app · Modern Sheet</title>
+<meta name="description" content="Come installare e usare Modern Sheet: libreria, editor, PDF, sincronizzazione con Google Drive, importazione.">
+<link rel="canonical" href="https://modernsheet.app/it/guida/">
+<link rel="alternate" hreflang="en" href="https://modernsheet.app/en/guide/">
+<link rel="icon" href="/assets/img/favicon.png">
+<link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+<meta property="og:title" content="Guida all&#x27;app · Modern Sheet">
+<meta property="og:description" content="Come installare e usare Modern Sheet: libreria, editor, PDF, sincronizzazione con Google Drive, importazione.">
+<meta property="og:image" content="https://modernsheet.app/assets/img/sheet-demo.png">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body class="doc">
+<a class="skip" href="#main">Vai al contenuto</a>
+<header class="top">
+  <div class="wrap bar">
+    <a class="brand" href="/it/"><img src="/assets/img/logo.png" alt="" width="36" height="36">Modern Sheet</a>
+    <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Menu">
+    <label for="nav-toggle" class="nav-button" aria-hidden="true"><span></span><span></span><span></span></label>
+    <nav class="menu">
+      <a href="/it/">Home</a><a href="/it/guida/" aria-current="page">Guida all&#x27;app</a><a href="/it/formato/">Il formato .chs</a><a href="/it/chordsheet/">chordsheet.com</a>
+      <a class="lang" href="/en/guide/" hreflang="en">English</a>
+      <a class="gh" href="https://github.com/supermariolabs/modernsheet">GitHub</a>
+    </nav>
+  </div>
+</header>
+<main id="main" class="wrap">
+<h1 id="guida-allapp">Guida all'app<a class="headerlink" href="#guida-allapp">#</a></h1>
+<div class="toc">
+<ul>
+<li><a href="#avviare-modern-sheet">Avviare Modern Sheet</a></li>
+<li><a href="#la-libreria">La libreria</a><ul>
+<li><a href="#la-ricerca">La ricerca</a></li>
+</ul>
+</li>
+<li><a href="#leggere-e-modificare-un-brano">Leggere e modificare un brano</a></li>
+<li><a href="#sincronizzazione">Sincronizzazione</a></li>
+<li><a href="#importare-brani">Importare brani</a></li>
+<li><a href="#impostazioni">Impostazioni</a></li>
+</ul>
+</div>
+<h2 id="avviare-modern-sheet">Avviare Modern Sheet<a class="headerlink" href="#avviare-modern-sheet">#</a></h2>
+<p>Non ci sono ancora pacchetti pronti: l'app si avvia dai sorgenti, con <strong>Python 3.10 o successivo</strong>.</p>
+<pre><code>git clone https://github.com/supermariolabs/modernsheet.git
+cd modernsheet
+python3 -m venv .venv &amp;&amp; source .venv/bin/activate     # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+flet run                                               # l'app desktop
+</code></pre>
+<p>Per creare un'app vera e propria si usa <code>flet build</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Comando</th>
+<th>Risultato</th>
+<th>Serve</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>flet build macos</code></td>
+<td>app per Mac</td>
+<td>Xcode completo e CocoaPods (<code>brew install cocoapods</code>)</td>
+</tr>
+<tr>
+<td><code>flet build windows</code></td>
+<td>app per Windows</td>
+<td>Visual Studio con gli strumenti C++</td>
+</tr>
+<tr>
+<td><code>flet build linux</code></td>
+<td>app per Linux</td>
+<td>i pacchetti di sviluppo GTK</td>
+</tr>
+<tr>
+<td><code>flet build ipa</code></td>
+<td>iPad e iPhone</td>
+<td>un Mac con Xcode e un account Apple Developer</td>
+</tr>
+<tr>
+<td><code>flet build apk</code></td>
+<td>Android</td>
+<td>niente: Flet scarica l'Android SDK</td>
+</tr>
+</tbody>
+</table>
+<p>Per provare l'app su iPad o Android senza compilarla: installa l'app <strong>Flet</strong> dallo store, avvia <code>flet run --ios</code> (o <code>--android</code>) e inquadra il QR code.</p>
+<p>Dalla riga di comando, senza app, si producono i PDF:</p>
+<pre><code>python modernsheet_cli.py brano.chs -o pdf/              # un PDF per brano
+python modernsheet_cli.py *.chs --theme clean -t 3       # tema Clean, trasposto di 3 semitoni
+python modernsheet_cli.py --check *.chs                  # solo controllo degli errori
+</code></pre>
+<h2 id="la-libreria">La libreria<a class="headerlink" href="#la-libreria">#</a></h2>
+<p>Al primo avvio la libreria contiene la cartella <strong>examples</strong> con i brani di esempio: sono un buon modo per vedere tutte le funzioni. I tuoi brani vanno accanto, in cartelle a piacere.</p>
+<ul>
+<li><strong>Card</strong> con titolo, artista, tonalità, metro, BPM, tag, nome del file e date di creazione e modifica. Con l'icona a destra si passa alla vista a <strong>elenco</strong>.</li>
+<li><strong>Ordinamento</strong> per titolo, artista, tonalità, BPM, ultima modifica o data di creazione. Per titolo e artista i brani sono <strong>raggruppati per lettera</strong> (A, B, C…).</li>
+<li><strong>Cartelle</strong>: <em>Nuova cartella</em> in basso a destra; il menu <strong>⋮</strong> di una cartella permette di <strong>rinominarla</strong> (i riferimenti ai MusicXML vengono aggiornati).</li>
+<li><strong>Brani con lo stesso titolo</strong>: il dato che li distingue (data di modifica, di creazione o nome del file) è in arancione, e il più recente viene prima.</li>
+</ul>
+<h3 id="la-ricerca">La ricerca<a class="headerlink" href="#la-ricerca">#</a></h3>
+<p>La ricerca guarda in tutta la libreria, sottocartelle comprese, senza distinguere maiuscole e accenti.</p>
+<table>
+<thead>
+<tr>
+<th>Scrivi</th>
+<th>Trova</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>blues lunedì</code></td>
+<td>brani che contengono tutte le parole (titolo, artista, tag, nome del file)</td>
+</tr>
+<tr>
+<td><code>#jazz</code></td>
+<td>brani con il tag <em>jazz</em></td>
+</tr>
+<tr>
+<td><code>A*</code></td>
+<td>titoli che <strong>iniziano</strong> con A</td>
+</tr>
+<tr>
+<td><code>*amore</code></td>
+<td>titoli che <strong>finiscono</strong> con "amore"</td>
+</tr>
+<tr>
+<td><code>*hey jude*</code></td>
+<td>brani che <strong>contengono</strong> "hey jude", spazi compresi</td>
+</tr>
+<tr>
+<td><code>A* &amp; #jazz</code></td>
+<td>entrambe le condizioni (<strong>e</strong>)</td>
+</tr>
+<tr>
+<td><code>A* | B*</code></td>
+<td>almeno una delle due (<strong>o</strong>); <code>&amp;</code> lega più di <code>|</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="leggere-e-modificare-un-brano">Leggere e modificare un brano<a class="headerlink" href="#leggere-e-modificare-un-brano">#</a></h2>
+<p>Toccando una card il brano si apre in <strong>modalità vista</strong>: solo lo spartito, con le opzioni in alto.</p>
+<ul>
+<li><strong>Trasposizione</strong> – / +: cambia sigle e armature; <strong>Real Book</strong> o <strong>Clean</strong>; <strong>Griglia</strong> (battute tutte uguali) o <strong>Riempi</strong>; <strong>sigle jazz</strong>; <strong>colori per sezione</strong>.</li>
+<li><strong>⛶ Schermo intero</strong>: restano solo le pagine. Per uscire c'è il pulsante in alto a destra, oppure il tasto <strong>Esc</strong>.</li>
+<li>Le frecce, Pagina su/giù, lo spazio e le <strong>pedaliere Bluetooth</strong> girano le pagine.</li>
+</ul>
+<p>La <strong>matita</strong> apre l'editor accanto allo spartito:</p>
+<ul>
+<li><strong>evidenziazione</strong> della sintassi e <strong>suggerimenti</strong> delle direttive quando scrivi <code>{</code> (Invio o Tab per scegliere);</li>
+<li>l'anteprima si aggiorna mentre scrivi; i <strong>warning</strong> sono elencati sotto l'editor e toccandoli si va alla riga;</li>
+<li>una <strong>scheda per ogni MusicXML</strong> citato dal brano, modificabile come il sorgente;</li>
+<li><strong>Salva</strong> (⌘S / Ctrl+S) diventa verde quando c'è qualcosa da salvare; <strong>Salva con nome</strong> crea una copia accanto al brano;</li>
+<li><strong>Esporta PDF</strong>; il <strong>cestino rosso</strong> elimina il brano e i suoi MusicXML, dopo una conferma con l'elenco dei file.</li>
+</ul>
+<p>L'app scrive da sola nel file le date <code>{created}</code> e <code>{modified}</code>.</p>
+<h2 id="sincronizzazione">Sincronizzazione<a class="headerlink" href="#sincronizzazione">#</a></h2>
+<p>La libreria è sempre <strong>locale</strong>: l'app funziona anche senza rete. In <em>Impostazioni › Sincronizzazione</em> puoi tenerla allineata con:</p>
+<ul>
+<li><strong>Google Drive</strong>: <em>Collega</em>, poi inserisci il codice mostrato su google.com/device. L'app vede solo i file che crea lei (permesso <code>drive.file</code>), in una cartella "Modern Sheet" del tuo Drive (il nome si può cambiare).</li>
+<li><strong>una cartella</strong>: per esempio dentro iCloud Drive, Dropbox o Google Drive per desktop, il cui programma la porta sugli altri computer.</li>
+</ul>
+<p>La sincronizzazione parte all'avvio, dopo ogni salvataggio, ogni 5 minuti e con <em>Sincronizza ora</em>. Non si perde nulla: se lo stesso brano cambia su due dispositivi restano <strong>entrambe le versioni</strong>, e i file cancellati finiscono nel <strong>cestino</strong> (dell'app o di Drive). Collegando un secondo dispositivo, l'app scarica prima quello che c'è già e poi aggiunge solo i brani mancanti.</p>
+<h2 id="importare-brani">Importare brani<a class="headerlink" href="#importare-brani">#</a></h2>
+<ul>
+<li><strong>Importa file .chs</strong> (icona nella barra della libreria): copia un <code>.chs</code> nella cartella aperta, con i MusicXML che cita, senza sovrascrivere nulla.</li>
+<li><strong>Importa da chordsheet.com</strong>: accedi al tuo account, scegli i brani da un elenco e vengono importati convertiti. Dettagli nella pagina <a href="/it/chordsheet/">chordsheet.com</a>.</li>
+</ul>
+<h2 id="impostazioni">Impostazioni<a class="headerlink" href="#impostazioni">#</a></h2>
+<p>Lingua (italiano o inglese), cartella dei brani, cartella per i PDF, opzioni di visualizzazione predefinite (tema, griglia, sigle, colori) e sincronizzazione. Le impostazioni restano salvate sul dispositivo.</p>
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <p>Modern Sheet · Software libero, licenza GPL-3.0 · <a href="https://github.com/supermariolabs/modernsheet">Codice su GitHub</a> · <a href="/it/privacy/">Privacy</a></p>
+  </div>
+</footer>
+</body>
+</html>

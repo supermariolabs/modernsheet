@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>App guide · Modern Sheet</title>
+<meta name="description" content="How to install and use Modern Sheet: library, editor, PDF, Google Drive sync, import.">
+<link rel="canonical" href="https://modernsheet.app/en/guide/">
+<link rel="alternate" hreflang="it" href="https://modernsheet.app/it/guida/">
+<link rel="icon" href="/assets/img/favicon.png">
+<link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+<meta property="og:title" content="App guide · Modern Sheet">
+<meta property="og:description" content="How to install and use Modern Sheet: library, editor, PDF, Google Drive sync, import.">
+<meta property="og:image" content="https://modernsheet.app/assets/img/sheet-demo.png">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body class="doc">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <div class="wrap bar">
+    <a class="brand" href="/en/"><img src="/assets/img/logo.png" alt="" width="36" height="36">Modern Sheet</a>
+    <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Menu">
+    <label for="nav-toggle" class="nav-button" aria-hidden="true"><span></span><span></span><span></span></label>
+    <nav class="menu">
+      <a href="/en/">Home</a><a href="/en/guide/" aria-current="page">App guide</a><a href="/en/format/">The .chs format</a><a href="/en/chordsheet/">chordsheet.com</a>
+      <a class="lang" href="/it/guida/" hreflang="it">Italiano</a>
+      <a class="gh" href="https://github.com/supermariolabs/modernsheet">GitHub</a>
+    </nav>
+  </div>
+</header>
+<main id="main" class="wrap">
+<h1 id="app-guide">App guide<a class="headerlink" href="#app-guide">#</a></h1>
+<div class="toc">
+<ul>
+<li><a href="#running-modern-sheet">Running Modern Sheet</a></li>
+<li><a href="#the-library">The library</a><ul>
+<li><a href="#search">Search</a></li>
+</ul>
+</li>
+<li><a href="#reading-and-editing-a-song">Reading and editing a song</a></li>
+<li><a href="#sync">Sync</a></li>
+<li><a href="#importing-songs">Importing songs</a></li>
+<li><a href="#settings">Settings</a></li>
+</ul>
+</div>
+<h2 id="running-modern-sheet">Running Modern Sheet<a class="headerlink" href="#running-modern-sheet">#</a></h2>
+<p>There are no ready-made packages yet: the app runs from source, with <strong>Python 3.10 or later</strong>.</p>
+<pre><code>git clone https://github.com/supermariolabs/modernsheet.git
+cd modernsheet
+python3 -m venv .venv &amp;&amp; source .venv/bin/activate     # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+flet run                                               # the desktop app
+</code></pre>
+<p>To make a real app, use <code>flet build</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Result</th>
+<th>Needs</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>flet build macos</code></td>
+<td>Mac app</td>
+<td>full Xcode and CocoaPods (<code>brew install cocoapods</code>)</td>
+</tr>
+<tr>
+<td><code>flet build windows</code></td>
+<td>Windows app</td>
+<td>Visual Studio with the C++ tools</td>
+</tr>
+<tr>
+<td><code>flet build linux</code></td>
+<td>Linux app</td>
+<td>the GTK development packages</td>
+</tr>
+<tr>
+<td><code>flet build ipa</code></td>
+<td>iPad and iPhone</td>
+<td>a Mac with Xcode and an Apple Developer account</td>
+</tr>
+<tr>
+<td><code>flet build apk</code></td>
+<td>Android</td>
+<td>nothing: Flet downloads the Android SDK</td>
+</tr>
+</tbody>
+</table>
+<p>To try the app on iPad or Android without building it: install the <strong>Flet</strong> app from the store, run <code>flet run --ios</code> (or <code>--android</code>) and scan the QR code.</p>
+<p>From the command line, without the app, you get PDF files:</p>
+<pre><code>python modernsheet_cli.py song.chs -o pdf/               # one PDF per song
+python modernsheet_cli.py *.chs --theme clean -t 3       # Clean theme, 3 semitones up
+python modernsheet_cli.py --check *.chs                  # check for errors only
+</code></pre>
+<h2 id="the-library">The library<a class="headerlink" href="#the-library">#</a></h2>
+<p>On first start the library holds the <strong>examples</strong> folder with the example songs: a good way to see every feature. Your songs go next to it, in folders of your choice.</p>
+<ul>
+<li><strong>Cards</strong> with title, artist, key, time, BPM, tags, file name and creation and modification dates. The icon on the right switches to the <strong>list</strong> view.</li>
+<li><strong>Sorting</strong> by title, artist, key, BPM, last modified or date created. By title and artist the songs are <strong>grouped by letter</strong> (A, B, C…).</li>
+<li><strong>Folders</strong>: <em>New folder</em> at the bottom right; the <strong>⋮</strong> menu of a folder <strong>renames</strong> it (references to MusicXML files are updated).</li>
+<li><strong>Songs with the same title</strong>: the detail that tells them apart (modification date, creation date or file name) is in orange, and the most recent comes first.</li>
+</ul>
+<h3 id="search">Search<a class="headerlink" href="#search">#</a></h3>
+<p>Search looks through the whole library, subfolders included, ignoring case and accents.</p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Finds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>blues monday</code></td>
+<td>songs containing all the words (title, artist, tags, file name)</td>
+</tr>
+<tr>
+<td><code>#jazz</code></td>
+<td>songs tagged <em>jazz</em></td>
+</tr>
+<tr>
+<td><code>A*</code></td>
+<td>titles <strong>starting</strong> with A</td>
+</tr>
+<tr>
+<td><code>*love</code></td>
+<td>titles <strong>ending</strong> with "love"</td>
+</tr>
+<tr>
+<td><code>*hey jude*</code></td>
+<td>songs <strong>containing</strong> "hey jude", spaces included</td>
+</tr>
+<tr>
+<td><code>A* &amp; #jazz</code></td>
+<td>both conditions (<strong>and</strong>)</td>
+</tr>
+<tr>
+<td><code>A* | B*</code></td>
+<td>at least one of them (<strong>or</strong>); <code>&amp;</code> binds tighter than <code>|</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="reading-and-editing-a-song">Reading and editing a song<a class="headerlink" href="#reading-and-editing-a-song">#</a></h2>
+<p>Tapping a card opens the song in <strong>view mode</strong>: just the sheet, with the options above it.</p>
+<ul>
+<li><strong>Transpose</strong> – / +: changes chords and key signatures; <strong>Real Book</strong> or <strong>Clean</strong>; <strong>Grid</strong> (all bars equal) or <strong>Fill</strong>; <strong>jazz symbols</strong>; <strong>colours by section</strong>.</li>
+<li><strong>⛶ Full screen</strong>: only the pages remain. To leave, use the button at the top right or the <strong>Esc</strong> key.</li>
+<li>Arrow keys, Page Up/Down, the space bar and <strong>Bluetooth pedals</strong> that send those keys turn the pages.</li>
+</ul>
+<p>The <strong>pencil</strong> opens the editor next to the sheet:</p>
+<ul>
+<li><strong>syntax highlighting</strong> and <strong>suggestions</strong> for directives when you type <code>{</code> (Enter or Tab to choose);</li>
+<li>the preview updates as you type; <strong>warnings</strong> are listed under the editor, and tapping one jumps to the line;</li>
+<li>a <strong>tab for every MusicXML file</strong> the song cites, editable like the source;</li>
+<li><strong>Save</strong> (⌘S / Ctrl+S) turns green when there is something to save; <strong>Save as</strong> makes a copy next to the song;</li>
+<li><strong>Export PDF</strong>; the <strong>red bin</strong> deletes the song and its MusicXML files, after a confirmation listing the files.</li>
+</ul>
+<p>The app writes the <code>{created}</code> and <code>{modified}</code> dates into the file by itself.</p>
+<h2 id="sync">Sync<a class="headerlink" href="#sync">#</a></h2>
+<p>The library is always <strong>local</strong>: the app works without a network. In <em>Settings › Sync</em> you can keep it in step with:</p>
+<ul>
+<li><strong>Google Drive</strong>: <em>Connect</em>, then enter the code shown at google.com/device. The app only sees the files it creates (<code>drive.file</code> permission), in a "Modern Sheet" folder of your Drive (the name can be changed).</li>
+<li><strong>a folder</strong>: for example inside iCloud Drive, Dropbox or Google Drive for desktop, whose client carries it to your other computers.</li>
+</ul>
+<p>Sync runs at start, after every save, every 5 minutes and with <em>Sync now</em>. Nothing gets lost: if the same song changes on two devices <strong>both versions</strong> are kept, and deleted files go to the <strong>trash</strong> (the app's or Drive's). When a second device connects, the app first downloads what is already there and then adds only the missing songs.</p>
+<h2 id="importing-songs">Importing songs<a class="headerlink" href="#importing-songs">#</a></h2>
+<ul>
+<li><strong>Import a .chs file</strong> (icon in the library bar): copies a <code>.chs</code> into the open folder, with the MusicXML files it cites, never overwriting anything.</li>
+<li><strong>Import from chordsheet.com</strong>: log in to your account, pick the songs from a list and they are imported converted. Details on the <a href="/en/chordsheet/">chordsheet.com</a> page.</li>
+</ul>
+<h2 id="settings">Settings<a class="headerlink" href="#settings">#</a></h2>
+<p>Language (Italian or English), songs folder, PDF folder, default display options (theme, grid, chord symbols, colours) and sync. Settings are kept on the device.</p>
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <p>Modern Sheet · Free software, GPL-3.0 license · <a href="https://github.com/supermariolabs/modernsheet">Code on GitHub</a> · <a href="/en/privacy/">Privacy</a></p>
+  </div>
+</footer>
+</body>
+</html>

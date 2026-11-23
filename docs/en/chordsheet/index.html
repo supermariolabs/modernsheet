@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>chordsheet.com · Modern Sheet</title>
+<meta name="description" content="How to import into Modern Sheet the chord sheets made on chordsheet.com (Chord Sheet Maker), from your account or a text file.">
+<link rel="canonical" href="https://modernsheet.app/en/chordsheet/">
+<link rel="alternate" hreflang="it" href="https://modernsheet.app/it/chordsheet/">
+<link rel="icon" href="/assets/img/favicon.png">
+<link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+<meta property="og:title" content="chordsheet.com · Modern Sheet">
+<meta property="og:description" content="How to import into Modern Sheet the chord sheets made on chordsheet.com (Chord Sheet Maker), from your account or a text file.">
+<meta property="og:image" content="https://modernsheet.app/assets/img/sheet-demo.png">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body class="doc">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <div class="wrap bar">
+    <a class="brand" href="/en/"><img src="/assets/img/logo.png" alt="" width="36" height="36">Modern Sheet</a>
+    <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Menu">
+    <label for="nav-toggle" class="nav-button" aria-hidden="true"><span></span><span></span><span></span></label>
+    <nav class="menu">
+      <a href="/en/">Home</a><a href="/en/guide/">App guide</a><a href="/en/format/">The .chs format</a><a href="/en/chordsheet/" aria-current="page">chordsheet.com</a>
+      <a class="lang" href="/it/chordsheet/" hreflang="it">Italiano</a>
+      <a class="gh" href="https://github.com/supermariolabs/modernsheet">GitHub</a>
+    </nav>
+  </div>
+</header>
+<main id="main" class="wrap">
+<h1 id="importing-from-chordsheetcom">Importing from chordsheet.com<a class="headerlink" href="#importing-from-chordsheetcom">#</a></h1>
+<p>If you use <a href="https://www.chordsheet.com">Chord Sheet Maker</a>, you can bring your songs into Modern Sheet: they are <strong>converted</strong> to the <code>.chs</code> format, with repeats, endings, signs, annotations and rhythm marks.</p>
+<h2 id="from-your-account">From your account<a class="headerlink" href="#from-your-account">#</a></h2>
+<ol>
+<li>In the library, open the folder where you want the songs and tap <strong>Import from chordsheet.com</strong>.</li>
+<li>Enter the <strong>email and password</strong> of your chordsheet.com account. With <em>Remember the email</em> the app keeps the email for next time; the <strong>password is never stored</strong>, it is only used to log in.</li>
+<li>A list of <strong>all your songs</strong> appears: pick the ones to import (there is a filter, <em>All new ones</em> and <em>None</em>). Songs already imported are marked.</li>
+<li><strong>Import</strong>: the songs are read one at a time and saved in the open folder, never overwriting anything.</li>
+</ol>
+<p>Songs that need a check get the <strong><code>import_warn</code></strong> tag: find them with <code>#import_warn</code>. Each file starts with a reference to the original song and, if any, the conversion notes.</p>
+<blockquote>
+<p>chordsheet.com has no API: the import reads the same pages you see in the browser. If the site changes, Modern Sheet may need an update.</p>
+</blockquote>
+<h2 id="from-a-text-file">From a text file<a class="headerlink" href="#from-a-text-file">#</a></h2>
+<p>In the same window, <strong>From a .txt file…</strong> imports the text of the "Chords" field saved in a file. Lines like <code>Title:</code>, <code>Artist:</code>, <code>Key:</code>, <code>BPM:</code>, <code>Time:</code> can be added at the top. From the command line:</p>
+<pre><code>python modernsheet_cli.py --from-chordsheet --pdf song.txt
+</code></pre>
+<h2 id="what-is-converted">What is converted<a class="headerlink" href="#what-is-converted">#</a></h2>
+<table>
+<thead>
+<tr>
+<th>chordsheet.com</th>
+<th>Modern Sheet</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>A B C D</code>, <code>Dm7_G7</code></td>
+<td>bars, several chords in a bar</td>
+</tr>
+<tr>
+<td><code>*_B_*_*</code></td>
+<td>B on the second beat</td>
+</tr>
+<tr>
+<td><code>( … )</code>, <code>|: … :|</code>, <code>x3</code></td>
+<td>repeats</td>
+</tr>
+<tr>
+<td><code>1.</code> <code>2.</code> <code>1.-3.+5.</code></td>
+<td>endings</td>
+</tr>
+<tr>
+<td><code>%</code>, <code>%%</code>, <code>%2</code></td>
+<td>repeated bars</td>
+</tr>
+<tr>
+<td><code>= Title</code>, <code>: Title</code></td>
+<td>sections</td>
+</tr>
+<tr>
+<td><code>- text</code>, <code>; text</code></td>
+<td><code>{text}</code> lines</td>
+</tr>
+<tr>
+<td><code>$ o O fine D.C. … D.S. …</code></td>
+<td>navigation signs</td>
+</tr>
+<tr>
+<td><code>&lt;C &lt;&lt;C C^ C,,, Cfermata C&lt;&gt;</code></td>
+<td>rhythm marks</td>
+</tr>
+<tr>
+<td><code>C?</code>, <code>[G_D+7]</code></td>
+<td>optional chords</td>
+</tr>
+<tr>
+<td><code>A"1°"</code>, <code>Dm7 "II"</code></td>
+<td>annotations</td>
+</tr>
+<tr>
+<td><code>r1 r2 r4 r8</code>, <code>N.C.</code>, <code>3:4</code></td>
+<td>rests, N.C., time changes</td>
+</tr>
+<tr>
+<td><code>X</code>, <code>P0</code>…<code>P9</code></td>
+<td>ignored (indents and colours)</td>
+</tr>
+</tbody>
+</table>
+<p>On a real archive of 234 songs, 230 were imported without notes; the others had errors in the original source or were written in another format.</p>
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <p>Modern Sheet · Free software, GPL-3.0 license · <a href="https://github.com/supermariolabs/modernsheet">Code on GitHub</a> · <a href="/en/privacy/">Privacy</a></p>
+  </div>
+</footer>
+</body>
+</html>

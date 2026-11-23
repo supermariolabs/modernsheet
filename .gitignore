@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+.pytest_cache/
+out/
+build/
+.DS_Store
+
+# Google OAuth client of the app (see README, "Google Drive")
+src/google_client.json
+
+# app data of `flet run` (settings, synced library copy): never public
+.flet/

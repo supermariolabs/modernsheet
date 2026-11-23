@@ -1,0 +1,26 @@
+Title: Esempio da Chord Sheet Maker
+Artist: Brano di prova
+Key: G
+BPM: 96
+Time: 4/4
+
+# testo copiato dal campo "Chords" di chordsheet.com
+= Intro
+(G D/F# Em7 Cmaj7)x3
+
+= Verse
+$ G % Am7_D7 G
+Em7 % C_D *
+- secondo giro più piano
+|:G Bm7 C D:|
+
+: Chorus
+(C D Bm7 Em7 1. Am7 D7 2. Am7_D7 G o)
+
+= Bridge
+3:4 Em7 Bm7 C %%
+4:4 Am7_D <G, r2_D^ ||
+D.S. al coda
+
+= Coda
+O C Cm6 G fine

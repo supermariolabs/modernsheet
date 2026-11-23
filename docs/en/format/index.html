@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The .chs format · Modern Sheet</title>
+<meta name="description" content="Complete reference of the Modern Sheet .chs format: header, sections, chords and durations, bars, repeats, endings, signs, text, MusicXML.">
+<link rel="canonical" href="https://modernsheet.app/en/format/">
+<link rel="alternate" hreflang="it" href="https://modernsheet.app/it/formato/">
+<link rel="icon" href="/assets/img/favicon.png">
+<link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+<meta property="og:title" content="The .chs format · Modern Sheet">
+<meta property="og:description" content="Complete reference of the Modern Sheet .chs format: header, sections, chords and durations, bars, repeats, endings, signs, text, MusicXML.">
+<meta property="og:image" content="https://modernsheet.app/assets/img/sheet-demo.png">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body class="doc">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <div class="wrap bar">
+    <a class="brand" href="/en/"><img src="/assets/img/logo.png" alt="" width="36" height="36">Modern Sheet</a>
+    <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Menu">
+    <label for="nav-toggle" class="nav-button" aria-hidden="true"><span></span><span></span><span></span></label>
+    <nav class="menu">
+      <a href="/en/">Home</a><a href="/en/guide/">App guide</a><a href="/en/format/" aria-current="page">The .chs format</a><a href="/en/chordsheet/">chordsheet.com</a>
+      <a class="lang" href="/it/formato/" hreflang="it">Italiano</a>
+      <a class="gh" href="https://github.com/supermariolabs/modernsheet">GitHub</a>
+    </nav>
+  </div>
+</header>
+<main id="main" class="wrap">
+<h1 id="the-chs-format">The .chs format<a class="headerlink" href="#the-chs-format">#</a></h1>
+<p>A song is a UTF-8 text file with the <code>.chs</code> extension. It holds <strong>directives</strong> in braces (<code>{title: …}</code>), <strong>chords</strong> in square brackets (<code>[Am7]</code>), <strong>bar lines</strong> (<code>|</code>) and the <strong>lyrics</strong>. Lines starting with <code>#</code> are comments.</p>
+<div class="toc">
+<ul>
+<li><a href="#an-example">An example</a></li>
+<li><a href="#header">Header</a></li>
+<li><a href="#sections">Sections</a></li>
+<li><a href="#chords-and-durations">Chords and durations</a><ul>
+<li><a href="#bars">Bars</a></li>
+<li><a href="#marks-inside-the-chord">Marks inside the chord</a></li>
+</ul>
+</li>
+<li><a href="#bar-lines-repeats-and-endings">Bar lines, repeats and endings</a></li>
+<li><a href="#key-and-time-changes">Key and time changes</a></li>
+<li><a href="#navigation-signs">Navigation signs</a></li>
+<li><a href="#text-lines">Text lines</a></li>
+<li><a href="#notes-from-musicxml">Notes from MusicXML</a></li>
+<li><a href="#format-versions">Format versions</a></li>
+</ul>
+</div>
+<h2 id="an-example">An example<a class="headerlink" href="#an-example">#</a></h2>
+<pre><code>{format: v1}
+{title: My song}
+{artist: Me}
+{key: G}
+{time: 4/4}
+{tempo: 96}
+
+{start_of_verse: Verse}
+| [G]First line | [Em7]of the lyrics | [C]and the [D7]chords | [G] |
+{end_of_verse}
+
+{start_of_chorus: Chorus}
+|: [C] | [D] | [Bm7] | [Em7] :|
+{end_of_chorus}
+
+{ref: Verse}
+</code></pre>
+<h2 id="header">Header<a class="headerlink" href="#header">#</a></h2>
+<table>
+<thead>
+<tr>
+<th>Directive</th>
+<th>Example</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>format</code></td>
+<td><code>{format: v1}</code></td>
+<td>Format version, as the first directive. Missing means v1.</td>
+</tr>
+<tr>
+<td><code>title</code>, <code>subtitle</code></td>
+<td><code>{title: Amazing Grace}</code></td>
+<td>Title and subtitle.</td>
+</tr>
+<tr>
+<td><code>artist</code>, <code>composer</code></td>
+<td><code>{artist: Traditional}</code></td>
+<td>Shown under the title.</td>
+</tr>
+<tr>
+<td><code>key</code></td>
+<td><code>{key: F#m}</code></td>
+<td>The first is the song's key; later ones are <strong>key changes</strong>.</td>
+</tr>
+<tr>
+<td><code>time</code></td>
+<td><code>{time: 3/4}</code></td>
+<td>The first is the song's time; later ones are <strong>time changes</strong>.</td>
+</tr>
+<tr>
+<td><code>tempo</code></td>
+<td><code>{tempo: 96}</code></td>
+<td>BPM, shown as ♩ = 96.</td>
+</tr>
+<tr>
+<td><code>capo</code></td>
+<td><code>{capo: 2}</code></td>
+<td>Capo.</td>
+</tr>
+<tr>
+<td><code>tags</code></td>
+<td><code>{tags: jazz, ballad}</code></td>
+<td>Labels for the library (search with <code>#jazz</code>).</td>
+</tr>
+<tr>
+<td><code>bar_width</code></td>
+<td><code>{bar_width: fit}</code></td>
+<td><code>uniform</code> (equal bars) or <code>fit</code> for this song.</td>
+</tr>
+<tr>
+<td><code>bars_per_line</code></td>
+<td><code>{bars_per_line: 6}</code></td>
+<td>Bars per line (also inside a section).</td>
+</tr>
+<tr>
+<td><code>label_colors</code>, <code>section_colors</code></td>
+<td><code>{section_colors: verse=#33cc66}</code></td>
+<td>Colours of the section boxes.</td>
+</tr>
+<tr>
+<td><code>created</code>, <code>modified</code></td>
+<td></td>
+<td>Dates written by the app when saving.</td>
+</tr>
+<tr>
+<td><code>comment</code></td>
+<td><code>{comment: …}</code></td>
+<td>A comment, not printed.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="sections">Sections<a class="headerlink" href="#sections">#</a></h2>
+<pre><code>{start_of_verse: Verse 1}
+…
+{end_of_verse}
+</code></pre>
+<p>The kind (<code>verse</code>, <code>chorus</code>, <code>bridge</code>, <code>intro</code>, <code>solo</code>, <code>outro</code>, <code>coda</code>…) is free; the label after the colon is what is shown. Every section starts on a new line.</p>
+<p><strong>References</strong>: <code>{ref: Verse}</code> repeats a section written earlier, <code>{ref: Chorus x2 | louder}</code> repeats it twice with a note. If the key changed in the meantime, the reference is <strong>transposed automatically</strong>.</p>
+<h2 id="chords-and-durations">Chords and durations<a class="headerlink" href="#chords-and-durations">#</a></h2>
+<ul>
+<li><code>[Am7]</code> a chord; <code>[C/E]</code> with a bass note; the quality is free (<code>m7b5</code>, <code>7#9</code>, <code>sus4</code>, <code>6/9</code>…).</li>
+<li><code>[C:2]</code> lasts 2 beats (quarter notes); half a beat at least (<code>[G:1.5]</code>).</li>
+<li>In a bar, chords without a duration share the remaining time equally.</li>
+<li><code>[/]</code> is a <strong>stop</strong>; <code>[%]</code> means "no new chord".</li>
+<li>A bar without chords continues the previous one and is shown as <strong>%</strong>.</li>
+<li>The text after a chord is what is sung on it.</li>
+</ul>
+<h3 id="bars">Bars<a class="headerlink" href="#bars">#</a></h3>
+<ul>
+<li><strong>With bar lines</strong>: <code>| [C] [G] | [Am] |</code> – bars are delimited by <code>|</code>.</li>
+<li><strong>Without bar lines</strong>: <code>[Gm7:2] [C7:2] [F]</code> – each chord lasts its duration, or a whole bar.</li>
+</ul>
+<h3 id="marks-inside-the-chord">Marks inside the chord<a class="headerlink" href="#marks-inside-the-chord">#</a></h3>
+<table>
+<thead>
+<tr>
+<th>Write</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>[(C)]</code> or <code>[C?]</code></td>
+<td><strong>optional</strong> chord, in parentheses</td>
+</tr>
+<tr>
+<td><code>[&lt;C]</code> / <code>[&lt;&lt;C]</code></td>
+<td><strong>push</strong>: an eighth / a sixteenth early</td>
+</tr>
+<tr>
+<td><code>[C~]</code></td>
+<td><strong>tie</strong> to the next chord</td>
+</tr>
+<tr>
+<td><code>[C,,,]</code></td>
+<td><strong>rhythm slashes</strong>, one per comma</td>
+</tr>
+<tr>
+<td><code>[C fermata]</code></td>
+<td><strong>fermata</strong></td>
+</tr>
+<tr>
+<td><code>[C diamond]</code> or <code>[C &lt;&gt;]</code></td>
+<td><strong>diamond</strong>: held chord</td>
+</tr>
+<tr>
+<td><code>[A "1st"]</code></td>
+<td><strong>annotation</strong> over the chord; <code>[% "again"]</code> on a repeated bar</td>
+</tr>
+</tbody>
+</table>
+<p>They combine with each other and with the duration: <code>[&lt;(G7):2~ fermata]</code>.</p>
+<h2 id="bar-lines-repeats-and-endings">Bar lines, repeats and endings<a class="headerlink" href="#bar-lines-repeats-and-endings">#</a></h2>
+<table>
+<thead>
+<tr>
+<th>Write</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>||</code></td>
+<td>double bar line</td>
+</tr>
+<tr>
+<td><code>|: … :|</code></td>
+<td>repeat (twice)</td>
+</tr>
+<tr>
+<td><code>:| x3</code></td>
+<td>repeat played 3 times</td>
+</tr>
+<tr>
+<td><code>{volta: 1}</code> … <code>{volta: 2}</code></td>
+<td>endings (also <code>{volta: 1, 2}</code>)</td>
+</tr>
+<tr>
+<td><code>{volta_end}</code> / <code>{volta_end: hook}</code></td>
+<td>close the ending, open or with a hook</td>
+</tr>
+<tr>
+<td><code>{br}</code></td>
+<td>forced line break</td>
+</tr>
+</tbody>
+</table>
+<pre><code>|: [Gm7] [C7] | [Am7] [D7] |
+{volta: 1} [Gm7] [C7] | [F7] [D7] :|
+{volta: 2} [Gm7] [C7] | [F7] ||
+</code></pre>
+<p>The 2nd ending starts a new line, right-aligned under the 1st.</p>
+<h2 id="key-and-time-changes">Key and time changes<a class="headerlink" href="#key-and-time-changes">#</a></h2>
+<p><code>{key: …}</code> and <code>{time: …}</code> go on a line of their own or right after a bar line:</p>
+<pre><code>| [G7]last time round || {key: Db} [Db]modulation | [Gb] |
+| [Gm7] | {time: 2/4} [C7] | {time: 4/4} [F7] |
+</code></pre>
+<p>A key change brings a double bar line, the new key signature (with courtesy naturals) and, under the staff, the name of the new key.</p>
+<h2 id="navigation-signs">Navigation signs<a class="headerlink" href="#navigation-signs">#</a></h2>
+<table>
+<thead>
+<tr>
+<th>Directive</th>
+<th>Where</th>
+<th>Shown as</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>{segno}</code></td>
+<td>start of the next bar</td>
+<td>𝄋</td>
+</tr>
+<tr>
+<td><code>{coda}</code></td>
+<td>start of the next bar</td>
+<td>⊕</td>
+</tr>
+<tr>
+<td><code>{to_coda}</code></td>
+<td>end of the bar it is written in</td>
+<td>To Coda ⊕</td>
+</tr>
+<tr>
+<td><code>{fine}</code></td>
+<td>end of the bar</td>
+<td>Fine, with a double bar line</td>
+</tr>
+<tr>
+<td><code>{dc: al Fine}</code></td>
+<td>end of the bar</td>
+<td>D.C. al Fine</td>
+</tr>
+<tr>
+<td><code>{ds: al Coda}</code></td>
+<td>end of the bar</td>
+<td>D.S. al Coda</td>
+</tr>
+</tbody>
+</table>
+<pre><code>{segno}
+| [Am7] | [D7] {to_coda} | [G] | [G7] |
+| [C] | [D7] {ds: al Coda} ||
+</code></pre>
+<h2 id="text-lines">Text lines<a class="headerlink" href="#text-lines">#</a></h2>
+<p><code>{text: First time guitar only}</code> on a line of its own, inside a section, prints a line of text in the sheet at that point: before the music, between two lines or at the end of the section.</p>
+<h2 id="notes-from-musicxml">Notes from MusicXML<a class="headerlink" href="#notes-from-musicxml">#</a></h2>
+<p>Written parts (intros, riffs, heads) are prepared in a notation editor (MuseScore, Dorico, Sibelius…), exported as <strong>MusicXML</strong> and referenced:</p>
+<pre><code>{start_of_intro: Intro}
+{musicxml: intro.musicxml}
+{end_of_intro}
+</code></pre>
+<p><code>{musicxml: head.musicxml | 3-6}</code> uses bars 3 to 6 only. The path is relative to the song's folder. Notes, chords and lyrics from the file are drawn on the staff, transposed along with the rest.</p>
+<h2 id="format-versions">Format versions<a class="headerlink" href="#format-versions">#</a></h2>
+<p><code>{format: v1}</code> declares the version. Additions arrive in the current version without changing the meaning of existing files; should the syntax ever change incompatibly, the app will still read v1 files and offer to upgrade them.</p>
+<hr />
+<p>All the details (layout rules, special cases) are in the <a href="https://github.com/supermariolabs/modernsheet/blob/main/SPEC.md">full specification</a> in the repository (in Italian).</p>
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <p>Modern Sheet · Free software, GPL-3.0 license · <a href="https://github.com/supermariolabs/modernsheet">Code on GitHub</a> · <a href="/en/privacy/">Privacy</a></p>
+  </div>
+</footer>
+</body>
+</html>
