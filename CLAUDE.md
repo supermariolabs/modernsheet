@@ -61,7 +61,8 @@ nella libreria "Modern Sheet" di una nuova installazione).
   di `SPEC.md`.
 - Commit piccoli, uno per funzionalità, messaggio in italiano.
 - **Mai pubblicare `main`** (la cronologia di sviluppo resta locale): su GitHub va solo il ramo `github`, creato da
-  `tools/publish_github.sh` (un commit per pubblicazione con i file di `main`) e spinto con `git push origin github:main`.
+  `tools/publish_github.sh` (un commit per pubblicazione con i file di `main`, più l'etichetta `v<versione>`) e spinto con
+  `git push origin github:main v<versione>`: l'etichetta fa compilare le app desktop (`.github/workflows/release.yml`).
 
 ## Cose da sapere (decisioni già prese)
 

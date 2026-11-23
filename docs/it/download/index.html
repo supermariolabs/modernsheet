@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Download · Modern Sheet</title>
+<meta name="description" content="Scarica Modern Sheet per macOS, Windows e Linux.">
+<link rel="canonical" href="https://modernsheet.app/it/download/">
+<link rel="alternate" hreflang="en" href="https://modernsheet.app/en/download/">
+<link rel="icon" href="/assets/img/favicon.png">
+<link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+<meta property="og:title" content="Download · Modern Sheet">
+<meta property="og:description" content="Scarica Modern Sheet per macOS, Windows e Linux.">
+<meta property="og:image" content="https://modernsheet.app/assets/img/sheet-demo.png">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body class="doc">
+<a class="skip" href="#main">Vai al contenuto</a>
+<header class="top">
+  <div class="wrap bar">
+    <a class="brand" href="/it/"><img src="/assets/img/logo.png" alt="" width="36" height="36">Modern Sheet</a>
+    <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Menu">
+    <label for="nav-toggle" class="nav-button" aria-hidden="true"><span></span><span></span><span></span></label>
+    <nav class="menu">
+      <a href="/it/">Home</a><a href="/it/download/" aria-current="page">Download</a><a href="/it/guida/">Guida all&#x27;app</a><a href="/it/formato/">Il formato .chs</a><a href="/it/chordsheet/">chordsheet.com</a>
+      <a class="lang" href="/en/download/" hreflang="en">English</a>
+      <a class="gh" href="https://github.com/supermariolabs/modernsheet">GitHub</a>
+    </nav>
+  </div>
+</header>
+<main id="main" class="wrap">
+<h1 id="download">Download<a class="headerlink" href="#download">#</a></h1>
+<p>Modern Sheet per computer, nell'ultima versione pubblicata. Le app sono gratuite e libere (licenza GPL-3.0).</p>
+<div class="grid">
+<div class="card">
+<p><span class="ico">🍎</span></p>
+<h3 id="macos">macOS<a class="headerlink" href="#macos">#</a></h3>
+<p>Mac con chip Apple o Intel.</p>
+<p><a class="btn primary" href="https://github.com/supermariolabs/modernsheet/releases/latest/download/ModernSheet-macos.zip">Scarica per macOS</a></p>
+</div>
+<div class="card">
+<p><span class="ico">💻</span></p>
+<h3 id="windows">Windows<a class="headerlink" href="#windows">#</a></h3>
+<p>Windows 10 e 11, 64 bit.</p>
+<p><a class="btn primary" href="https://github.com/supermariolabs/modernsheet/releases/latest/download/ModernSheet-windows.zip">Scarica per Windows</a></p>
+</div>
+<div class="card">
+<p><span class="ico">🐧</span></p>
+<h3 id="linux">Linux<a class="headerlink" href="#linux">#</a></h3>
+<p>x86_64, con GTK 3 (le distribuzioni desktop più diffuse).</p>
+<p><a class="btn primary" href="https://github.com/supermariolabs/modernsheet/releases/latest/download/ModernSheet-linux.tar.gz">Scarica per Linux</a></p>
+</div>
+</div>
+<p>Tutte le versioni, con le novità, sono nella pagina <a href="https://github.com/supermariolabs/modernsheet/releases">Releases</a> del progetto. iPad e Android sono in prova: per ora si provano con l'app <em>Flet</em> (vedi la <a href="/it/guida/">guida</a>).</p>
+<h2 id="installare-e-aprire">Installare e aprire<a class="headerlink" href="#installare-e-aprire">#</a></h2>
+<p>Le app <strong>non sono ancora firmate</strong> con un certificato Apple o Microsoft: al primo avvio il sistema chiede una conferma. È normale per il software distribuito così; il codice è tutto pubblico su <a href="https://github.com/supermariolabs/modernsheet">GitHub</a>.</p>
+<h3 id="macos_1">macOS<a class="headerlink" href="#macos_1">#</a></h3>
+<ol>
+<li>Apri <code>ModernSheet-macos.zip</code>: compare <strong>Modern Sheet.app</strong>. Trascinala in <strong>Applicazioni</strong>.</li>
+<li>Al primo avvio macOS dice che l'app non può essere aperta perché lo sviluppatore non è verificato. Fai <strong>clic destro › Apri</strong> sull'app, poi <strong>Apri</strong>. Se il pulsante non c'è: <em>Impostazioni di Sistema › Privacy e sicurezza</em>, in fondo <strong>Apri comunque</strong>.</li>
+<li>Dal secondo avvio si apre normalmente.</li>
+</ol>
+<p>In alternativa, dal Terminale: <code>xattr -dr com.apple.quarantine "/Applications/Modern Sheet.app"</code>.</p>
+<h3 id="windows_1">Windows<a class="headerlink" href="#windows_1">#</a></h3>
+<ol>
+<li>Estrai <code>ModernSheet-windows.zip</code> in una cartella (per esempio <em>Documenti\Modern Sheet</em>): l'app ha bisogno di tutti i file che contiene.</li>
+<li>Avvia il file <strong>.exe</strong> della cartella.</li>
+<li>Se compare <em>Windows ha protetto il PC</em>, scegli <strong>Ulteriori informazioni › Esegui comunque</strong>.</li>
+</ol>
+<h3 id="linux_1">Linux<a class="headerlink" href="#linux_1">#</a></h3>
+<pre><code>mkdir -p ~/modernsheet &amp;&amp; tar -xzf ModernSheet-linux.tar.gz -C ~/modernsheet
+~/modernsheet/modernsheet
+</code></pre>
+<h2 id="dopo-linstallazione">Dopo l'installazione<a class="headerlink" href="#dopo-linstallazione">#</a></h2>
+<p>Al primo avvio la libreria contiene la cartella <strong>examples</strong> con i brani di esempio. Per iniziare c'è la <a href="/it/guida/">guida all'app</a>; per scrivere i brani, il <a href="/it/formato/">formato .chs</a>.</p>
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <p>Modern Sheet · Software libero, licenza GPL-3.0 · <a href="https://github.com/supermariolabs/modernsheet">Codice su GitHub</a> · <a href="/it/privacy/">Privacy</a></p>
+  </div>
+</footer>
+</body>
+</html>

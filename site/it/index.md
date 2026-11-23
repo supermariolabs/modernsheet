@@ -14,7 +14,8 @@ description: Scrivi accordi in un file di testo, ottieni un lead sheet in stile 
 <p class="lead">Scrivi gli accordi in un formato semplice (<code>.chs</code>) e Modern Sheet li impagina come in un Real Book: pentagramma, sigle, ritornelli, segni, testo. Sullo schermo e in PDF.</p>
 
 <div class="cta">
-<a class="btn primary" href="/it/guida/">Inizia</a>
+<a class="btn primary" href="/it/download/">Scarica</a>
+<a class="btn" href="/it/guida/">Guida</a>
 <a class="btn" href="/it/formato/">Il formato .chs</a>
 <a class="btn" href="{{repo}}">GitHub</a>
 </div>
@@ -110,6 +111,6 @@ Accedi al tuo account, scegli i brani e importali convertiti, con ritornelli, vo
 
 ## Stato del progetto
 
-Modern Sheet è in sviluppo attivo. L'app desktop (macOS, Windows, Linux) funziona e si avvia dai sorgenti; la compilazione per macOS è provata, iPad e Android sono in prova. Non ci sono ancora pacchetti pronti da scaricare: la [guida](/it/guida/) spiega come avviarla.
+Modern Sheet è in sviluppo attivo. Le app per **macOS, Windows e Linux** si [scaricano qui](/it/download/) (non ancora firmate: la pagina spiega come aprirle); iPad e Android sono in prova. Si può anche avviare dai sorgenti, come spiega la [guida](/it/guida/).
 
 Il codice è su [GitHub]({{repo}}) con licenza **GPL-3.0**. Segnalazioni e idee sono benvenute nelle *Issues*.

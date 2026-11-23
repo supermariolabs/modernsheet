@@ -1,7 +1,7 @@
 ---
 title: App guide
 slug: guide
-nav: 2
+nav: 3
 other: guida
 description: How to install and use Modern Sheet: library, editor, PDF, Google Drive sync, import.
 ---
@@ -12,7 +12,7 @@ description: How to install and use Modern Sheet: library, editor, PDF, Google D
 
 ## Running Modern Sheet
 
-There are no ready-made packages yet: the app runs from source, with **Python 3.10 or later**.
+The simplest way is to **download the app** for macOS, Windows or Linux from the [Download](/en/download/) page. Otherwise it runs from source, with **Python 3.10 or later**:
 
 ```
 git clone {{repo}}.git

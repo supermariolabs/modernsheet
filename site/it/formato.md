@@ -1,7 +1,7 @@
 ---
 title: Il formato .chs
 slug: formato
-nav: 3
+nav: 4
 other: format
 description: Riferimento completo del formato .chs di Modern Sheet: intestazione, sezioni, accordi e durate, battute, ritornelli, volte, segni, testo, MusicXML.
 ---

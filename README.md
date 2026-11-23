@@ -91,6 +91,8 @@ pip install -r requirements.txt
 flet run                           # l'app desktop
 ```
 
+Oppure scarica l'app già pronta per macOS, Windows o Linux dalla pagina **[Download](https://modernsheet.app/it/download/)**.
+
 Dalla riga di comando:
 
 ```
@@ -152,9 +154,11 @@ In VS Code: *Python: Select Interpreter* → `.venv`; le configurazioni di avvio
 Lo sviluppo avviene sul ramo locale `main`, che non viene pubblicato. Su GitHub va il ramo `github`: ogni pubblicazione è un solo commit con i file di `main` in quel momento.
 
 ```
-tools/publish_github.sh "Modern Sheet 0.36.0"    # nuovo commit su github con i file di main
-git push origin github:main                       # pubblica come main su GitHub
+tools/publish_github.sh "Modern Sheet 0.36.0"    # nuovo commit su github con i file di main + etichetta v0.36.0
+git push origin github:main v0.36.0               # pubblica; l'etichetta fa partire le build desktop
 ```
+
+Un'etichetta `v…` fa partire `.github/workflows/release.yml`: GitHub compila l'app per macOS (universale), Windows e Linux e la allega a una *Release*; la pagina [Download](https://modernsheet.app/it/download/) del sito punta sempre all'ultima. Per avere Google Drive nelle app compilate, copia il contenuto di `src/google_client.json` nel secret del repository **`GOOGLE_CLIENT_JSON`** (*Settings › Secrets and variables › Actions*).
 
 ### Google Drive: configurazione (una volta sola)
 

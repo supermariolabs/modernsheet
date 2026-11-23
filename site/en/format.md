@@ -1,7 +1,7 @@
 ---
 title: The .chs format
 slug: format
-nav: 3
+nav: 4
 other: formato
 description: Complete reference of the Modern Sheet .chs format: header, sections, chords and durations, bars, repeats, endings, signs, text, MusicXML.
 ---

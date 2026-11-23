@@ -1,7 +1,7 @@
 ---
 title: chordsheet.com
 slug: chordsheet
-nav: 4
+nav: 5
 other: chordsheet
 description: How to import into Modern Sheet the chord sheets made on chordsheet.com (Chord Sheet Maker), from your account or a text file.
 ---

@@ -14,7 +14,8 @@ description: Write chords in a plain text file, get a Real Book style lead sheet
 <p class="lead">Write the chords in a simple format (<code>.chs</code>) and Modern Sheet lays them out like a Real Book: staff, chord symbols, repeats, signs, lyrics. On screen and as PDF.</p>
 
 <div class="cta">
-<a class="btn primary" href="/en/guide/">Get started</a>
+<a class="btn primary" href="/en/download/">Download</a>
+<a class="btn" href="/en/guide/">Guide</a>
 <a class="btn" href="/en/format/">The .chs format</a>
 <a class="btn" href="{{repo}}">GitHub</a>
 </div>
@@ -112,6 +113,6 @@ Log in to your account, pick the songs and import them converted, with repeats, 
 
 ## Project status
 
-Modern Sheet is under active development. The desktop app (macOS, Windows, Linux) works and runs from source; the macOS build is tested, iPad and Android are in testing. There are no ready-made downloads yet: the [guide](/en/guide/) explains how to run it.
+Modern Sheet is under active development. The apps for **macOS, Windows and Linux** can be [downloaded here](/en/download/) (not signed yet: the page explains how to open them); iPad and Android are in testing. It also runs from source, as the [guide](/en/guide/) explains.
 
 The code is on [GitHub]({{repo}}) under the **GPL-3.0** license. Reports and ideas are welcome in the *Issues*.

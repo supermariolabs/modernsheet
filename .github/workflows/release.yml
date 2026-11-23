@@ -1,0 +1,104 @@
+# Desktop builds (flet build) for macOS, Windows and Linux, attached to a GitHub Release.
+# Runs when a version tag (v0.36.0…) is pushed, or by hand from the Actions tab (then only as artifacts).
+# The asset names do not change between versions, so the website can always link to
+# https://github.com/supermariolabs/modernsheet/releases/latest/download/<name>.
+#
+# Google Drive sync needs the app's OAuth client: put the content of src/google_client.json in the
+# repository secret GOOGLE_CLIENT_JSON (Settings › Secrets and variables › Actions). Without it the
+# builds work, but without Google Drive.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write          # create the release and upload its files
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            platform: macos
+            args: --arch arm64 x86_64
+            asset: ModernSheet-macos.zip
+          - os: windows-latest
+            platform: windows
+            args: ""
+            asset: ModernSheet-windows.zip
+          - os: ubuntu-22.04
+            platform: linux
+            args: ""
+            asset: ModernSheet-linux.tar.gz
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Linux build tools
+        if: matrix.platform == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev \
+            libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libsecret-1-dev libmpv-dev
+      - run: pip install -r requirements.txt
+      - name: Google OAuth client (optional secret)
+        shell: bash
+        env:
+          GOOGLE_CLIENT_JSON: ${{ secrets.GOOGLE_CLIENT_JSON }}
+        run: |
+          if [ -n "$GOOGLE_CLIENT_JSON" ]; then
+            printf '%s' "$GOOGLE_CLIENT_JSON" > src/google_client.json
+            echo "Google Drive: client configured"
+          else
+            echo "Google Drive: no GOOGLE_CLIENT_JSON secret, building without it"
+          fi
+      - name: flet build ${{ matrix.platform }}
+        shell: bash
+        env:
+          PYTHONIOENCODING: utf-8
+          PYTHONUTF8: "1"
+        run: flet build ${{ matrix.platform }} ${{ matrix.args }} --yes --no-rich-output --skip-flutter-doctor
+      - name: Package
+        shell: bash
+        run: |
+          mkdir -p dist
+          case "${{ matrix.platform }}" in
+            macos)   (cd build/macos && ditto -c -k --keepParent "Modern Sheet.app" "$GITHUB_WORKSPACE/dist/${{ matrix.asset }}") ;;
+            windows) (cd build/windows && 7z a "$GITHUB_WORKSPACE/dist/${{ matrix.asset }}" . > /dev/null) ;;
+            linux)   tar -C build/linux -czf "dist/${{ matrix.asset }}" . ;;
+          esac
+          ls -la dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.platform }}
+          path: dist/${{ matrix.asset }}
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          name: Modern Sheet ${{ github.ref_name }}
+          files: dist/*
+          generate_release_notes: false
+          body: |
+            App desktop di Modern Sheet ${{ github.ref_name }} · Desktop apps.
+
+            - **macOS** (Apple Silicon e Intel): `ModernSheet-macos.zip`
+            - **Windows** (64 bit): `ModernSheet-windows.zip`
+            - **Linux** (x86_64): `ModernSheet-linux.tar.gz`
+
+            Le app non sono firmate: istruzioni per aprirle su https://modernsheet.app/it/download/ (English: https://modernsheet.app/en/download/).

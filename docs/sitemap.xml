@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://modernsheet.app/it/chordsheet/</loc></url>
+  <url><loc>https://modernsheet.app/it/download/</loc></url>
   <url><loc>https://modernsheet.app/it/formato/</loc></url>
   <url><loc>https://modernsheet.app/it/guida/</loc></url>
   <url><loc>https://modernsheet.app/it/</loc></url>
   <url><loc>https://modernsheet.app/it/privacy/</loc></url>
   <url><loc>https://modernsheet.app/en/chordsheet/</loc></url>
+  <url><loc>https://modernsheet.app/en/download/</loc></url>
   <url><loc>https://modernsheet.app/en/format/</loc></url>
   <url><loc>https://modernsheet.app/en/guide/</loc></url>
   <url><loc>https://modernsheet.app/en/</loc></url>
