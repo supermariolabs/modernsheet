@@ -45,6 +45,9 @@ jobs:
         if: matrix.platform == 'linux'
         run: |
           sudo apt-get update
+          # libgstreamer1.0-dev needs libunwind-dev, which clashes with the runner's libunwind-14-dev:
+          # installing it first resolves the conflict
+          sudo apt-get install -y libunwind-dev
           sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev \
             libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libsecret-1-dev libmpv-dev
       - run: pip install -r requirements.txt
