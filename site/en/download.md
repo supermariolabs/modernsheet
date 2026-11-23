@@ -3,12 +3,12 @@ title: Download
 slug: download
 nav: 2
 other: download
-description: Download Modern Sheet for macOS, Windows and Linux.
+description: Download Modern Sheet for macOS, Windows, Linux and Android.
 ---
 
 # Download
 
-Modern Sheet for computers, in the latest published version. The apps are free and open source (GPL-3.0 license).
+Modern Sheet for computers and Android, in the latest published version. The apps are free and open source (GPL-3.0 license).
 
 <div class="grid" markdown="1">
 <div class="card" markdown="1"><span class="ico">🍎</span>
@@ -29,9 +29,15 @@ x86_64, with GTK 3 (the most common desktop distributions).
 
 <a class="btn primary" href="{{repo}}/releases/latest/download/ModernSheet-linux.tar.gz">Download for Linux</a>
 </div>
+<div class="card" markdown="1"><span class="ico">🤖</span>
+### Android
+64-bit phones and tablets (APK). **Experimental**: not much tested yet.
+
+<a class="btn primary" href="https://drive.google.com/file/d/1vwZ0EVc03DHRL17h8emCMKTPHOiS09Ye/view?usp=sharing">Download for Android</a>
+</div>
 </div>
 
-Every version, with its changes, is on the project's [Releases]({{repo}}/releases) page. iPad and Android are in testing: for now you can try them with the *Flet* app (see the [guide](/en/guide/)).
+Every version, with its changes, is on the project's [Releases]({{repo}}/releases) page. The iPad app is in testing: for now you can try it with the *Flet* app (see the [guide](/en/guide/)).
 
 ## Installing and opening
 
@@ -57,6 +63,14 @@ Or, from the Terminal: `xattr -dr com.apple.quarantine "/Applications/Modern She
 mkdir -p ~/modernsheet && tar -xzf ModernSheet-linux.tar.gz -C ~/modernsheet
 ~/modernsheet/modernsheet
 ```
+
+### Android
+
+1. Download the APK on the device: the button opens Google Drive, then tap **Download**.
+2. Open the downloaded file. The first time, Android asks to allow *Install unknown apps* for the app you open it from (Drive, Files, Chrome…): allow it and go back.
+3. If Play Protect warns that the app is unknown, choose **Install anyway**.
+
+The APK is for 64-bit devices, which means nearly all recent ones. Updates install over the previous version, keeping the library.
 
 ## After installing
 

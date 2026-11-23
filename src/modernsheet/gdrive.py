@@ -14,6 +14,12 @@ of earlier versions also work) or from a
 JSON file kept out of version control (see client_config). The refresh token is stored in the
 app's data folder (file readable by the user only).
 
+The client secret is NOT confidential: the device flow requires it, so it ships inside every built app
+(desktop packages, APK) and can be extracted. Google treats installed-app secrets this way. Whoever
+extracts it can only pose as this app and use its quota; user data still needs each user's consent,
+drive.file limits access to the app's own files and tokens stay on the device. On abuse: rotate the
+secret in the Cloud Console and release a new build (SPEC.md §8.3b).
+
 All HTTP goes through a `Transport` (callable), replaced by a fake Drive in the tests.
 """
 from __future__ import annotations

@@ -3,12 +3,12 @@ title: Download
 slug: download
 nav: 2
 other: download
-description: Scarica Modern Sheet per macOS, Windows e Linux.
+description: Scarica Modern Sheet per macOS, Windows, Linux e Android.
 ---
 
 # Download
 
-Modern Sheet per computer, nell'ultima versione pubblicata. Le app sono gratuite e libere (licenza GPL-3.0).
+Modern Sheet per computer e Android, nell'ultima versione pubblicata. Le app sono gratuite e libere (licenza GPL-3.0).
 
 <div class="grid" markdown="1">
 <div class="card" markdown="1"><span class="ico">🍎</span>
@@ -29,9 +29,15 @@ x86_64, con GTK 3 (le distribuzioni desktop più diffuse).
 
 <a class="btn primary" href="{{repo}}/releases/latest/download/ModernSheet-linux.tar.gz">Scarica per Linux</a>
 </div>
+<div class="card" markdown="1"><span class="ico">🤖</span>
+### Android
+Telefoni e tablet a 64 bit (APK). **Sperimentale**: ancora poco provato.
+
+<a class="btn primary" href="https://drive.google.com/file/d/1vwZ0EVc03DHRL17h8emCMKTPHOiS09Ye/view?usp=sharing">Scarica per Android</a>
+</div>
 </div>
 
-Tutte le versioni, con le novità, sono nella pagina [Releases]({{repo}}/releases) del progetto. iPad e Android sono in prova: per ora si provano con l'app *Flet* (vedi la [guida](/it/guida/)).
+Tutte le versioni, con le novità, sono nella pagina [Releases]({{repo}}/releases) del progetto. L'app per iPad è in prova: per ora si prova con l'app *Flet* (vedi la [guida](/it/guida/)).
 
 ## Installare e aprire
 
@@ -57,6 +63,14 @@ In alternativa, dal Terminale: `xattr -dr com.apple.quarantine "/Applications/Mo
 mkdir -p ~/modernsheet && tar -xzf ModernSheet-linux.tar.gz -C ~/modernsheet
 ~/modernsheet/modernsheet
 ```
+
+### Android
+
+1. Scarica l'APK dal dispositivo: il pulsante apre Google Drive, da lì **Scarica**.
+2. Apri il file scaricato. La prima volta Android chiede di consentire *Installa app sconosciute* all'app da cui lo apri (Drive, File, Chrome…): consenti e torna indietro.
+3. Se Play Protect avvisa che l'app è sconosciuta, scegli **Installa comunque**.
+
+L'APK è per i dispositivi a 64 bit, cioè quasi tutti quelli degli ultimi anni. Gli aggiornamenti si installano sopra la versione precedente, senza perdere la libreria.
 
 ## Dopo l'installazione
 

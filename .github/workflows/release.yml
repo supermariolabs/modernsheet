@@ -5,7 +5,10 @@
 #
 # Google Drive sync needs the app's OAuth client: put the content of src/google_client.json in the
 # repository secret GOOGLE_CLIENT_JSON (Settings › Secrets and variables › Actions). Without it the
-# builds work, but without Google Drive.
+# builds work, but without Google Drive. The GitHub secret only keeps the file out of the repository:
+# the client id and secret end up inside every published app, where anyone can extract them. That is
+# expected for installed apps (Google's device flow requires the secret, and Google treats installed-app
+# secrets as non-confidential); it gives no access to users' data. See SPEC.md §8.3b.
 name: Release
 
 on:

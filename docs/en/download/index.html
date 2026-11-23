@@ -4,13 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Download · Modern Sheet</title>
-<meta name="description" content="Download Modern Sheet for macOS, Windows and Linux.">
+<meta name="description" content="Download Modern Sheet for macOS, Windows, Linux and Android.">
 <link rel="canonical" href="https://modernsheet.app/en/download/">
 <link rel="alternate" hreflang="it" href="https://modernsheet.app/it/download/">
 <link rel="icon" href="/assets/img/favicon.png">
 <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
 <meta property="og:title" content="Download · Modern Sheet">
-<meta property="og:description" content="Download Modern Sheet for macOS, Windows and Linux.">
+<meta property="og:description" content="Download Modern Sheet for macOS, Windows, Linux and Android.">
 <meta property="og:image" content="https://modernsheet.app/assets/img/sheet-demo.png">
 <link rel="stylesheet" href="/assets/style.css">
 </head>
@@ -31,7 +31,7 @@
 </header>
 <main id="main" class="wrap">
 <h1 id="download">Download<a class="headerlink" href="#download">#</a></h1>
-<p>Modern Sheet for computers, in the latest published version. The apps are free and open source (GPL-3.0 license).</p>
+<p>Modern Sheet for computers and Android, in the latest published version. The apps are free and open source (GPL-3.0 license).</p>
 <div class="grid">
 <div class="card">
 <p><span class="ico">🍎</span></p>
@@ -51,8 +51,14 @@
 <p>x86_64, with GTK 3 (the most common desktop distributions).</p>
 <p><a class="btn primary" href="https://github.com/supermariolabs/modernsheet/releases/latest/download/ModernSheet-linux.tar.gz">Download for Linux</a></p>
 </div>
+<div class="card">
+<p><span class="ico">🤖</span></p>
+<h3 id="android">Android<a class="headerlink" href="#android">#</a></h3>
+<p>64-bit phones and tablets (APK). <strong>Experimental</strong>: not much tested yet.</p>
+<p><a class="btn primary" href="https://drive.google.com/file/d/1vwZ0EVc03DHRL17h8emCMKTPHOiS09Ye/view?usp=sharing">Download for Android</a></p>
 </div>
-<p>Every version, with its changes, is on the project's <a href="https://github.com/supermariolabs/modernsheet/releases">Releases</a> page. iPad and Android are in testing: for now you can try them with the <em>Flet</em> app (see the <a href="/en/guide/">guide</a>).</p>
+</div>
+<p>Every version, with its changes, is on the project's <a href="https://github.com/supermariolabs/modernsheet/releases">Releases</a> page. The iPad app is in testing: for now you can try it with the <em>Flet</em> app (see the <a href="/en/guide/">guide</a>).</p>
 <h2 id="installing-and-opening">Installing and opening<a class="headerlink" href="#installing-and-opening">#</a></h2>
 <p>The apps are <strong>not signed yet</strong> with an Apple or Microsoft certificate: on first start the system asks for a confirmation. This is normal for software distributed this way; all the code is public on <a href="https://github.com/supermariolabs/modernsheet">GitHub</a>.</p>
 <h3 id="macos_1">macOS<a class="headerlink" href="#macos_1">#</a></h3>
@@ -72,6 +78,13 @@
 <pre><code>mkdir -p ~/modernsheet &amp;&amp; tar -xzf ModernSheet-linux.tar.gz -C ~/modernsheet
 ~/modernsheet/modernsheet
 </code></pre>
+<h3 id="android_1">Android<a class="headerlink" href="#android_1">#</a></h3>
+<ol>
+<li>Download the APK on the device: the button opens Google Drive, then tap <strong>Download</strong>.</li>
+<li>Open the downloaded file. The first time, Android asks to allow <em>Install unknown apps</em> for the app you open it from (Drive, Files, Chrome…): allow it and go back.</li>
+<li>If Play Protect warns that the app is unknown, choose <strong>Install anyway</strong>.</li>
+</ol>
+<p>The APK is for 64-bit devices, which means nearly all recent ones. Updates install over the previous version, keeping the library.</p>
 <h2 id="after-installing">After installing<a class="headerlink" href="#after-installing">#</a></h2>
 <p>On first start the library holds the <strong>examples</strong> folder with the example songs. To get started there is the <a href="/en/guide/">app guide</a>; to write songs, the <a href="/en/format/">.chs format</a>.</p>
 </main>
