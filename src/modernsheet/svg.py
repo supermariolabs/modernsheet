@@ -9,6 +9,7 @@ from .screen import screen_ops
 
 
 def page_svg(dl: DisplayList, page_index: int, metrics, scale: float = 1.0) -> str:
+    """One page as an SVG document, from the same screen operations as the Flet backend."""
     W, H = dl.page_size[0] * scale, dl.page_size[1] * scale
     out = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{W:.1f}" height="{H:.1f}" viewBox="0 0 {W:.2f} {H:.2f}">',
            f'<rect width="{W:.2f}" height="{H:.2f}" fill="#ffffff"/>']

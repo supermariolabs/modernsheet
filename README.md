@@ -50,7 +50,7 @@ Scrivi gli accordi in un formato di testo leggibile (`.chs`) e Modern Sheet li i
 **L'app** (Flet: macOS, Windows, Linux; iPad e Android in prova)
 - Libreria con card, gruppi A–Z, ordinamenti, cartelle (con rinomina), ricerca con `A*`, `*testo*`, `#tag`, `&`, `|`.
 - Modalità vista, schermo intero per il palco, pagine girate con tastiera o pedaliera.
-- Editor scuro con evidenziazione, suggerimenti delle direttive, schede per i MusicXML (con indentazione e battute comprimibili), anteprima dal vivo.
+- Editor scuro con evidenziazione, parti modificate in verde fino al salvataggio, annulla/ripristina, suggerimenti delle direttive, schede per i MusicXML in sola lettura (con conversione in note nel `.chs`), anteprima dal vivo.
 - Sincronizzazione **local-first** con Google Drive o con una cartella (iCloud, Dropbox…): funziona offline, non perde nulla.
 - Importazione dal tuo account **chordsheet.com** e di singoli file `.chs`.
 - Interfaccia in italiano e inglese.

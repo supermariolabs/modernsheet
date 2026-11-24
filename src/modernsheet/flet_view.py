@@ -14,6 +14,9 @@ FLET_FONTS = {name: f"fonts/{file}" for name, file in FONT_FILES.items()}   # re
 
 
 def page_shapes(dl: DisplayList, page_index: int, metrics, scale: float = 1.0) -> list:
+    """Canvas shapes for one page at `scale` pixels per point (screen_ops does the conversion).
+    Filled and stroked shapes are two shapes, as Flet paints have one style each; flet is imported
+    here so the engine stays importable without it (CLI, tests)."""
     import flet as ft
     import flet.canvas as cv
 

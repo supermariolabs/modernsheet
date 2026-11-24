@@ -220,6 +220,9 @@ class DriveProvider:
     # ---- HTTP
     def _call(self, method: str, url: str, params: dict | None = None, body: bytes | None = None,
               content_type: str | None = None) -> Response:
+        """One Drive API request. A 401 is retried once with a refreshed access token (they expire
+        after an hour, and the expiry time is not always reliable); a second 401 means the user
+        revoked access and must sign in again (AuthError)."""
         if params:
             url += "?" + urllib.parse.urlencode(params)
         for attempt in (0, 1):
@@ -240,6 +243,8 @@ class DriveProvider:
         return self._call("GET", f"{API}/about", {"fields": "user(emailAddress,displayName)"}).json().get("user", {})
 
     def _ensure_root(self) -> str:
+        """Id of the app's folder in the Drive root, created if missing. A folder created here sets
+        `fresh`: the sync must then treat the remote as new, not as "everything was deleted"."""
         if self.root_id:
             return self.root_id
         q = f"name='{_q(self.root_name)}' and mimeType='{FOLDER_MIME}' and 'root' in parents and trashed=false"
@@ -258,6 +263,12 @@ class DriveProvider:
 
     # ---- Provider interface
     def list(self) -> dict[str, RemoteFile]:
+        """Every synced file under the app's folder, with its MD5 as revision.
+
+        With drive.file the API cannot list "the children of a folder, recursively" cheaply, so it
+        lists every non-trashed file the app can see (only its own: drive.file) and rebuilds the
+        paths from the parents. Drive allows two files with the same name in one folder (two
+        devices uploading at the same moment): only the most recent one is used."""
         if self.root_id and self.root_id not in self._live_folders():
             self.root_id = None                # renamed, moved or deleted since the last sync
         root = self._ensure_root()
@@ -311,6 +322,8 @@ class DriveProvider:
         return self._call("GET", f"{API}/files/{self.files[rel]['id']}", {"alt": "media"}).body
 
     def _check(self, rel: str, expected: str | None) -> None:
+        """Raise RemoteChanged if the file on Drive is no longer the revision the sync decided on.
+        Drive has no conditional writes, so the checksum is read again just before writing."""
         if rel not in self.files:
             if expected is not None:
                 raise RemoteChanged(rel)
@@ -344,11 +357,13 @@ class DriveProvider:
             r = self._call("POST", f"{UPLOAD}/files", {"uploadType": "multipart", "fields": "id,md5Checksum"},
                            body, f"multipart/related; boundary={boundary}")
         d = r.json()
+        # Drive may answer before it has computed the checksum: the local MD5 of what was sent is the same
         md5 = d.get("md5Checksum") or hashlib.md5(data).hexdigest()
         self.files[rel] = {"id": d["id"], "md5": md5}
         return md5
 
     def delete(self, rel: str, expected_rev: str | None) -> None:
+        """Move the file to Drive's trash (recoverable for 30 days), never a permanent deletion."""
         self._check(rel, expected_rev)
         self._call("PATCH", f"{API}/files/{self.files[rel]['id']}", {"fields": "id"},
                    json.dumps({"trashed": True}).encode("utf-8"), "application/json")

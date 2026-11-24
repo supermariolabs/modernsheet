@@ -121,6 +121,9 @@ class Style:
 
 
 def natural_count(sig: int, prev: int | None) -> int:
+    """How many naturals cancel the previous key signature at a key change: all of the old signs
+    when the new key is C or changes between sharps and flats, else only those the new key drops
+    (from 3 flats to 1 flat: 2 naturals)."""
     if not prev:
         return 0
     if sig == 0 or (prev > 0) != (sig > 0):
@@ -707,6 +710,14 @@ class Layout:
             self.volta_carry = True
 
     def note_accidentals(self, notes: list[Note], key: str) -> dict:
+        """Accidentals to draw in one bar: {id(note): "sharp" | "flat" | "natural"}.
+
+        The notes carry their real pitch (alter), not what is printed: what to print is decided here,
+        as an engraver would. A note needs a sign only when its alteration differs from what is "in
+        force" for that step and octave: the key signature, or an earlier accidental of the same bar
+        (it lasts until the barline). A tied continuation never repeats the sign, but it does set the
+        state, so a later note of the same pitch in the bar needs no sign either. This is why
+        writing `Bb` in F prints nothing and `B` (or `Bn`) prints a natural (SPEC §2.12b)."""
         sig = key_signature(key)
         default = {s: 0 for s in STEPS}
         for s in ("FCGDAEB"[:sig] if sig > 0 else ""):
@@ -726,6 +737,9 @@ class Layout:
         return out
 
     def notation_need(self, b: Bar) -> float:
+        """Smallest readable width of a notated bar: room per onset (more with an accidental or a dot)
+        or the width of its chord symbols, whichever is larger. The grid uses it to give a crowded
+        bar two or more slots instead of squeezing it (bar_need / slots)."""
         notes = b.notation.notes
         acc = self.note_accidentals(notes, b.key)
         need = 10.0
@@ -757,11 +771,24 @@ class Layout:
         c.drawPath(p, stroke=1, fill=1)
 
     def flush_ties(self, x_end):
+        """Close the ties still open at the end of a row with an arc to the row's end: a tie that
+        crosses a line break is drawn as two halves, like in printed music (the continuation on the
+        next row gets its own short arc, see draw_notation)."""
         for (x1, y, below) in self.pending_ties.values():
             self.tie_arc(x1, x_end, y, below)
         self.pending_ties = {}
 
     def draw_notation(self, b: Bar, ax, right, top):
+        """Draw the notes of a notated bar (MusicXML or {start_of_notes}) between x = ax and x = right
+        on the staff whose top line is at `top`.
+
+        Steps: horizontal spacing (one column per onset), stems grouped with their stacked notes,
+        beam groups, stem directions and lengths, then either the staff drawing (heads, ledger
+        lines, accidentals, dots, ties, stems, flags, beams, tuplets) or, in "tab" mode, the
+        tablature with the rhythm under it. Chord symbols and lyrics are not drawn here: they are
+        collected for draw_row, which puts all those of a row on one line (SPEC §4.8). The row's
+        vertical extent (row_hi / row_lo) is updated so that row keeps clear of the notes.
+        `hw` below is the width of a (black) notehead glyph: stems, dots and ledger lines hang on it."""
         c, sp, th = self.c, self.SP, self.th
         notes = b.notation.notes
         bottom = top - self.STAFF_H
@@ -770,6 +797,10 @@ class Layout:
         acc = self.note_accidentals(notes, b.key)
 
         # ---- horizontal spacing: one column per onset (notes and chord symbols)
+        # Engraving rule: space grows with duration, but much less than proportionally (a half note
+        # does not take twice a quarter's room), hence duration ** 0.6 plus a fixed part so even
+        # sixteenths stay readable; an accidental or a dot asks for a little more. Chord symbols
+        # that fall between notes get a column too, so they are never placed over the wrong note.
         times = sorted({n.start for n in notes if not n.chord} | {e.start for e in b.events if e.chord})
         if not times:
             return
@@ -786,6 +817,8 @@ class Layout:
         for t, w in zip(times, weights):
             xs[t] = ax + 2 + usable * acc_w / sum(weights)
             acc_w += w
+        # an accidental on the first note would touch the barline (or the key signature): move the
+        # notes right by up to 5 pt, fading to nothing at the end of the bar so its total width holds
         first_acc = any(id(n) in acc for n in notes if n.start == times[0])
         if first_acc:
             for t in xs:
@@ -799,7 +832,9 @@ class Layout:
             else:
                 stems.append({"n": n, "heads": [n]})
 
-        # beam groups (from the file; else auto-beam eighths/16ths within each beat)
+        # beam groups: the beams written in the notes (MusicXML <beam>, or notes.beam_bar for notes
+        # written in the .chs); a MusicXML file without any falls back to one group per beat.
+        # Quarter notes and longer, and rests, always break a group; a "group" of one is a flag.
         has_beams = any(s["n"].beams for s in stems)
         groups, cur = [], []
         for s in stems:
@@ -828,7 +863,9 @@ class Layout:
         groups = [g for g in groups if len(g) > 1]
         in_group = {id(s): g for g in groups for s in g}
 
-        # stem direction and natural tips
+        # stem direction and natural tips. Positions count staff steps from the bottom line (E4 = 0);
+        # 4 is the middle line: notes below it get the stem up, as in any engraving manual. A beamed
+        # group takes one direction for all its notes (the average), or the beam would zigzag.
         for s in stems:
             n = s["n"]
             s["x"] = xs[n.start]
@@ -846,12 +883,17 @@ class Layout:
             if s["n"].step is None or s["n"].type == "whole":
                 continue
             up = s["up"]
+            # stem on the right edge of the head going up, on the left going down; the 0.45 pt keeps
+            # it inside the glyph's outline. Length: 3.5 spaces from the farthest head (the standard)
             s["stem_x"] = s["x"] + (hw - 0.45 if up else 0.45)
             s["base_y"] = (min(s["ys"]) if up else max(s["ys"]))
             far = max(s["ys"]) if up else min(s["ys"])
             s["tip"] = far + (3.5 * sp if up else -3.5 * sp)
 
-        # beams: straight line between end tips, slope limited, every stem >= 2.75 spaces
+        # beams: straight line between end tips, slope limited, every stem >= 2.75 spaces.
+        # The slope follows the first and last note but is capped (0.12): steep beams read badly.
+        # A capped or straight beam may then pass too close to (or through) an inner head, so the
+        # whole beam is shifted away from the heads until every stem is at least 2.75 spaces long.
         for g in groups:
             up = g[0]["up"]
             x0, x1 = g[0]["stem_x"], g[-1]["stem_x"]
@@ -886,6 +928,8 @@ class Layout:
             for s in stems:
                 n, x = s["n"], s["x"]
                 if n.step is None:
+                    # a whole-bar rest is centred in the bar (in any time signature, as printed music
+                    # does), hanging from the 4th line; other rests sit in their column
                     if n.measure_rest or (n.type == "whole" and len(stems) == 1):
                         gx = (ax + right) / 2 - 5
                         self.nglyph(gx, top - sp, self.REST_GLYPHS["whole"])
@@ -908,11 +952,14 @@ class Layout:
                         aw = self.metrics.stringWidth(g, "Petaluma", self.STAFF_H)
                         self.nglyph(x - aw - 0.25 * sp, y, g)
                     for k in range(h.dots):
-                        dy = sp / 2 if pos % 2 == 0 else 0
+                        dy = sp / 2 if pos % 2 == 0 else 0      # a head on a line: its dot goes up into the space
                         c.setFillColorRGB(*ink)
                         c.circle(x + hw + (0.55 + 0.5 * k) * sp, y + dy, 0.22 * sp, stroke=0, fill=1)
                     hi, lo = max(hi, y + sp), min(lo, y - sp)
-                    # ties
+                    # ties: the start is remembered by pitch (pending_ties) because the end is often in
+                    # the next bar, drawn by another call; it is closed here at the continuation. A
+                    # continuation without a start is the second half of a tie broken by a line
+                    # change (the first half was closed by flush_ties): a short arc from the left.
                     key_ = h.midi
                     if h.tie_stop:
                         if key_ in self.pending_ties:
@@ -952,6 +999,8 @@ class Layout:
                     c.drawPath(p, stroke=0, fill=1)
 
                 beam(g[0]["stem_x"] - 0.4, g[-1]["stem_x"] + 0.4, 0)
+                # second beam for sixteenths: joined between neighbouring sixteenths; a lone one in
+                # an eighth group gets a short stub (a "broken beam") pointing to its beat partner
                 for i, s in enumerate(g):
                     if s["n"].type != "16th":
                         continue
@@ -967,6 +1016,9 @@ class Layout:
                             beam(s["stem_x"] - stub, s["stem_x"], 1)
 
             # ---- tuplets: SMuFL digit over the beam, or a bracket when not all beamed together
+            # A group runs from a tuplet start to its stop. Many MusicXML exports mark only the time
+            # modification on each note, without <tuplet> start/stop: then a group closes once its
+            # notes fill the "normal" span (3 eighths of a triplet = the time of 2 eighths).
             tgroups, curt = [], []
             for s in stems:
                 n = s["n"]
@@ -1022,6 +1074,9 @@ class Layout:
                     lo = min(lo, y - 0.3 * sp)
 
         # ---- chord symbols above, lyrics below
+        # One size for all the chord symbols of the bar: the largest at which each fits before the
+        # next one, never under chord_min_size (a bar whose chords still do not fit got more slots
+        # from the grid). Mixed sizes in one bar looked like a mistake.
         chords = [e for e in b.events if e.chord]
         size = th.chord_size
         for i, e in enumerate(chords):
@@ -1099,10 +1154,13 @@ class Layout:
                 if h.fret is None:
                     continue
                 y = tab_top - (self.tab_n - 1 - h.string) * sp
-                label = f"({h.fret})" if h.tie_stop else str(h.fret)
+                label = f"({h.fret})" if h.tie_stop else str(h.fret)    # tied: not played again
+                # the number sits on its line on a small white patch that interrupts the line
                 w = self.text_width(label, th.text, size)
                 self.knockout(cx - w / 2 - 1, y - size * 0.4, w + 2, size * 0.8)
                 self.text(cx - w / 2, y - size * 0.34, label, th.text, size, th.ink)
+            # "tab" mode: the rhythm under the lines, as in printed guitar books: a short stem for
+            # half notes, a longer one for quarters and shorter values, nothing for whole notes
             if rhythm and n.type != "whole":
                 length = 8 if n.type == "half" else 12
                 c.setStrokeColorRGB(*th.ink)
@@ -1185,6 +1243,8 @@ class Layout:
 
     # -- layout --------------------------------------------------------------
     def prefix_width(self, row, first_row):
+        """Room at the start of a row before its first bar: clef, key signature (with the naturals of
+        a key change) and, on the first row or at a time change, the time signature."""
         b0 = row[0]
         prev = key_signature(b0.prev_key) if b0.key_change else None
         w = (24 if self.th.smufl else 22) + 2 + self.key_signature_width(key_signature(b0.key), prev) + 2
@@ -1193,6 +1253,8 @@ class Layout:
         return w
 
     def bar_extra(self, b: Bar, first_in_row: bool) -> float:
+        """Room a bar needs besides its content: padding, a repeat sign, and a key or time change in
+        the middle of a row (at the start of a row they are part of prefix_width instead)."""
         extra = 7 + (8 if b.repeat_start else 0)
         if not first_in_row and b.key_change:
             extra += self.key_signature_width(key_signature(b.key), key_signature(b.prev_key))
@@ -1201,7 +1263,11 @@ class Layout:
         return extra
 
     def bar_need(self, b: Bar, first_in_row: bool = False) -> float:
-        """Width needed so every chord fits at chord_fit_size without overlapping."""
+        """Width needed so every chord fits at chord_fit_size without overlapping.
+
+        Chords take room in proportion to their duration (a chord on beat 3 starts half way), so the
+        need is the widest chord per beat times the beats: a long name on a short beat dictates the
+        width of the whole bar. Short durations count as at least half a beat."""
         if b.notation:
             return self.bar_extra(b, first_in_row) + (12 if b.repeat_end else 3) + self.notation_need(b)
         chords = [e for e in b.events if e.chord]
@@ -1220,6 +1286,14 @@ class Layout:
         return max(1, min(capacity, math.ceil(self.bar_need(b) / self.uniform_bw - 1e-6)))
 
     def build_rows(self, sec: Section):
+        """Split a section's bars into rows. Returns (rows, bars per line).
+
+        uniform: each bar costs its slots and a row holds `bpl` slots. fit: each bar costs what it
+        really needs and a row holds the page width; it also closes at `bpl` bars. A row that closes
+        only because the next bar does not fit is remembered in full_rows: it is then stretched to
+        the margin (bar_widths), while a row ended by {br}, a section end or a later ending keeps
+        its natural widths. A 2nd (3rd…) ending always starts a line of its own, right-aligned under
+        the 1st (right_rows), and nothing else joins it (SPEC §2.7)."""
         bpl = sec.bars_per_line or self.bpl_default
         rows, row, used = [], [], 0.0
         fit_avail = self.page_w - 2 * self.st.margin - 60
@@ -1251,12 +1325,18 @@ class Layout:
         return rows, bpl
 
     def section_notation(self, sec: Section) -> str:
+        """staff / both / tab for a section: the viewer's forced choice, else the section's own
+        {notation}, else the song's (or the app option)."""
         if self.notation_force:
             return self.song_notation
         return sec.notation if sec.notation in NOTATIONS else self.song_notation
 
     def assign_tab(self):
-        """String and fret for the notes of every run of consecutive notated bars (tab.py)."""
+        """String and fret for the notes of every run of consecutive notated bars (tab.py).
+
+        The fingering is chosen per run, not per bar: hand position carries over from bar to bar, so
+        a riff is played in one place instead of jumping each barline. A bar of chords only breaks
+        the run (the hand is free again). Warnings are added once, even if a run repeats them."""
         capo = int(self.song.meta.get("capo", "0")) if str(self.song.meta.get("capo", "0")).strip().isdigit() else 0
         seen = set(self.song.warnings)
         for sec in self.song.sections:
@@ -1277,6 +1357,12 @@ class Layout:
         return sec.bar_width if sec.bar_width in ("uniform", "fit") else self.song_bar_width
 
     def plan(self):
+        """Rows of every section, before drawing anything.
+
+        All uniform sections share one grid, so their bars line up down the page: the bar width is
+        (page width − widest row prefix) / most bars per line. The widest prefix depends on the rows
+        (a key change at the start of a row widens it) and the rows depend on the bar width, so the
+        two are computed again until the prefix no longer changes (in practice 1–2 rounds)."""
         self.right_rows = set()
         self.full_rows: set[int] = set()        # fit rows that wrapped because the next bar did not fit
         # the grid (uniform bar width, aligned columns) is shared by all the uniform sections
@@ -1300,6 +1386,10 @@ class Layout:
             self.max_prefix = new_prefix
 
     def bar_widths(self, row, bpl, x):
+        """Widths of the bars of a row starting at x. uniform: slots × grid width. fit: proportional
+        to the beats (a 2/4 bar half as wide as a 4/4 one), never below a bar's need; a full row (bpl
+        bars, or closed for lack of room) is stretched to the right margin by share(), a short last
+        row keeps its natural widths instead of being spread out."""
         avail = self.page_w - self.st.margin - x
         if self.bar_width == "uniform":
             widths = [self.uniform_bw * self.slots(b, bpl) for b in row]
@@ -1333,6 +1423,7 @@ class Layout:
 
     # -- drawing -------------------------------------------------------------
     def run(self) -> DisplayList:
+        """Lay out the whole song: plan the rows, then draw header, sections and rows page by page."""
         self.plan()
         self.header()
         first_row = True
@@ -1403,6 +1494,13 @@ class Layout:
         self.y -= self.st.section_height
 
     def draw_row(self, row, bpl, first_row, is_last_row):
+        """Draw one row: the row start (clef, key, time; or TAB; or nothing for a later ending),
+        the staff (or tablature lines), each bar, barlines and repeats, then what is shared by the
+        whole row: ties across the line end, chord symbols and lyrics of notated bars on a single
+        line, the "both" tablature underneath, endings and navigation marks above.
+
+        The vertical room above the staff (`top`) is reserved first from what the row contains
+        (notes above the staff, endings, marks), so nothing overlaps the row above."""
         has_volta = self.row_has_volta(row)
         mark_room = self.mark_room(row)
         row_top = self.y
@@ -1422,7 +1520,8 @@ class Layout:
         left = L
         if id(b0) in self.right_rows:
             # 2nd ending: right-aligned under the 1st, drawn as bare bars (no clef/key);
-            # the space on the left stays blank
+            # the space on the left stays blank. It aligns with where the 1st ending's row really
+            # ended (volta1_end), not with the margin: in fit mode that row may be shorter.
             full_end = (x + self.uniform_bw * bpl) if self.bar_width == "uniform" else self.page_w - self.st.margin
             if getattr(self, "volta1_end", None):
                 full_end = self.volta1_end
@@ -1469,7 +1568,10 @@ class Layout:
                 self.tab_barline(bx1 - (1.6 if b.repeat_end else 0), top - self.STAFF_H, top - self.TAB_H)
         self.flush_ties(bx1 - 2)          # a tie that crosses the end of the line
         self.draw_ties(x - 8, bx1 - 4)    # ties between chord symbols ([C~]); a carried one starts by the key
-        if self.row_chords:                # notated bars: one baseline for every chord symbol of the row
+        # notated bars: one baseline for every chord symbol of the row, above its highest note, and one
+        # for the lyrics, below its lowest note. Placing them per bar made a wavy line that was hard to
+        # read (SPEC §4.8, "una sola linea per riga")
+        if self.row_chords:
             chord_y = max(top + 10, self.row_hi + 5)
             for cx, chord, size in self.row_chords:
                 self.draw_chord(cx, chord_y, chord, size)
@@ -1486,6 +1588,9 @@ class Layout:
             self.draw_marks(row, spans, top + 8 if self.marks_low(row) else row_top - mark_room + 5)
 
     def draw_bar(self, b: Bar, bx0, bx1, top, first_in_row):
+        """Draw one bar between bx0 and bx1: repeat start, a key or time change inside the row, then
+        either its notes (draw_notation) or its chord symbols placed by beat, with rhythm slashes,
+        annotations, fermatas and lyrics; a bar without chords is a continuation and shows %."""
         th = self.th
         ax = bx0 + 7
         if b.repeat_start:
@@ -1522,6 +1627,8 @@ class Layout:
             ex = ax + e.start * cell - 1
             if e.chord:
                 w = self.event_width(e, size)
+                # chords sit on the middle of the staff (Real Book style): a white patch hides the
+                # staff lines under the symbol so it stays readable
                 self.knockout(ex - 1.5, mid - size * 0.5, w + 3, size * 1.05)
                 xr = self.draw_event(ex, mid - size * 0.34, e, size)
                 self.row_events.append((e, ex, xr, mid + size * 0.55))

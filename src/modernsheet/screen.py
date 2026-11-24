@@ -50,6 +50,9 @@ def screen_ops(dl: DisplayList, page_index: int, scale: float, metrics):
             yield ("path", out, hex_color(fill), hex_color(stroke), lw * k)
         elif kind == "text":
             _, x, y, s, font, size, rgb, outline = op
+            # Flutter places text by the top of its line box, not by the baseline: with a 1-em line
+            # height the baseline sits `baseline_ratio` em below the top (measured from each font's
+            # ascent and descent in fonts.py), so the text lands exactly where the PDF puts it
             ratio = metrics.faces[font].baseline_ratio
             base = Y(y)
             yield ("text", x * k, base - ratio * size * k, s, font, size * k, hex_color(rgb), outline * k, base)

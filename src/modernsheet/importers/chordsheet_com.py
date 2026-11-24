@@ -219,6 +219,12 @@ class _Converter:
 
     # ---- chord lines
     def chord_line(self, line: str) -> list[_Bar]:
+        """One line of chords → its bars (blank-separated tokens, one bar each, `_` glues chords).
+
+        Most of the special cases below come from the 234 real songs of the user's account, which
+        use the syntax more loosely than the manual: endings glued to the chord ("1.C"), a repeat
+        count after a space ("( … ) x4"), annotations glued to a simile mark, chords with their
+        own parentheses ("C7(b9)" is not the end of a repeat), editor-only tokens (X, P1…)."""
         bars: list[_Bar] = []
         # quoted annotations may contain spaces: put them aside, a placeholder keeps their place
         self.quotes = []
@@ -252,7 +258,9 @@ class _Converter:
                 else:
                     self.note("Annotazione senza un accordo prima: ignorata.")
                 continue
-            if re.fullmatch(r"X+|P\d", t):               # indentation spacer, colour palette switch
+            # X: spacer the site's editor uses to indent a line (e.g. to put a 2nd ending under the 1st;
+            # our layout aligns endings by itself); P0-P9: colour palette switch. Neither is music.
+            if re.fullmatch(r"X+|P\d", t):
                 continue
             m = re.fullmatch(r"x(\d+)|(\d+)x", t)      # "( … ) x4": the count after a space
             if m and self.last_group_end is not None and GROUP_END_RE.match(last_tok or "") and \
@@ -314,6 +322,8 @@ class _Converter:
             elif t in ("o", "fine", "Fine"):            # to coda / fine: at the end of the bar before
                 self.end_mark(bars, "to_coda" if t == "o" else "fine", "")
             elif re.fullmatch(r"%%|%\d*", t):
+                # simile marks: % repeats the previous bar, %% the previous two, %N the previous N;
+                # they become real copies of those bars (the .chs has no multi-bar simile sign)
                 n = 2 if t == "%%" else int(t[1:] or 1)
                 prev = self.all_bars[-n:] if len(self.all_bars) >= n else []
                 if not prev:
@@ -350,6 +360,8 @@ class _Converter:
 
     # ---- main
     def run(self) -> Conversion:
+        """Header lines (Title:, Key:…), then each line by its first character: # comment, + page
+        break / new section, : or = section title (= with a double bar), - or ; text, else chords."""
         lines = list(self.lines)
         # optional header lines
         while lines and (not lines[0].strip() or HEADER_RE.match(lines[0])):
@@ -394,6 +406,11 @@ class _Converter:
 
     # ---- output
     def serialize(self) -> str:
+        """The .chs source: header, conversion notes as comments, then each section with one source
+        line per original line. Lines after the first start with {br} so the original line breaks
+        are kept; an ending that is still open continues on the same source line, because in the
+        .chs an ending bracket closes at the end of its line (SPEC §2.7). Fractions of a bar from
+        the original (r2, r4) become durations in beats of the time signature in force."""
         m = self.meta
         num, den = (m.get("time") or "4/4").replace(":", "/").split("/")
         beats = int(num) * 4 / int(den)

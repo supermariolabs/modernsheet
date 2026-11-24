@@ -12,6 +12,9 @@ from .formats import CURRENT, detect, label, upgrade
 from .parser import parse
 
 def main(argv=None):
+    """Command line: render .chs files to PDF, validate them (--check), or import chordsheet.com text
+    (--from-chordsheet), show or upgrade the format version. Returns the exit status: 1 with --check
+    if a file has warnings (so it can be used in scripts and CI), else 0."""
     ap = argparse.ArgumentParser(description="Render .chs chord sheets to PDF lead sheets.")
     ap.add_argument("files", nargs="+", help=".chs input files")
     ap.add_argument("-o", "--output", help="output PDF (single input) or folder")

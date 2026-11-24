@@ -40,6 +40,10 @@ TOKEN_RE = re.compile(
     r"|<[^>]*>[^\s\[\]|<>(){}]*"         # notes on one stem, with duration / tie after >
     r"|[^\s\[\]|<>(){}]+"                # a note or a rest
 )
+# One note: name, accidental (n = natural), octave (' and , relative, or @N absolute), duration
+# figure, dots, tie (-), string (~N). The absolute octave is ONE digit on purpose: with @\d+, `C@54`
+# (octave 5, quarter… written without the slash) was read as octave 54. A duration after @N needs a
+# slash (C@5/4), which keeps the two numbers apart and lets read() warn about the ambiguous form.
 NOTE_RE = re.compile(r"(?P<step>[A-Ga-g])(?P<acc>##|bb|#|b|n)?(?P<oct>[',]+|@-?\d)?"
                      r"(?P<slash>/)?(?P<fig>32|16|1|2|4|8)?(?P<dots>\.{0,2})(?P<tie>-)?(?:~(?P<string>[1-9]))?")
 REST_RE = re.compile(r"[Rr](?:(?P<star>\*)|(?P<fig>32|16|1|2|4|8)?(?P<dots>\.{0,2}))")
@@ -94,6 +98,8 @@ class NoteReader:
                       f"or {step}n for a natural)")
         idx = STEPS.index(step)
         octv = m.group("oct") or ""
+        # relative octave (as in LilyPond): the octave that puts the note nearest to the previous one,
+        # i.e. within a fourth; ' and , move it up or down from there. @N sets it outright
         if octv.startswith("@"):
             octave = int(octv[1:])
         else:
@@ -104,6 +110,8 @@ class NoteReader:
 
     # -- durations --------------------------------------------------------------
     def duration(self, fig: str | None, dots: str, tok: str) -> tuple[Fraction, str, int]:
+        """Duration in quarters, type and dots. A figure stays in force until another is written, so
+        `G8 A B C` are four eighths; inside a tuplet the duration is scaled (3 in the time of 2)."""
         if fig:
             self.fig, self.dots = int(fig), len(dots)
         elif dots:
@@ -114,6 +122,9 @@ class NoteReader:
         return d, FIGURES[self.fig], self.dots
 
     def tie(self, notes: list[Note], tied: bool, tok: str) -> None:
+        """Close the tie waiting from the previous note (`A2-`) on these notes, if the pitch matches,
+        and open a new one if this token ends with `-`. A tie that finds no matching pitch is
+        dropped with a warning instead of drawing an arc to the wrong note."""
         if self.tie_from:
             prev = {(n.step, n.alter, n.octave) for n in self.tie_from}
             matched = False
@@ -165,6 +176,8 @@ class NoteReader:
             if not m or not heads:
                 self.warn(f"unrecognised notes '{tok}'")
                 return None
+            # inside < > each note is relative to the one before it (written bottom to top), but the
+            # next token is relative to the FIRST note of the chord, as in LilyPond
             pitches, ref, strings = [], self.prev, []
             for h in heads:
                 hm = NOTE_RE.fullmatch(h)
@@ -286,7 +299,10 @@ def beam_bar(notes: list[Note], num: int, den: int) -> None:
             cur_beat = None
     if len(cur) > 1:
         groups.append(cur)
-    if (num, den) == (4, 4):                     # two beats of plain eighths on one half bar: one beam
+    # in 4/4, four plain eighths on beats 1-2 or 3-4 are printed under one beam, as notation software
+    # does (never across the middle of the bar); this is the one visible difference with the bundled
+    # MusicXML examples, which beam eighths in pairs
+    if (num, den) == (4, 4):
         merged: list[list[Note]] = []
         for g in groups:
             prev = merged[-1] if merged else None
@@ -317,6 +333,11 @@ def to_notes_text(measures: list[dict], key: str = "C", per_row: int = 4) -> str
     out = ["{start_of_notes}"]
 
     def measure(ms: dict) -> tuple[str, list[str]]:
+        """One measure as notes text and its syllables. Mirrors NoteReader in reverse: it tracks the
+        previous pitch and the current figure exactly as the reader will, so it writes a duration only
+        when it changes, ' or , for an octave step and @N only for bigger jumps, and `n` where the key
+        signature alters a note that is natural. Chord symbols are emitted before the note they fall
+        on (the remaining ones, after the last note, at the end). An empty measure stays empty."""
         nonlocal prev, fig_dots
         parts: list[str] = []
         if ms.get("volta"):

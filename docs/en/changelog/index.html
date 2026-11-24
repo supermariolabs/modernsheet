@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Changelog · Modern Sheet</title>
+<meta name="description" content="The history of the released versions of Modern Sheet.">
+<link rel="canonical" href="https://modernsheet.app/en/changelog/">
+<link rel="alternate" hreflang="it" href="https://modernsheet.app/it/changelog/">
+<link rel="icon" href="/assets/img/favicon.png">
+<link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+<meta property="og:title" content="Changelog · Modern Sheet">
+<meta property="og:description" content="The history of the released versions of Modern Sheet.">
+<meta property="og:image" content="https://modernsheet.app/assets/img/sheet-demo.png">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body class="doc">
+<a class="skip" href="#main">Skip to content</a>
+<div class="beta-ribbon" title="Beta software: it may contain bugs"><span>Beta</span></div>
+<header class="top">
+  <div class="wrap bar">
+    <a class="brand" href="/en/"><img src="/assets/img/logo.png" alt="" width="36" height="36">Modern Sheet<span class="beta-tag" title="Beta software: it may contain bugs">Beta</span></a>
+    <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Menu">
+    <label for="nav-toggle" class="nav-button" aria-hidden="true"><span></span><span></span><span></span></label>
+    <nav class="menu">
+      <a href="/en/">Home</a><a href="/en/download/">Download</a><a href="/en/guide/">App guide</a><a href="/en/format/">The .chs format</a><a href="/en/chordsheet/">chordsheet.com</a><a href="/en/changelog/" aria-current="page">Changelog</a>
+      <a class="lang" href="/it/changelog/" hreflang="it">Italiano</a>
+      <a class="gh" href="https://github.com/supermariolabs/modernsheet">GitHub</a>
+    </nav>
+  </div>
+</header>
+<main id="main" class="wrap">
+<h1 id="changelog">Changelog<a class="headerlink" href="#changelog">#</a></h1>
+<p>The released versions of Modern Sheet, newest first. The apps are on the
+<a href="/en/download/">Download</a> page; every version with built apps has its own
+<a href="https://github.com/supermariolabs/modernsheet/releases">release on GitHub</a>.</p>
+<h2 id="v0.44.0">0.44.0 — 24 November 2026<a class="headerlink" href="#v0.44.0">#</a></h2>
+<p><a href="https://github.com/supermariolabs/modernsheet/releases/tag/v0.44.0">Release on GitHub</a> · apps for macOS, Windows, Linux and Android</p>
+<p>Gathers versions 0.43 and 0.44.</p>
+<p><strong>Editor</strong></p>
+<ul>
+<li>What you changed since the last save has a <strong>green background</strong> (brighter on the text you wrote), which
+  goes away when you save.</li>
+<li>Step-by-step <strong>Undo</strong> and <strong>Redo</strong>, a word at a time: ↶ ↷ buttons at the top and
+  ⌘Z / Ctrl+Z, ⌘⇧Z / Ctrl+Y.</li>
+</ul>
+<p><strong>MusicXML</strong></p>
+<ul>
+<li>The tabs of the MusicXML files a song cites are now <strong>read only</strong>: the file is shown indented and
+  coloured. The <strong>Convert to notes in the song</strong> button writes its bars into the <code>.chs</code> as notes
+  (<code>{start_of_notes}</code>), in place of the reference, which stays as a comment; the file is not touched.
+  Notes written in the song are much easier to edit.</li>
+<li>Accordingly removed: editing MusicXML, <em>Indent</em>, <em>Collapse/Expand</em> and <em>Create the MusicXML file</em>.
+  Songs that cite a MusicXML file keep working as before.</li>
+</ul>
+<p><strong>Website</strong></p>
+<ul>
+<li>This changelog page.</li>
+</ul>
+<h2 id="v0.42.0">0.42.0 — 24 November 2026<a class="headerlink" href="#v0.42.0">#</a></h2>
+<p><a href="https://github.com/supermariolabs/modernsheet/releases/tag/v0.42.0">Release on GitHub</a> · apps for macOS, Windows, Linux and Android</p>
+<p>Gathers versions 0.37 to 0.42.</p>
+<p><strong>Notes written in the song</strong></p>
+<ul>
+<li>Bars with notes (intros, riffs, heads) can be written <strong>right in the <code>.chs</code></strong>, in a
+  <code>{start_of_notes}</code> … <code>{end_of_notes}</code> block, as an alternative to MusicXML: note names like chords
+  (<code>G</code>, <code>Bb</code>, <code>F#</code>), durations as figures (<code>8</code>, <code>4.</code>), relative octave with <code>'</code> and <code>,</code> or absolute with <code>@N</code>,
+  rests, ties, tuplets, stacked notes, chord symbols over the note, lyrics on a <code>w:</code> line.
+  See <a href="/en/format/">The .chs format</a>.</li>
+<li>Automatic beams, accidentals recomputed against the key signature, transposition as for MusicXML.</li>
+</ul>
+<p><strong>Guitar tablature</strong></p>
+<ul>
+<li>Notated bars can be shown as <strong>staff</strong>, <strong>staff + tablature</strong> or <strong>tablature only</strong> with the rhythm under
+  the numbers: <code>{notation: staff | both | tab}</code> for the song or a section, and a switch over the sheet in the app.</li>
+<li>String and fret worked out for the whole passage, to stay in a comfortable hand position; capo.</li>
+<li>Manual corrections: <code>{tab_position: N}</code> (hand around fret N), <code>~N</code> after a note to choose its string,
+  <code>{tuning}</code> (drop D, DADGAD, open G, half step down, 4- and 5-string bass, ukulele, or the strings' notes),
+  string and fret read from MusicXML.</li>
+</ul>
+<p><strong>Layout</strong></p>
+<ul>
+<li><code>{bar_width: uniform | fit}</code> also <strong>for a single section</strong>, over the song's and the app's setting.</li>
+<li><em>Fit</em> wraps only when the bars really do not fit, and rows closed for lack of room reach the margin.</li>
+<li>Adjustable <strong>space between rows</strong>, in the settings and per song with <code>{row_spacing}</code> (compact, normal,
+  wide, extra or a percentage).</li>
+</ul>
+<p><strong>App and website</strong></p>
+<ul>
+<li>In the MusicXML editor: indenting the file and collapsible lines.</li>
+<li><strong>Android app</strong> (experimental APK) built and signed automatically along with the desktop apps.</li>
+<li>Download page with the version and date of each app, read from GitHub.</li>
+</ul>
+<h2 id="v0.36.1">0.36.1 — 23 November 2026<a class="headerlink" href="#v0.36.1">#</a></h2>
+<p><a href="https://github.com/supermariolabs/modernsheet/releases/tag/v0.36.1">Release on GitHub</a> · apps for macOS, Windows and Linux</p>
+<ul>
+<li>Fixed the build of the Linux app, which had failed in 0.36.0.</li>
+</ul>
+<h2 id="v0.36.0">0.36.0 — 23 November 2026<a class="headerlink" href="#v0.36.0">#</a></h2>
+<ul>
+<li><strong>Desktop apps</strong> for macOS, Windows and Linux built automatically on GitHub and downloadable from the
+  Download page. This version produced no apps (the Linux build stopped): replaced by 0.36.1.</li>
+</ul>
+<h2 id="v0.35.0">0.35.0 — 23 November 2026<a class="headerlink" href="#v0.35.0">#</a></h2>
+<p>First release: code on GitHub under the GPL-3.0 license, the modernsheet.app website in Italian and English,
+automated tests. It includes all the work done until then:</p>
+<ul>
+<li><strong>Versioned <code>.chs</code> format</strong>: sections, chords with durations, explicit or automatic bars, repeats and
+  endings, time and key changes, segno, coda, D.C., D.S., Fine, text lines, rhythm marks (pushes, ties,
+  slashes, fermata), optional chords and chord annotations.</li>
+<li><strong>Real Book style lead sheets</strong>, identical in PDF and on screen: a grid of aligned bars, optional jazz
+  symbols, section colours, transposition.</li>
+<li><strong>Notated parts from MusicXML</strong>, with tuplets, repeats and lyrics.</li>
+<li><strong>App</strong> for computers and tablets: song library as cards with search and sorting, editor with
+  highlighting, suggestions and live preview, full-screen view mode, PDF export, Italian and English interface.</li>
+<li><strong>Library sync</strong> with a folder or Google Drive, losing nothing on conflicts.</li>
+<li><strong>Import</strong> from chordsheet.com, from text or straight from your own account.</li>
+</ul>
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <p>Modern Sheet · Free software, GPL-3.0 license · <a href="https://github.com/supermariolabs/modernsheet">Code on GitHub</a> · <a href="/en/privacy/">Privacy</a></p>
+  </div>
+</footer>
+</body>
+</html>

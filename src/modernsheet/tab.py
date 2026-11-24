@@ -98,6 +98,17 @@ def _position(a: tuple[Place, ...]) -> float | None:
 
 
 def _static(a: tuple[Place, ...], pos: int | None = None) -> float:
+    """Cost of playing one stem in place `a`, by itself (the moves between stems are _move).
+
+    The numbers were tuned on real riffs, they are not arbitrary:
+    - an open string costs nothing: with any cost, an open E and the same E at the 5th fret of the
+      A string tied, and the path chose the fret; guitarists use the open string in first position;
+    - a fretted note costs a little more the higher it is, and much more above the 7th fret, so a
+      line stays low on the neck unless the notes need it (or {tab_position} asks);
+    - with {tab_position: N} the hand is "held" in frets N−1…N+4: leaving that window costs 2.5 per
+      fret, a lot; an open string from position 5 or higher costs 1.2, because it is played but
+      usually avoided there (it changes the sound and breaks the hand's shape);
+    - notes on one stem must fit under the hand: a stretch over MAX_STRETCH frets is very expensive."""
     cost = 0.0
     for _, f in a:
         cost += 0.0 if f == 0 else 0.2 + 0.03 * f + 0.3 * max(0, f - 7)   # a fretted note takes a finger
@@ -115,7 +126,12 @@ def _static(a: tuple[Place, ...], pos: int | None = None) -> float:
 
 def _move(a: tuple[Place, ...], b: tuple[Place, ...], after_rest: bool, held: bool = False) -> float:
     """Cost of going from `a` to `b`; `held`: a hand position is asked, so moving inside it is cheap
-    (leaving it is paid by _static)."""
+    (leaving it is paid by _static).
+
+    A shift of the hand costs by distance, plus a jump over MAX_STRETCH frets (a real position
+    change). After a rest there is time to move: half the cost. With a held position the moves cost
+    a fifth: without that, the move cost was larger than the window's penalty and the path kept the
+    hand where the previous bars were, ignoring {tab_position}."""
     pa, pb = _position(a), _position(b)
     cost = 0.05 * abs(a[0][0] - b[0][0])                  # string changes
     if pa is not None and pb is not None:
@@ -132,6 +148,8 @@ def _options(midis: list[int], capo: int, tuning, wanted=None) -> list[tuple[Pla
         if w:
             per_note[i] = [p for p in per_note[i] if p in w] or per_note[i]
     opts = []
+    # every combination of places for the notes of the stem, one string each; spans up to 2 frets
+    # over MAX_STRETCH are kept (and paid in _static) so wide voicings still get a fingering
     for combo in product(*per_note):
         strings = [s for s, _ in combo]
         if len(set(strings)) != len(strings):

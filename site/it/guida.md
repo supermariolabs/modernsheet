@@ -77,8 +77,10 @@ Toccando una card il brano si apre in **modalità vista**: solo lo spartito, con
 La **matita** apre l'editor accanto allo spartito:
 
 - **evidenziazione** della sintassi e **suggerimenti** delle direttive quando scrivi `{` (Invio o Tab per scegliere);
+- quello che hai cambiato dall'ultimo salvataggio ha lo **sfondo verde** (più acceso sul testo scritto), che sparisce quando salvi;
+- **Annulla** e **Ripristina** passo per passo (una parola alla volta) con i pulsanti ↶ ↷ in alto o con ⌘Z / Ctrl+Z e ⌘⇧Z / Ctrl+Y;
 - l'anteprima si aggiorna mentre scrivi; i **warning** sono elencati sotto l'editor e toccandoli si va alla riga;
-- una **scheda per ogni MusicXML** citato dal brano, modificabile come il sorgente, con una barra per **indentare** il file (solo i rientri, o un elemento per riga) e **comprimere** su una riga una battuta o un altro elemento (*Comprimi* dove si trova il cursore, *Comprimi battute* per tutte, *Espandi*, *Espandi tutto*); comprimere non cambia il file;
+- una **scheda per ogni MusicXML** citato dal brano, in **sola lettura**: il file si vede già indentato e colorato, e il pulsante **Converti in note nel brano** scrive le sue battute nel `.chs` come note (`{start_of_notes}`), al posto del riferimento, che resta come commento per traccia (il file MusicXML non viene toccato); controlla l'anteprima e salva;
 - **Salva** (⌘S / Ctrl+S) diventa verde quando c'è qualcosa da salvare; **Salva con nome** crea una copia accanto al brano;
 - **Esporta PDF**; il **cestino rosso** elimina il brano e i suoi MusicXML, dopo una conferma con l'elenco dei file.
 

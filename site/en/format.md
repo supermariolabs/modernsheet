@@ -158,6 +158,8 @@ Written parts (intros, riffs, heads) are prepared in a notation editor (MuseScor
 
 `{musicxml: head.musicxml | 3-6}` uses bars 3 to 6 only. The path is relative to the song's folder. Notes, chords and lyrics from the file are drawn on the staff, transposed along with the rest.
 
+In the app, cited MusicXML files are shown in a tab next to the song, read only; to change them, convert them into notes written in the `.chs` (below) with the **Convert to notes in the song** button.
+
 ## Notes written in the .chs
 
 Instead of MusicXML, a few bars of notes can be written **right in the song**, inside a section:

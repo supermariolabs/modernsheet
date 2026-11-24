@@ -101,6 +101,7 @@ class Parser:
         self.song.warnings.append(f"line {self.lineno}: {msg}")
 
     def set_key(self, value: str) -> str:
+        """The key in force after `{key: value}`, already transposed (an invalid key: unchanged)."""
         try:
             parse_key(value)
         except ValueError as e:
@@ -121,13 +122,16 @@ class Parser:
         self.open_volta_label = None
 
     def push_bar(self, bar: Bar) -> None:
+        """Append a finished bar to the current section, applying what directives left pending for
+        "the next bar" (time and key changes, {br}, repeat start, ending, start marks, {text} lines).
+        Directives are read before the bar they affect exists, hence this queue."""
         if self.pending.pop("time", False):
             bar.time_change = True
         if "key" in self.pending:
             prev = self.pending.pop("key")
             if prev != bar.key:
                 bar.key_change, bar.prev_key = True, prev
-                if self.song.bars:
+                if self.song.bars:                   # engraving convention: a double bar before a new key
                     self.song.bars[-1].double_after = True
         if self.pending.pop("br", False):
             bar.break_before = True
@@ -184,6 +188,8 @@ class Parser:
                      strokes=tail.count(","), fermata="fermata" in marks, diamond="diamond" in marks, note=note)
 
     def chord(self, raw: str) -> tuple[str, float | None]:
+        """`Name:duration` → (transposed chord or None for %, duration in beats or None). Durations
+        are multiples of half a beat: the grid cannot place anything finer (SPEC §2.4)."""
         name, _, dur = raw.partition(":")
         name = name.strip()
         d = None
@@ -203,12 +209,16 @@ class Parser:
 
     # -- directives ------------------------------------------------------------
     def directive(self, body: str) -> None:
+        """Apply one `{name: value}`. The first {key} and {time} are the song's (header); later ones
+        are changes, attached to the next bar (pending). Many directives mean "this section" inside
+        a section and "the whole song" in the header ({bar_width}, {notation}, {bars_per_line})."""
         name, value = split_directive(body)
         if name == "key":
             new = self.set_key(value)
             if "key" not in self.song.meta:
                 self.song.meta["key"] = new
             else:
+                # setdefault: two {key} lines before the next bar are one change, from the first key
                 self.pending.setdefault("key", self.key)
             self.key = new
         elif name == "time":
@@ -327,6 +337,7 @@ class Parser:
             bar.double_after = True
 
     def start_section(self, kind: str, label: str) -> None:
+        """Open a section ({start_of_KIND: label}); the label defaults to the kind ("Verse")."""
         self.tab_pos = None                      # a hand position lasts until the end of its section
         if self.section is not None:
             self.warn(f"section '{self.section.label}' not closed before '{kind}'")
@@ -335,6 +346,12 @@ class Parser:
         self.song.sections.append(self.section)
 
     def reference(self, value: str) -> None:
+        """{ref: Label} / {ref: Label x2 | note}: repeat an earlier section here, as copies of its bars.
+
+        The copy is transposed from the original's key to the key in force here, so a chorus
+        recalled after a key change is printed in the new key. Signs, marks and {text} lines stay
+        with the original (repeating "D.S. al Coda" in the copy would be wrong), and the copy's first
+        bar does not repeat the original's time/key change or line break."""
         target, _, note = value.partition("|")
         target, note = target.strip(), note.strip()
         times = 1
@@ -378,13 +395,12 @@ class Parser:
         except Exception as e:                      # missing file, bad XML…
             self.warn(f"musicxml '{file.strip()}': {e}")
             return
-        m = re.search(r"(\d+)\s*(?:-\s*(\d+))?", opts)
-        if m:
-            a, b = int(m.group(1)), int(m.group(2) or m.group(1))
-            measures = measures[a - 1:b]
+        measures = measure_range(measures, opts)
         if self.section is None:
             self.warn("musicxml outside a section: opening an untitled one")
             self.start_section("instrumental", "")
+        # the file is written in the song's own key: compare its key signature with the key before
+        # transposition (the parser's self.key is already transposed)
         original_key = transpose_key(self.key, -self.transpose)
         for i, ms in enumerate(measures):
             if (ms["beats"], ms["beat_type"]) != (self.num, self.den):
@@ -408,6 +424,8 @@ class Parser:
             if ms["volta"]:
                 self.pending["volta"] = ms["volta"]
             harm = [(t, transpose_chord(ch, self.transpose, self.key)) for t, ch in ms["harmonies"] if t < bar.beats]
+            # chord symbols become the bar's events, each lasting until the next; if the first one is
+            # not on beat 1, the bar starts with a "continuation" event (the previous chord goes on)
             if not harm or harm[0][0] > 0:
                 harm.insert(0, (0.0, None))
             for j, (t, ch) in enumerate(harm):
@@ -422,6 +440,8 @@ class Parser:
 
     # -- notes written in the source (SPEC §2.12b) --------------------------------
     def start_notes(self) -> None:
+        """{start_of_notes}: the following rows are notes (SPEC §2.12b), read by a NoteReader that
+        keeps the current duration and octave from note to note until {end_of_notes}."""
         if self.notes is not None:
             self.warn("{start_of_notes} inside a notes block")
             return
@@ -450,6 +470,8 @@ class Parser:
         self.notes_row = []
 
         def close(force: bool) -> Bar | None:
+            """Finish the bar read so far: notes → a notated bar whose chord symbols last from their
+            note to the next symbol; only chords → an ordinary bar. `force`: make a bar even if empty."""
             nonlocal notes, chords, t
             reader.end_bar()
             if not (notes or chords or force):
@@ -473,6 +495,8 @@ class Parser:
                     ev.start, ev.dur = float(starts[j]), float(end - starts[j])
                 bar.events = events
             else:                                   # chords only: an ordinary bar
+                # (a bar of chords inside a notes block is drawn as a normal chord bar, so a riff
+                # can end on bars of chords without closing the block)
                 bar.events = [ev for _, ev in chords] or [Event(None)]
                 self.resolve(bar)
             self.push_bar(bar)
@@ -520,13 +544,12 @@ class Parser:
                     t += got[1]
         if notes or chords:
             close(force=False)
-        if chords and not notes:
-            pass
         for name, value in ends:
             self.end_mark(name, value, self.song.bars[-1] if self.song.bars else None)
         self.close_volta("open")
 
     def notes_lyrics(self, text: str) -> None:
+        """`w: …` under a row of notes: one syllable per note of the row just read (notes_row)."""
         bars = [b.notation.notes if b.notation else [] for b in self.notes_row]
         if not bars:
             self.warn("w: line without a row of notes before it")
@@ -535,6 +558,9 @@ class Parser:
 
     # -- music lines -----------------------------------------------------------
     def resolve(self, bar: Bar) -> None:
+        """Give every chord of a bar its start and duration: chords with `:n` keep it, the others
+        share what is left equally, rounded down to half beats, the last one taking the remainder
+        ([C] [G] in 3/4 → 1.5 + 1.5; [C] [F] [G] in 4/4 → 1 + 1 + 2)."""
         fixed = sum(e.dur for e in bar.events if e.dur is not None)
         free = [e for e in bar.events if e.dur is None]
         rest = bar.beats - fixed
@@ -553,6 +579,9 @@ class Parser:
             e.start, t = t, t + e.dur
 
     def explicit_line(self, tokens: list[str]) -> None:
+        """A source line with bar lines: every `|` closes a bar with the chords and lyrics read since.
+        Lyrics before the first chord of a bar (`lead`) belong to its first chord; directives right
+        after a bar line apply to the next bar, end marks written inside a bar to that bar."""
         events: list[Event] = []
         lead = ""
         opened = False
@@ -658,6 +687,10 @@ class Parser:
 
     # -- main ------------------------------------------------------------------
     def parse(self) -> Song:
+        """Read the whole source line by line: comments are skipped, a line holding only a directive
+        is a directive, inside a notes block rows of notes and `w:` lines, otherwise a line of music
+        (explicit with bar lines, implicit without). Problems become warnings with the line number;
+        the parser never stops on them, so the preview always shows what can be read."""
         for self.lineno, raw in enumerate(self.text.splitlines(), 1):
             line = raw.strip()
             if not line or line.startswith("#"):

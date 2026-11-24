@@ -27,16 +27,16 @@ from pathlib import Path
 import flet as ft
 import flet.canvas as cv
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
-from modernsheet import formats, gdrive, layout, library, parse, sync, syntax, xml_syntax
+from modernsheet import edits, formats, gdrive, layout, library, parse, sync, syntax, xml_syntax
 from modernsheet.flet_view import FLET_FONTS, page_shapes
 from modernsheet.fonts import registry
 from modernsheet.importers import chordsheet_account, from_chordsheet_com
 from modernsheet.pdf import pdf_bytes
 from modernsheet.i18n import LANGUAGES, set_language, tr, tr_count, tr_date, tr_datetime
 from modernsheet.settings import Settings, env
-from modernsheet.theory import key_signature, pretty_chord
+from modernsheet.theory import pretty_chord
 
 HERE = Path(__file__).resolve().parent
 EXAMPLES = HERE / "examples"                 # bundled examples: the default library folder
@@ -49,7 +49,12 @@ PREF_LEGACY_SETTINGS = "chordsheet.settings"   # 0.10–0.18, when the app was c
 PREF_ROOT = "chordsheet.library_root"          # before 0.10: only the library folder was stored
 DESKTOP = (ft.PagePlatform.MACOS, ft.PagePlatform.WINDOWS, ft.PagePlatform.LINUX)
 
-# ---- source editor: a transparent TextField over a Text with coloured spans, same font and metrics
+# ---- source editor: a transparent TextField over a Text with coloured spans, same font and metrics.
+# Flet's TextField cannot colour parts of its text, so the field's own text is transparent (it keeps
+# caret, selection, keyboard, IME and copy/paste) and a Text with coloured spans is drawn exactly
+# under it. That only works if both lay out the text identically: same bundled monospace font, a
+# forced line height (strut), no extra letter spacing, the same wrapping width. The constants below
+# are measured values that make the two coincide; change them together or the colours drift.
 CODE_FONT = "ChsMono"                         # DejaVu Sans Mono, bundled: identical metrics everywhere
 CODE_SIZE = 13
 CODE_LINE = 1.4                               # line height, in font sizes
@@ -76,29 +81,11 @@ XML_COLORS = {                                # MusicXML token kind -> colour of
     "text": "text", "comment": "comment", "decl": "comment", "brace": "brace",
     "tag": "section", "attr": "directive", "value": "value", "entity": "bar",
 }
-SYNTAXES = {"chs": syntax, "xml": xml_syntax}
 TAB_BG = "#16171B"
+CHANGE_BG = {edits.LINE: "#262F26", edits.CHARS: "#35512F"}   # changed line / text written, until saved
 POPUP_ROWS = 8
 POPUP_ROW_H = 30
 POPUP_W = 330
-
-
-FOLD_STYLE = {"color": "#FFCC00", "bgcolor": "#4A4320"}    # the ⋯ of a collapsed MusicXML element
-
-
-def mark_folds(spans: list[ft.TextSpan]) -> list[ft.TextSpan]:
-    """Split the ⋯ of collapsed elements out of the highlighted spans, in their own colours."""
-    out = []
-    for sp in spans:
-        if xml_syntax.FOLD not in sp.text:
-            out.append(sp)
-            continue
-        for i, part in enumerate(sp.text.split(xml_syntax.FOLD)):
-            if i:
-                out.append(ft.TextSpan(xml_syntax.FOLD, code_style(**FOLD_STYLE)))
-            if part:
-                out.append(ft.TextSpan(part, sp.style))
-    return out
 
 
 def code_style(color: str | None = EDITOR_FG, **kw) -> ft.TextStyle:
@@ -137,21 +124,21 @@ CARD_TITLE_BG = "#0066CC"     # same blue as the section boxes of the sheet
 
 @dataclass
 class Doc:
-    """A file open in the editor: the song (.chs, always the first tab) or a MusicXML it references."""
+    """A file open in the editor: the song (.chs, always the first tab) or a MusicXML it references
+    (read only: shown indented, it can only be converted into notes of the song)."""
     kind: str                       # "chs" | "xml"
     name: str                       # tab label
     path: Path | None
     text: str = ""
     saved: str = ""
     missing: bool = False           # referenced but not on disk (yet)
-    note: str | None = None         # why it cannot be edited (compressed, unreadable)
+    note: str | None = None         # why it cannot be shown (compressed, unreadable)
     scroll: float = 0.0
-    folds: xml_syntax.Folds | None = None   # collapsed elements (MusicXML): the editor shows folds.view
+    base: str = ""                  # the text as opened or last saved: what differs from it is painted
+    history: edits.History = field(default_factory=edits.History)   # undo / redo
 
-    @property
-    def view(self) -> str:
-        """The text in the editor: `text`, with the collapsed elements on one line each."""
-        return self.folds.view if self.folds else self.text
+    def __post_init__(self):
+        self.base = self.text
 
     @property
     def dirty(self) -> bool:
@@ -236,6 +223,12 @@ def bar_width_selector(on_change) -> ft.SegmentedButton:
 
 
 class App:
+    """The whole app: three screens (library, settings, editor with preview) on one Flet page.
+
+    The engine does the music (parse → layout → DisplayList); this class only shows it, edits the
+    source, and manages files, settings and sync. Long work (parsing and layout, PDF, sync, Drive)
+    runs in threads (asyncio.to_thread) so typing never waits for it."""
+
     def __init__(self, page: ft.Page):
         self.page = page
         self.picker = ft.FilePicker()
@@ -283,6 +276,7 @@ class App:
         self.ac_index = 0
         self.ac_caret = 0                         # caret offset the suggestions were computed for
         self._nav_until = 0.0                     # ignore caret moves caused by popup navigation keys
+        self._undo_key: tuple[str, float] | None = None   # ⌘Z / ⌘⇧Z just pressed: (action, when)
 
         self.build_library()
         self.build_editor()
@@ -309,15 +303,11 @@ class App:
 
     @saved_text.setter
     def saved_text(self, value: str):
-        self.docs[0].saved = value
+        self.docs[0].saved = self.docs[0].base = value      # saved: the changed parts are no longer painted
 
     @property
     def doc(self) -> Doc:
         return self.docs[self.doc_index]
-
-    @property
-    def lang(self):
-        return SYNTAXES[self.doc.kind]
 
     async def start(self):
         raw = await self.prefs.get(PREF_SETTINGS) or await self.prefs.get(PREF_LEGACY_SETTINGS)
@@ -458,7 +448,8 @@ class App:
             for d in self.docs:
                 if d.path and not d.dirty and d.path.resolve() in changed:
                     try:
-                        d.text = d.saved = d.path.read_text(encoding="utf-8")
+                        d.text = d.saved = d.base = d.path.read_text(encoding="utf-8")
+                        d.history.clear()                 # another device's version: a fresh start
                         d.missing = False
                         reloaded.append(d)
                     except (OSError, UnicodeDecodeError):
@@ -641,6 +632,8 @@ class App:
 
     # ================================================================ library screen
     def build_library(self):
+        """Controls of the library screen, built once: app bar (sync state, refresh, import, settings),
+        search with sorting and view switch, the breadcrumbs and the body that draw_library fills."""
         self.sync_btn = ft.IconButton(ft.Icons.CLOUD_DONE, visible=False, on_click=self.sync_now)
         self.lib_appbar = ft.AppBar(
             title=ft.Text(tr("library"), size=18, weight=ft.FontWeight.W_600),
@@ -756,6 +749,8 @@ class App:
         self.run(self.sync_now())
 
     def draw_library(self):
+        """Redraw the library: breadcrumbs, then folders and songs of the open folder (or the search
+        results) as cards or as a list, grouped A–Z when sorted by title or artist."""
         if self.screen != "library":
             return
         self.page.floating_action_button = None
@@ -1090,6 +1085,8 @@ class App:
 
     # ================================================================ settings screen
     def build_settings(self):
+        """Controls of the settings screen, built once (draw_settings fills in the current values):
+        folders, sync (folder or Google Drive), display defaults, language."""
         self.set_appbar = ft.AppBar(
             leading=ft.IconButton(ft.Icons.ARROW_BACK, tooltip=tr("library"), on_click=lambda e: self.show_library()),
             title=ft.Text(tr("settings"), size=18, weight=ft.FontWeight.W_600))
@@ -1192,6 +1189,7 @@ class App:
         self.draw_settings()
 
     def draw_settings(self):
+        """Fill the settings screen with the current values (folders, sync state, Drive account)."""
         if self.screen != "settings":
             return
         st = self.settings
@@ -1263,6 +1261,9 @@ class App:
 
     # ================================================================ editor screen
     def build_editor(self):
+        """Controls of the editor screen, built once: app bar, preview toolbar, the source editor
+        (tabs, MusicXML bar, coloured text under a transparent field, completion popup, warnings,
+        status) and the preview pages."""
         self.title = ft.Text("", size=18, weight=ft.FontWeight.W_600, no_wrap=True,
                              overflow=ft.TextOverflow.ELLIPSIS)
         # view ⇄ edit: the pencil opens the editor, the reader icon goes back to the sheet alone
@@ -1271,12 +1272,18 @@ class App:
         self.fullscreen_btn = ft.IconButton(ft.Icons.FULLSCREEN, tooltip=tr("ed.fullscreen"),
                                             on_click=lambda e: self.set_fullscreen(True))
         self.save_btn = ft.IconButton(ft.Icons.SAVE_OUTLINED, tooltip=tr("ed.save"), on_click=self.save)
+        self.undo_btn = ft.IconButton(ft.Icons.UNDO, tooltip=tr("ed.undo"),
+                                      on_click=lambda e: self.run(self.undo_redo("undo")))
+        self.redo_btn = ft.IconButton(ft.Icons.REDO, tooltip=tr("ed.redo"),
+                                      on_click=lambda e: self.run(self.undo_redo("redo")))
         self.delete_btn = ft.IconButton(ft.Icons.DELETE_OUTLINE, icon_color=ft.Colors.ERROR, tooltip=tr("ed.delete"),
                                         on_click=self.delete_song)
         self.ed_appbar = ft.AppBar(
             leading=ft.IconButton(ft.Icons.ARROW_BACK, tooltip=tr("library"), on_click=self.back),
             title=self.title,
             actions=[
+                self.undo_btn,
+                self.redo_btn,
                 self.fullscreen_btn,
                 self.toggle_btn,
                 self.save_btn,
@@ -1320,6 +1327,7 @@ class App:
             border=ft.InputBorder.NONE, content_padding=ft.Padding.all(CODE_PAD), left=0, right=0, top=0,
             cursor_color="#FFCC00", cursor_width=CURSOR_W, selection_color=ft.Colors.with_opacity(0.35, "#5C8DFF"),
             autocorrect=False, enable_suggestions=False,
+            # iPad/iOS keyboards would turn " into “ ” and -- into —, breaking annotations and lyrics
             smart_dashes_type=False, smart_quotes_type=False, capitalization=ft.TextCapitalization.NONE,
             keyboard_type=ft.KeyboardType.MULTILINE,
             on_change=self.on_edit, on_selection_change=self.on_caret,
@@ -1352,30 +1360,16 @@ class App:
         self.tabs = ft.Row(spacing=0, scroll=ft.ScrollMode.AUTO)
         self.tab_banner = ft.Container(visible=False, bgcolor="#2A2D35",
                                        padding=ft.Padding.symmetric(horizontal=12, vertical=8))
-        # MusicXML tools: indentation and collapsing of elements (at the caret, all measures)
-        tool = ft.ButtonStyle(color="#B8C0D0", padding=ft.Padding.symmetric(horizontal=8))
+        # MusicXML tabs are read only: a bar says so and offers the conversion into notes of the song
         self.xml_bar = ft.Container(
-            visible=False, bgcolor="#262A31", padding=ft.Padding.symmetric(horizontal=4, vertical=2),
+            visible=False, bgcolor="#262A31", padding=ft.Padding.symmetric(horizontal=12, vertical=4),
             width=float("inf"),                     # the bar spans the whole editor
-            content=ft.Row(spacing=0, wrap=True, controls=[
-                ft.PopupMenuButton(
-                    content=ft.Row(tight=True, spacing=6, controls=[
-                        ft.Icon(ft.Icons.FORMAT_INDENT_INCREASE, size=18, color="#B8C0D0"),
-                        ft.Text(tr("xml.indent"), size=13, color="#B8C0D0")]),
-                    tooltip=tr("xml.indent_tip"), padding=ft.Padding.symmetric(horizontal=8, vertical=6),
-                    items=[ft.PopupMenuItem(content=ft.Text(tr("xml.reindent")),
-                                            on_click=lambda e: self.run(self.indent_xml(False))),
-                           ft.PopupMenuItem(content=ft.Text(tr("xml.format")),
-                                            on_click=lambda e: self.run(self.indent_xml(True)))]),
-                ft.TextButton(tr("xml.fold"), icon=ft.Icons.UNFOLD_LESS, tooltip=tr("xml.fold_tip"), style=tool,
-                              on_click=lambda e: self.run(self.fold_xml("fold"))),
-                ft.TextButton(tr("xml.unfold"), icon=ft.Icons.UNFOLD_MORE, tooltip=tr("xml.unfold_tip"), style=tool,
-                              on_click=lambda e: self.run(self.fold_xml("unfold"))),
-                ft.TextButton(tr("xml.fold_measures"), icon=ft.Icons.UNFOLD_LESS_DOUBLE,
-                              tooltip=tr("xml.fold_measures_tip"), style=tool,
-                              on_click=lambda e: self.run(self.fold_xml("fold_all"))),
-                ft.TextButton(tr("xml.unfold_all"), icon=ft.Icons.UNFOLD_MORE_DOUBLE, style=tool,
-                              on_click=lambda e: self.run(self.fold_xml("unfold_all"))),
+            content=ft.Row(spacing=12, wrap=True, vertical_alignment=ft.CrossAxisAlignment.CENTER, controls=[
+                ft.Row(tight=True, spacing=6, controls=[
+                    ft.Icon(ft.Icons.VISIBILITY_OUTLINED, size=16, color="#8A93A6"),
+                    ft.Text(tr("xml.read_only"), size=12, color="#8A93A6")]),
+                ft.FilledTonalButton(tr("xml.convert"), icon=ft.Icons.AUTO_FIX_HIGH, tooltip=tr("xml.convert_tip"),
+                                     on_click=lambda e: self.run(self.convert_xml())),
             ]))
         self.editor_panel = ft.Container(
             expand=1, bgcolor=EDITOR_BG,
@@ -1444,9 +1438,10 @@ class App:
     def load_musicxml_docs(self) -> list[str]:
         """Add a tab for every MusicXML file the song references and has no tab yet (in order of
         reference); tabs of files no longer referenced go away unless they have unsaved changes.
-        Returns the names of the new tabs. Needs the song's folder (base_dir)."""
+        Returns the names of the new tabs. Needs the song's folder (base_dir). The files are read only:
+        shown with one element per line (xml_syntax.format_xml), never written."""
         refs = library.musicxml_refs(self.text) if self.base_dir else []
-        keep = {d.name: d for d in self.docs[1:] if d.name in refs or d.dirty}
+        keep = {d.name: d for d in self.docs[1:] if d.name in refs}
         added: list[str] = []
         docs = [self.docs[0]]
         for ref in refs:
@@ -1458,15 +1453,16 @@ class App:
             if not path.is_file():
                 d.missing = True
             elif path.suffix.lower() == ".mxl":
-                d.note = tr("tab.compressed", name=ref)
+                d.note = tr("tab.compressed", name=ref)       # cannot be shown, but can be converted
             else:
                 try:
-                    d.text = d.saved = path.read_text(encoding="utf-8")
+                    raw = path.read_text(encoding="utf-8")
                 except (OSError, UnicodeDecodeError) as err:
                     d.note = tr("tab.read_failed", name=ref, err=err)
+                else:
+                    d.text = d.saved = d.base = raw if xml_syntax.xml_error(raw) else xml_syntax.format_xml(raw)
             docs.append(d)
             added.append(ref)
-        docs += list(keep.values())                  # unsaved, no longer referenced: kept until saved
         current = self.doc
         self.docs = docs
         self.doc_index = docs.index(current) if current in docs else 0
@@ -1476,7 +1472,7 @@ class App:
         tabs = []
         for i, d in enumerate(self.docs):
             active = i == self.doc_index
-            label = tr("tab.missing", name=d.name) if d.missing and not d.text else d.name
+            label = tr("tab.missing", name=d.name) if d.missing else d.name
             tabs.append(ft.Container(
                 padding=ft.Padding.only(left=12, right=12, top=8, bottom=6), tooltip=str(d.path or d.name),
                 bgcolor=EDITOR_BG if active else None, on_click=lambda e, i=i: self.run(self.switch_tab(i)),
@@ -1486,22 +1482,20 @@ class App:
                             color=EDITOR_FG if active else "#8A93A6"),
                     ft.Text(("● " if d.dirty else "") + label, size=12, no_wrap=True,
                             color=EDITOR_FG if active else "#8A93A6",
-                            italic=d.missing and not d.text)])))
+                            italic=d.missing)])))
         self.tabs.controls = tabs
         d = self.doc
         if d.note:
             self.tab_banner.content = ft.Text(d.note, size=12, color="#F0A974")
         elif d.missing and not d.text:
-            self.tab_banner.content = ft.Row(wrap=True, spacing=10, controls=[
-                ft.Text(tr("tab.missing_text", name=d.name), size=12, color="#F0A974"),
-                ft.FilledTonalButton(tr("tab.create"), icon=ft.Icons.NOTE_ADD_OUTLINED, on_click=self.create_musicxml)])
-        self.tab_banner.visible = bool(d.note or (d.missing and not d.text))
-        self.editor.read_only = bool(d.note) or (d.missing and not d.text)
-        self.xml_bar.visible = d.kind == "xml" and not self.editor.read_only
+            self.tab_banner.content = ft.Text(tr("tab.missing_text", name=d.name), size=12, color="#F0A974")
+        self.tab_banner.visible = bool(d.note or d.missing)
+        self.editor.read_only = d.kind == "xml"
+        self.xml_bar.visible = d.kind == "xml" and not d.missing and d.path is not None
 
     def show_doc(self):
         """Put the active document in the editor."""
-        self.editor.value = self.doc.view
+        self.editor.value = self.doc.text
         self.hide_completions()
         self.paint_source()
         self.draw_tabs()
@@ -1518,22 +1512,40 @@ class App:
     def on_code_scroll(self, e):
         self.doc.scroll = e.pixels
 
-    async def create_musicxml(self, e=None):
-        """Start a missing referenced file from a one-measure MusicXML in the song's key and time."""
-        song = parse(self.text)
-        num, _, den = song.meta.get("time", "4/4").partition("/")
+    async def convert_xml(self):
+        """Write the bars of the open MusicXML tab as notes in the song (library.convert_musicxml): its
+        references become {start_of_notes} blocks, kept above them as comments; the file is not touched.
+        The song is changed in the editor, to be saved (or discarded) as any other edit."""
+        d = self.doc
+        if d.kind != "xml" or not d.path or not self.base_dir:
+            return
+        if await self.ask(tr("xml.convert_title", name=d.name), ft.Text(tr("xml.convert_text", name=d.name)),
+                          [(tr("cancel"), None), (tr("xml.convert_ok"), "ok")]) != "ok":
+            return
         try:
-            fifths = key_signature(song.meta.get("key", "C"))
-        except (ValueError, KeyError):
-            fifths = 0
-        self.doc.text = library.new_musicxml_text(int(num or 4), int(den or 4), fifths)
-        self.doc.folds = None
+            result = await asyncio.to_thread(library.convert_musicxml, self.text, d.name, self.base_dir,
+                                             tr("xml.converted_note"))
+        except Exception as err:                    # noqa: BLE001  unreadable or broken file
+            self.toast(tr("xml.convert_failed", name=d.name, err=err))
+            return
+        if not result.count:
+            return
+        self.docs[0].history.record(self.text, result.text, time.monotonic(), group=False)
+        self.text = result.text
+        self.load_musicxml_docs()                   # the file is no longer referenced: its tab goes away
+        self.doc_index = 0
         self.show_doc()
+        at = self.text.find(f"# {{musicxml: {d.name}")
+        if at >= 0:
+            self.editor.selection = ft.TextSelection(base_offset=at, extent_offset=at)
         self.update_chrome()
         self.page.update()
+        self.toast(tr("xml.converted" if result.exact else "xml.converted_check", name=d.name, n=result.count))
         await self.render()
 
     def update_chrome(self):
+        """Refresh everything around the source after a change: title with ●, Save, Undo/Redo, the
+        editor/preview visibility, tabs and the status line (file, lines, format version)."""
         dirty = self.dirty()
         self.title.value = ("● " if dirty else "") + (self.song_title or self.name)
         # Save: disabled until something changes (song or a MusicXML tab), then enabled and green
@@ -1542,6 +1554,10 @@ class App:
         self.save_btn.icon_color = SAVE_COLOR if dirty else None
         self.title.tooltip = str(self.path) if self.path else tr("ed.not_saved_tooltip")
         self.editor_panel.visible = self.divider.visible = self.show_editor
+        # undo / redo of the song source, while it is being edited
+        self.undo_btn.visible = self.redo_btn.visible = self.show_editor and not self.fullscreen
+        self.undo_btn.disabled = not self.docs[0].history.can_undo
+        self.redo_btn.disabled = not self.docs[0].history.can_redo
         self.toggle_btn.selected = not self.show_editor
         self.delete_btn.visible = self.path is not None        # a song never saved has no file to delete
         self.toggle_btn.tooltip = tr("ed.hide_editor") if self.show_editor else tr("ed.show_editor")
@@ -1552,8 +1568,7 @@ class App:
         self.draw_tabs()
         if self.doc.kind == "xml":
             lines = self.doc.text.count("\n") + 1
-            self.status.value = tr("ed.status_xml", where=self.doc.name, lines=lines) + \
-                (tr("ed.unsaved") if self.doc.dirty else "")
+            self.status.value = tr("ed.status_xml", where=self.doc.name, lines=lines)
             self.upgrade_btn.visible = False
             return
         lines = self.text.count("\n") + 1
@@ -1608,12 +1623,12 @@ class App:
     def paint_source(self):
         """Coloured copy of the source under the (transparent) text field."""
         text = self.editor.value or ""
-        colors = XML_COLORS if self.doc.kind == "xml" else {}
-        self.highlight.spans = [ft.TextSpan(s, code_style(SYNTAX_COLORS[colors.get(k, k)],
-                                                          italic=(k == "comment")))
-                                for k, s in self.lang.tokens(text)]
-        if self.doc.folds:
-            self.highlight.spans = mark_folds(self.highlight.spans)
+        lang, colors = (xml_syntax, XML_COLORS) if self.doc.kind == "xml" else (syntax, {})
+        # what differs from the text as opened or last saved gets a green background
+        pieces = edits.mark(lang.tokens(text), edits.changes(self.doc.base, text))
+        self.highlight.spans = [ft.TextSpan(s, code_style(SYNTAX_COLORS[colors.get(k, k)], italic=(k == "comment"),
+                                                          bgcolor=CHANGE_BG.get(level)))
+                                for k, s, level in pieces]
         # a trailing newline needs a character after it, or the Text is one line shorter than the field
         if text.endswith("\n") or not text:
             self.highlight.spans.append(ft.TextSpan(" ", code_style()))
@@ -1624,34 +1639,31 @@ class App:
         self.page.update()
         await self.editor.focus()
 
-    def set_view(self, new: str) -> bool:
-        """The editor's text changed to `new`: update the document. False (nothing changes) if the edit
-        touches a collapsed element, which must be expanded first."""
-        d = self.doc
-        if d.folds:
-            if not d.folds.edit(new):
-                return False
-            d.text = d.folds.full()
-        else:
-            d.text = new
-        return True
-
     async def on_edit(self, e):
-        old, new = self.doc.view, self.editor.value or ""
+        """Every change of the source text (typing, paste, the field's own undo): update the document,
+        the undo history, the colours and the completion popup, then redraw the preview after a
+        short pause (schedule_render), not at every keystroke."""
+        if self.doc.kind != "chs":               # MusicXML tabs are read only
+            return
+        old, new = self.doc.text, self.editor.value or ""
+        if self._undo_key and time.monotonic() - self._undo_key[1] < 0.5:
+            # ⌘Z / Ctrl+Z also reached the text field, which undid on its own: use the app's history instead
+            action, self._undo_key = self._undo_key[0], None
+            self.editor.value = old
+            await self.undo_redo(action)
+            return
         caret = edit_caret(old, new)
         if self.ac_popup.visible and new in (old[:self.ac_caret] + ch + old[self.ac_caret:] for ch in "\n\t"):
-            # Enter (or Tab) while the popup is open: accept the highlighted completion instead
+            # Enter (or Tab) while the popup is open: accept the highlighted completion instead.
+            # The key cannot be intercepted before the field handles it, so the newline (or tab) has
+            # already been inserted when we hear about it: put the old text back, then complete
             self.editor.value = old
             await self.accept_completion(self.ac_index, caret=self.ac_caret)
             return
-        if not self.set_view(new):
-            self.editor.value = old               # back to what the document holds
-            self.paint_source()
-            self.toast(tr("xml.folded_edit"))
-            self.page.update()
-            return
+        self.doc.text = new
+        self.doc.history.observe(old, new, time.monotonic())   # also the text field's own undo / redo
         self.paint_source()
-        if len(new) >= len(old) and self.lang.context(new, caret):
+        if len(new) >= len(old) and syntax.context(new, caret):
             self.show_completions(caret)
         else:
             self.hide_completions()
@@ -1670,27 +1682,17 @@ class App:
         """Close the popup when the caret leaves the directive name (clicks, arrows outside the popup)."""
         self.last_selection = e.selection
         caret = e.selection.extent_offset
-        folds = self.doc.folds
-        # a tap on the "… ⋯ …" line of a collapsed element expands it. Only a real tap: events without a
-        # cause (all of them in the web build, and the echo of selections set by the app, possibly with a
-        # stale offset) must never change the folds, or the editor and the document would drift apart
-        if folds and e.cause == ft.TextSelectionChangeCause.TAP and e.selection.is_collapsed:
-            i = folds.fold_index(caret, line=False)
-            if i is not None:
-                folds.unfold(i)
-                self.show_folds(caret)
-                return
         if e.cause is None:                   # set by the app (completion accepted, popup navigation)
             return
         await asyncio.sleep(0.05)             # the text change of the same keystroke may come later
         if not self.ac_popup.visible or time.monotonic() < self._nav_until:
             return
-        if caret != self.ac_caret and not self.lang.context(self.editor.value or "", caret):
+        if caret != self.ac_caret and not syntax.context(self.editor.value or "", caret):
             self.hide_completions()
             self.page.update()
 
     def show_completions(self, caret: int):
-        items = self.lang.suggestions(self.editor.value or "", caret)
+        items = syntax.suggestions(self.editor.value or "", caret)
         if not items:
             self.hide_completions()
             return
@@ -1714,8 +1716,7 @@ class App:
                 bgcolor="#3D5A99" if sel else None, on_click=lambda e, i=i: self.run(self.accept_completion(i)),
                 content=ft.Row(spacing=10, vertical_alignment=ft.CrossAxisAlignment.CENTER, controls=[
                     ft.Text(c.name, style=code_style(SYNTAX_COLORS[
-                        "section" if self.doc.kind == "xml" or (c.name.startswith(("start_of_", "end_of_"))
-                                                                 and "notes" not in c.name)
+                        "section" if c.name.startswith(("start_of_", "end_of_")) and "notes" not in c.name
                         else "directive"])),
                     ft.Text(c.hint, size=11, color="#9AA3B5", expand=True, no_wrap=True,
                             overflow=ft.TextOverflow.ELLIPSIS)])))
@@ -1729,12 +1730,10 @@ class App:
         if not self.ac_items:
             return
         text = self.editor.value or ""
-        new, a, b = self.lang.apply(text, self.ac_caret if caret is None else caret, self.ac_items[index])
+        new, a, b = syntax.apply(text, self.ac_caret if caret is None else caret, self.ac_items[index])
         self.hide_completions()
-        if not self.set_view(new):
-            self.toast(tr("xml.folded_edit"))
-            self.page.update()
-            return
+        self.doc.history.record(self.doc.text, new, time.monotonic(), group=False)
+        self.doc.text = new
         self.editor.value = new
         self.paint_source()
         self.editor.selection = ft.TextSelection(base_offset=a, extent_offset=b)
@@ -1743,64 +1742,19 @@ class App:
         await self.editor.focus()
         await self.schedule_render()
 
-    # ---- MusicXML: indentation and collapsed elements
-    def caret(self) -> int | None:
-        sel = self.last_selection
-        return None if sel is None else min(sel.extent_offset, len(self.editor.value or ""))
-
-    def show_folds(self, caret: int | None = None):
-        """Redraw the editor after collapsing or expanding (the document's text does not change)."""
-        self.hide_completions()
-        self.editor.value = self.doc.view
-        self.paint_source()
-        if caret is not None:
-            caret = min(caret, len(self.doc.view))
-            self.editor.selection = ft.TextSelection(base_offset=caret, extent_offset=caret)
-        self.page.update()
-
-    async def fold_xml(self, action: str):
-        d = self.doc
-        if d.kind != "xml":
+    # ---- undo / redo of the song source
+    async def undo_redo(self, action: str):
+        """Undo ("undo") or redo ("redo") one step of the song source (edits.History), on its tab."""
+        d = self.docs[0]
+        step = d.history.undo() if action == "undo" else d.history.redo()
+        if step is None:
             return
-        folds = d.folds or xml_syntax.Folds(d.text)
-        caret = self.caret()
-        if action in ("fold", "unfold") and caret is None:
-            self.toast(tr("xml.no_caret"))
-            return
-        if action == "fold":
-            if not folds.fold_at(caret):
-                self.toast(tr("xml.nothing_to_fold"))
-                return
-            caret = folds.view.rfind("\n", 0, min(caret, len(folds.view))) + 1
-        elif action == "unfold":
-            if not folds.unfold_at(caret):
-                self.toast(tr("xml.nothing_to_unfold"))
-                return
-        elif action == "fold_all":
-            if not folds.fold_all("measure"):
-                self.toast(tr("xml.no_measures"))
-                return
-            caret = 0
-        else:
-            folds.unfold_all()
-            caret = 0
-        d.folds = folds if folds else None
-        self.show_folds(caret)
-        await self.editor.focus()
-
-    async def indent_xml(self, one_per_line: bool):
-        d = self.doc
-        full = d.text
-        err = xml_syntax.xml_error(full)
-        if err:
-            self.toast(tr("xml.invalid", line=err[0]))
-            return
-        new = xml_syntax.format_xml(full) if one_per_line else xml_syntax.reindent_xml(full)
-        if new == full:
-            self.toast(tr("xml.already_indented"))
-            return
-        d.text, d.folds = new, None
+        text, caret = step
+        d.text = text
+        self.doc_index = 0
         self.show_doc()
+        caret = min(caret, len(text))
+        self.editor.selection = ft.TextSelection(base_offset=caret, extent_offset=caret)
         self.update_chrome()
         self.page.update()
         await self.schedule_render()
@@ -1842,29 +1796,27 @@ class App:
     async def render(self):
         """Parse and lay out the current text (off the UI thread) and redraw the preview.
         On an engine error the last good preview stays and the error is shown above it."""
-        text, semis, opts, base, files = self.text, self.transpose, dict(self.opts), self.base_dir, self.xml_files()
+        text, semis, opts, base = self.text, self.transpose, dict(self.opts), self.base_dir
         try:
-            dl, title, song_notation = await asyncio.to_thread(self.build, text, semis, opts, base, files)
+            dl, title, song_notation = await asyncio.to_thread(self.build, text, semis, opts, base)
         except Exception as err:          # keep typing even if the engine chokes on a half-written line
             self.error = f"{type(err).__name__}: {err}"
         else:
-            if text != self.text or semis != self.transpose or opts != self.opts or files != self.xml_files():
+            if text != self.text or semis != self.transpose or opts != self.opts:
                 return                    # stale: a newer render is on its way
             self.dl, self.error, self.song_title = dl, None, title
             if not opts.get("notation_force"):      # until the reader switches: show the song's own choice
                 self.notation_seg.selected = [song_notation or opts["notation"]]
         self.draw()
 
-    def xml_files(self) -> dict[Path, str]:
-        """MusicXML tabs whose content differs from the disk: the preview uses the edited text."""
-        return {d.path.resolve(): d.text for d in self.docs[1:] if d.path and d.text and d.dirty}
-
     @staticmethod
-    def build(text, transpose, opts, base_dir, files=None):
-        song = parse(text, transpose=transpose, base_dir=base_dir, files=files)
+    def build(text, transpose, opts, base_dir):
+        song = parse(text, transpose=transpose, base_dir=base_dir)
         return layout(song, **opts), song.meta.get("title"), song.meta.get("notation")
 
     def draw(self):
+        """Redraw the preview from the last DisplayList: one canvas per page, scaled to the panel
+        width (up to MAX_SCALE), with the engine error and the warnings around it."""
         if self.screen != "editor":
             return
         self.tr_label.value = f"{self.transpose:+d}" if self.transpose else "0"
@@ -1880,6 +1832,7 @@ class App:
             if self.show_editor and not self.fullscreen:
                 width = (width - 1) / 2
             self.scale = max(0.3, min(MAX_SCALE, (width - 2 * 16 - 8) / pw))
+            # the same metrics the layout measured with: page_shapes positions text by them
             metrics = registry(self.opts["theme"])
             self.pages.controls = [
                 ft.Row(alignment=ft.MainAxisAlignment.CENTER, controls=[
@@ -1944,6 +1897,7 @@ class App:
         new, old, to = formats.upgrade(self.text)
         if new == self.text:
             return
+        self.docs[0].history.record(self.text, new, time.monotonic(), group=False)
         self.text = new
         await self.switch_tab(0)
         self.show_doc()
@@ -1966,7 +1920,7 @@ class App:
             return
         if not self.path:
             if await self.save_as():
-                await self.save_musicxml([self.path.name if self.path else self.name])
+                await self.refresh_tabs([self.path.name if self.path else self.name])
             return
         if not await self.confirm_newer_format():
             return
@@ -1978,22 +1932,14 @@ class App:
             self.toast(tr("ed.save_failed", err=err))
             return
         self.saved_text = self.text
-        await self.save_musicxml([self.path.name])
+        await self.refresh_tabs([self.path.name])
 
-    async def save_musicxml(self, saved: list[str]):
-        """Write the changed MusicXML tabs, then look for MusicXML files the song references now:
-        each new reference gets its tab (opened right away if it is the first one)."""
-        for d in self.docs[1:]:
-            if not (d.dirty and d.path):
-                continue
-            try:
-                d.path.parent.mkdir(parents=True, exist_ok=True)
-                d.path.write_text(d.text, encoding="utf-8")
-            except OSError as err:
-                self.toast(tr("ed.save_failed", err=err))
-                continue
-            d.saved, d.missing = d.text, False
-            saved.append(d.name)
+    async def refresh_tabs(self, saved: list[str]):
+        """After saving the song: look for the MusicXML files it references now (the tabs are read
+        only, there is nothing of theirs to write); each new reference gets its tab (opened right away
+        if it is the first one). The song's changes are no longer painted: it is the saved text now."""
+        if self.doc_index == 0:
+            self.paint_source()
         had_xml = len(self.docs) > 1
         added = self.load_musicxml_docs()
         msg = tr("ed.saved", name=", ".join(saved))
@@ -2007,7 +1953,7 @@ class App:
 
     async def save_as_clicked(self, e=None):
         if await self.save_as():
-            await self.save_musicxml([self.path.name if self.path else self.name])
+            await self.refresh_tabs([self.path.name if self.path else self.name])
 
     def stamp(self, created: datetime | None = None, new_file: bool = False):
         """Write {created}/{modified} into the song source (library.stamp), keeping the caret where it was."""
@@ -2156,6 +2102,8 @@ class App:
         return False
 
     async def on_window_event(self, e):
+        """Desktop: the window's close button is intercepted (prevent_close) to ask about unsaved
+        changes first; the window is destroyed only once that is settled."""
         if e.type == ft.WindowEventType.CLOSE:
             if await self.confirm_discard():
                 await self.page.window.destroy()
@@ -2354,6 +2302,16 @@ class App:
             return
         if e.key.upper() == "S" and (e.meta or e.ctrl):
             await self.save()
+            return
+        if (e.meta or e.ctrl) and (e.key.upper() == "Z" or (e.key.upper() == "Y" and e.ctrl)):
+            if self.show_editor and self.doc.kind == "chs":
+                action = "redo" if e.shift or e.key.upper() == "Y" else "undo"
+                # the text field may undo by itself as well (on_edit then takes over): wait for it
+                self._undo_key = (action, time.monotonic())
+                await asyncio.sleep(0.15)
+                if self._undo_key and self._undo_key[0] == action:
+                    self._undo_key = None
+                    await self.undo_redo(action)
             return
         if self.editor_focused or not self.dl:
             return                         # arrows and space belong to the editor while typing

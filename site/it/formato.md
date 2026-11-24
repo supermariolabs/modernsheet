@@ -158,6 +158,8 @@ Le parti scritte (intro, riff, temi) si preparano in un editor di partiture (Mus
 
 `{musicxml: tema.musicxml | 3-6}` usa solo le battute dalla 3 alla 6. Il percorso è relativo alla cartella del brano. Note, accordi e testo del file vengono disegnati sul pentagramma, trasposti insieme al resto.
 
+Nell'app i MusicXML citati si vedono in una scheda accanto al brano, in sola lettura; per modificarli conviene convertirli in note scritte nel `.chs` (sotto) con il pulsante **Converti in note nel brano**.
+
 ## Note scritte nel .chs
 
 In alternativa al MusicXML, poche battute di note si possono scrivere **direttamente nel brano**, dentro una sezione:

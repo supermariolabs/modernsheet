@@ -23,7 +23,7 @@
     <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Menu">
     <label for="nav-toggle" class="nav-button" aria-hidden="true"><span></span><span></span><span></span></label>
     <nav class="menu">
-      <a href="/it/">Home</a><a href="/it/download/">Download</a><a href="/it/guida/" aria-current="page">Guida all&#x27;app</a><a href="/it/formato/">Il formato .chs</a><a href="/it/chordsheet/">chordsheet.com</a>
+      <a href="/it/">Home</a><a href="/it/download/">Download</a><a href="/it/guida/" aria-current="page">Guida all&#x27;app</a><a href="/it/formato/">Il formato .chs</a><a href="/it/chordsheet/">chordsheet.com</a><a href="/it/changelog/">Changelog</a>
       <a class="lang" href="/en/guide/" hreflang="en">English</a>
       <a class="gh" href="https://github.com/supermariolabs/modernsheet">GitHub</a>
     </nav>
@@ -154,8 +154,10 @@ python modernsheet_cli.py --check *.chs                  # solo controllo degli 
 <p>La <strong>matita</strong> apre l'editor accanto allo spartito:</p>
 <ul>
 <li><strong>evidenziazione</strong> della sintassi e <strong>suggerimenti</strong> delle direttive quando scrivi <code>{</code> (Invio o Tab per scegliere);</li>
+<li>quello che hai cambiato dall'ultimo salvataggio ha lo <strong>sfondo verde</strong> (più acceso sul testo scritto), che sparisce quando salvi;</li>
+<li><strong>Annulla</strong> e <strong>Ripristina</strong> passo per passo (una parola alla volta) con i pulsanti ↶ ↷ in alto o con ⌘Z / Ctrl+Z e ⌘⇧Z / Ctrl+Y;</li>
 <li>l'anteprima si aggiorna mentre scrivi; i <strong>warning</strong> sono elencati sotto l'editor e toccandoli si va alla riga;</li>
-<li>una <strong>scheda per ogni MusicXML</strong> citato dal brano, modificabile come il sorgente, con una barra per <strong>indentare</strong> il file (solo i rientri, o un elemento per riga) e <strong>comprimere</strong> su una riga una battuta o un altro elemento (<em>Comprimi</em> dove si trova il cursore, <em>Comprimi battute</em> per tutte, <em>Espandi</em>, <em>Espandi tutto</em>); comprimere non cambia il file;</li>
+<li>una <strong>scheda per ogni MusicXML</strong> citato dal brano, in <strong>sola lettura</strong>: il file si vede già indentato e colorato, e il pulsante <strong>Converti in note nel brano</strong> scrive le sue battute nel <code>.chs</code> come note (<code>{start_of_notes}</code>), al posto del riferimento, che resta come commento per traccia (il file MusicXML non viene toccato); controlla l'anteprima e salva;</li>
 <li><strong>Salva</strong> (⌘S / Ctrl+S) diventa verde quando c'è qualcosa da salvare; <strong>Salva con nome</strong> crea una copia accanto al brano;</li>
 <li><strong>Esporta PDF</strong>; il <strong>cestino rosso</strong> elimina il brano e i suoi MusicXML, dopo una conferma con l'elenco dei file.</li>
 </ul>

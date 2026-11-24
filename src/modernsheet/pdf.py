@@ -33,6 +33,8 @@ def pdf_bytes(dl: DisplayList) -> bytes:
 
 
 def _replay(c, op):
+    """Draw one DisplayList operation on a reportlab canvas, exactly as recorded: the backend makes
+    no layout decision (same operations as flet_view and svg, so PDF and screen match)."""
     kind = op[0]
     if kind == "line":
         _, x1, y1, x2, y2, rgb, w, cap = op
@@ -70,6 +72,8 @@ def _replay(c, op):
         _, x, y, s, font, size, rgb, outline = op
         c.setFillColorRGB(*rgb)
         if outline:
+            # simulated bold (the Real Book chord style): fill and stroke the glyph outline with a thin
+            # line (render mode 2), since the handwritten fonts have no bold face
             c.saveState()
             c.setStrokeColorRGB(*rgb)
             c.setLineWidth(outline)

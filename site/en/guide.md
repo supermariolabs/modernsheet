@@ -77,8 +77,10 @@ Tapping a card opens the song in **view mode**: just the sheet, with the options
 The **pencil** opens the editor next to the sheet:
 
 - **syntax highlighting** and **suggestions** for directives when you type `{` (Enter or Tab to choose);
+- what you changed since the last save has a **green background** (brighter on the text you wrote), which goes away when you save;
+- **Undo** and **Redo** step by step (a word at a time) with the ↶ ↷ buttons at the top or with ⌘Z / Ctrl+Z and ⌘⇧Z / Ctrl+Y;
 - the preview updates as you type; **warnings** are listed under the editor, and tapping one jumps to the line;
-- a **tab for every MusicXML file** the song cites, editable like the source, with a bar to **indent** the file (just the indentation, or one element per line) and **collapse** a measure or another element to one line (*Collapse* at the cursor, *Collapse measures* for all of them, *Expand*, *Expand all*); collapsing does not change the file;
+- a **tab for every MusicXML file** the song cites, **read only**: the file is shown indented and coloured, and the **Convert to notes in the song** button writes its bars into the `.chs` as notes (`{start_of_notes}`), in place of the reference, which stays as a comment for the record (the MusicXML file is not touched); check the preview and save;
 - **Save** (⌘S / Ctrl+S) turns green when there is something to save; **Save as** makes a copy next to the song;
 - **Export PDF**; the **red bin** deletes the song and its MusicXML files, after a confirmation listing the files.
 

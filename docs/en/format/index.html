@@ -23,7 +23,7 @@
     <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Menu">
     <label for="nav-toggle" class="nav-button" aria-hidden="true"><span></span><span></span><span></span></label>
     <nav class="menu">
-      <a href="/en/">Home</a><a href="/en/download/">Download</a><a href="/en/guide/">App guide</a><a href="/en/format/" aria-current="page">The .chs format</a><a href="/en/chordsheet/">chordsheet.com</a>
+      <a href="/en/">Home</a><a href="/en/download/">Download</a><a href="/en/guide/">App guide</a><a href="/en/format/" aria-current="page">The .chs format</a><a href="/en/chordsheet/">chordsheet.com</a><a href="/en/changelog/">Changelog</a>
       <a class="lang" href="/it/formato/" hreflang="it">Italiano</a>
       <a class="gh" href="https://github.com/supermariolabs/modernsheet">GitHub</a>
     </nav>
@@ -328,6 +328,7 @@
 {end_of_intro}
 </code></pre>
 <p><code>{musicxml: head.musicxml | 3-6}</code> uses bars 3 to 6 only. The path is relative to the song's folder. Notes, chords and lyrics from the file are drawn on the staff, transposed along with the rest.</p>
+<p>In the app, cited MusicXML files are shown in a tab next to the song, read only; to change them, convert them into notes written in the <code>.chs</code> (below) with the <strong>Convert to notes in the song</strong> button.</p>
 <h2 id="notes-written-in-the-chs">Notes written in the .chs<a class="headerlink" href="#notes-written-in-the-chs">#</a></h2>
 <p>Instead of MusicXML, a few bars of notes can be written <strong>right in the song</strong>, inside a section:</p>
 <pre><code>{start_of_intro: Intro}

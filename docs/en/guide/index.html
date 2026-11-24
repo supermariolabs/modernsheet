@@ -23,7 +23,7 @@
     <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Menu">
     <label for="nav-toggle" class="nav-button" aria-hidden="true"><span></span><span></span><span></span></label>
     <nav class="menu">
-      <a href="/en/">Home</a><a href="/en/download/">Download</a><a href="/en/guide/" aria-current="page">App guide</a><a href="/en/format/">The .chs format</a><a href="/en/chordsheet/">chordsheet.com</a>
+      <a href="/en/">Home</a><a href="/en/download/">Download</a><a href="/en/guide/" aria-current="page">App guide</a><a href="/en/format/">The .chs format</a><a href="/en/chordsheet/">chordsheet.com</a><a href="/en/changelog/">Changelog</a>
       <a class="lang" href="/it/guida/" hreflang="it">Italiano</a>
       <a class="gh" href="https://github.com/supermariolabs/modernsheet">GitHub</a>
     </nav>
@@ -154,8 +154,10 @@ python modernsheet_cli.py --check *.chs                  # check for errors only
 <p>The <strong>pencil</strong> opens the editor next to the sheet:</p>
 <ul>
 <li><strong>syntax highlighting</strong> and <strong>suggestions</strong> for directives when you type <code>{</code> (Enter or Tab to choose);</li>
+<li>what you changed since the last save has a <strong>green background</strong> (brighter on the text you wrote), which goes away when you save;</li>
+<li><strong>Undo</strong> and <strong>Redo</strong> step by step (a word at a time) with the ↶ ↷ buttons at the top or with ⌘Z / Ctrl+Z and ⌘⇧Z / Ctrl+Y;</li>
 <li>the preview updates as you type; <strong>warnings</strong> are listed under the editor, and tapping one jumps to the line;</li>
-<li>a <strong>tab for every MusicXML file</strong> the song cites, editable like the source, with a bar to <strong>indent</strong> the file (just the indentation, or one element per line) and <strong>collapse</strong> a measure or another element to one line (<em>Collapse</em> at the cursor, <em>Collapse measures</em> for all of them, <em>Expand</em>, <em>Expand all</em>); collapsing does not change the file;</li>
+<li>a <strong>tab for every MusicXML file</strong> the song cites, <strong>read only</strong>: the file is shown indented and coloured, and the <strong>Convert to notes in the song</strong> button writes its bars into the <code>.chs</code> as notes (<code>{start_of_notes}</code>), in place of the reference, which stays as a comment for the record (the MusicXML file is not touched); check the preview and save;</li>
 <li><strong>Save</strong> (⌘S / Ctrl+S) turns green when there is something to save; <strong>Save as</strong> makes a copy next to the song;</li>
 <li><strong>Export PDF</strong>; the <strong>red bin</strong> deletes the song and its MusicXML files, after a confirmation listing the files.</li>
 </ul>

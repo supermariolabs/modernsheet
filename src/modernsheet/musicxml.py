@@ -1,6 +1,8 @@
 """MusicXML reader for notated zones (notes, chord symbols, lyrics, tuplets, repeats, endings)."""
 from __future__ import annotations
 
+import re
+
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -66,6 +68,13 @@ class Notation:
 def _text(el, path, default=None):
     found = el.find(path)
     return found.text.strip() if found is not None and found.text else default
+
+
+def measure_range(measures: list[dict], spec: str) -> list[dict]:
+    """The measures a `{musicxml: file | N-M}` reference asks for: `spec` is what follows the `|`
+    ("3-6", "5"; empty or without a number: all of them)."""
+    m = re.search(r"(\d+)\s*(?:-\s*(\d+))?", spec)
+    return measures[int(m.group(1)) - 1:int(m.group(2) or m.group(1))] if m else measures
 
 
 def read_musicxml(path: Path, text: str | None = None) -> tuple[list[dict], list[str]]:

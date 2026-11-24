@@ -42,7 +42,7 @@ Controllo visivo di un PDF (i test non vedono la grafica):
 
 Altro: `importers/chordsheet_com.py` (testo di chordsheet.com → `.chs`), `importers/chordsheet_account.py`
 (login al sito, elenco e sorgenti dei brani dell'account; nessuna API, si leggono le pagine; password mai salvata), `library.py` (cartella di brani per
-l'app), `settings.py` (impostazioni dell'app), `syntax.py` / `xml_syntax.py` (evidenziazione e completamento nell'editor, `.chs` e MusicXML), `sync.py` / `gdrive.py` (sincronizzazione
+l'app), `settings.py` (impostazioni dell'app), `syntax.py` (evidenziazione e completamento del `.chs`), `edits.py` (sfondo delle parti modificate e annulla/ripristina dell'editor) / `xml_syntax.py` (evidenziazione e indentazione dei MusicXML, in sola lettura), `sync.py` / `gdrive.py` (sincronizzazione
 local-first della libreria, cartella o Google Drive), `cli.py`,
 `src/main.py` (app Flet: libreria + editor con anteprima + impostazioni),
 font in `src/assets/fonts/` (condivisi da motore, PDF e app), esempi in `src/examples/` (copiati in `examples/`
@@ -51,7 +51,8 @@ nella libreria "Modern Sheet" di una nuova installazione).
 ## Regole di lavoro
 
 - **Una modifica completa** = codice + `SPEC.md` (sezione giusta e riga "Versione" in cima) + esempio che la
-  mostri + test in `tests/test_engine.py` + PDF di esempio rigenerati in `examples-pdf/`. Se cambia qualcosa che
+  mostri + test in `tests/` (un file per area: `test_engine.py` motore e impaginazione, `test_notes.py`, `test_tab.py`,
+  `test_library.py`, `test_editor.py`, `test_importers.py`, `test_formats.py`, `test_sync.py`; aiuti comuni in `helpers.py`) + PDF di esempio rigenerati in `examples-pdf/`. Se cambia qualcosa che
   l'utente vede, aggiorna anche la documentazione del sito (`site/it/` **e** `site/en/`) e rigenera `docs/` con
   `python tools/build_site.py`.
 - Dopo ogni modifica grafica: rigenera i PDF coinvolti, **guardali** (PNG) e controlla anche le varianti
@@ -63,6 +64,8 @@ nella libreria "Modern Sheet" di una nuova installazione).
 - **Mai pubblicare `main`** (la cronologia di sviluppo resta locale): su GitHub va solo il ramo `github`, creato da
   `tools/publish_github.sh` (un commit per pubblicazione con i file di `main`, più l'etichetta `v<versione>`) e spinto con
   `git push origin github:main v<versione>`: l'etichetta fa compilare le app desktop (`.github/workflows/release.yml`).
+- A ogni pubblicazione aggiorna il **changelog** del sito (`site/it/changelog.md` e `site/en/changelog.md`): una voce per la
+  versione pubblicata, che riassume tutte le versioni locali dalla pubblicazione precedente.
 
 ## Cose da sapere (decisioni già prese)
 
@@ -83,6 +86,8 @@ nella libreria "Modern Sheet" di una nuova installazione).
   `{volta_end}` o a fine riga del sorgente; la 2ª volta va a capo, allineata a destra sotto la 1ª, solo
   battute (niente chiave/armatura); l'ultima volta chiude con doppia stanghetta.
 - Battute notate (MusicXML o note scritte nel `.chs`, `{start_of_notes}`, SPEC §2.12b, modulo `notes.py`): sigle sopra il rigo e testo sotto, **una sola linea per riga**. Note scritte: alterazioni sempre esplicite, durate come figure (mantenute), ottava relativa con `@N` facoltativa.
+  Nell'app i MusicXML non si modificano più (dalla 0.43): tab in sola lettura e pulsante che li converte in note nel `.chs`
+  (`library.convert_musicxml`, riferimento lasciato come commento).
 - Tablatura (SPEC §4.8b, `tab.py`): `{notation: staff|both|tab}` (opzione, brano, sezione); diteggiatura per programmazione dinamica,
   nota scritta = notazione per chitarra (corde a vuoto Mi3…Mi5 scritti), capotasto; default `staff` (i brani esistenti non cambiano).
   Correzioni: `{tab_position: N}`, `~N` (corda) sulle note, `{tuning}` (anche basso/ukulele), corda/tasto dal MusicXML.
@@ -94,7 +99,7 @@ nella libreria "Modern Sheet" di una nuova installazione).
 
 ## Stato e prossimi passi
 
-- App Flet (libreria da cartella con vista a card, ricerca/ordinamento e indice dei brani + editor scuro a tab (.chs + MusicXML citati) con evidenziazione/completamento e anteprima dal vivo + impostazioni)
+- App Flet (libreria da cartella con vista a card, ricerca/ordinamento e indice dei brani + editor scuro a tab (.chs + MusicXML citati in sola lettura, convertibili in note) con evidenziazione/completamento e anteprima dal vivo + impostazioni)
   funzionante su desktop; **mai provata su
   iPad/Android**: da verificare accesso alla cartella dei brani, posizione verticale dei testi, pedaliera Bluetooth, MusicXML dei file importati sul dispositivo (arrivano senza la loro cartella: non si possono copiare).
 - Sincronizzazione (SPEC §8.3b): fase 1 (motore local-first + provider cartella) e fase 2 (Google Drive, `gdrive.py`,

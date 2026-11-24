@@ -517,6 +517,8 @@ def rename_folder(folder: Path, new_name: str, root: Path) -> RenameResult:
         raise ValueError(f"'{name}' already exists")
     refs = outside_refs(root, folder)
     if same_folder:
+        # only the case changes (jazz → Jazz): on macOS and Windows disks, which ignore case, a direct
+        # rename may do nothing; going through a temporary (hidden) name always works
         tmp = folder.with_name(f".rename-{os.getpid()}-{name}")
         folder.rename(tmp)
         tmp.rename(new)
@@ -681,27 +683,66 @@ def musicxml_refs(text: str) -> list[str]:
     return out
 
 
-def new_musicxml_text(beats: int = 4, beat_type: int = 4, fifths: int = 0) -> str:
-    """A minimal partwise MusicXML: one part, one measure with a whole-bar rest, the given time
-    signature and key signature (fifths: −7…7). Starting point for a referenced file that is missing."""
-    return f"""<?xml version="1.0" encoding="UTF-8"?>
-<score-partwise version="4.0">
-  <part-list>
-    <score-part id="P1"><part-name>Music</part-name></score-part>
-  </part-list>
-  <part id="P1">
-    <measure number="1">
-      <attributes>
-        <divisions>1</divisions>
-        <key><fifths>{fifths}</fifths></key>
-        <time><beats>{beats}</beats><beat-type>{beat_type}</beat-type></time>
-        <clef><sign>G</sign><line>2</line></clef>
-      </attributes>
-      <note>
-        <rest measure="yes"/>
-        <duration>{beats * 4 // beat_type}</duration>
-      </note>
-    </measure>
-  </part>
-</score-partwise>
-"""
+@dataclass
+class Conversion:
+    text: str                       # the source with the references converted
+    count: int                      # references converted
+    exact: bool                     # the song reads the same notes, chords and repeats as before
+
+
+def _notated(song) -> list:
+    """What a conversion must keep: per bar its notes, chords and repeat marks."""
+    def sig(n):
+        return (n.step, n.alter, n.octave, round(n.start, 6), round(n.dur, 6), n.type, n.dots, n.chord,
+                n.tie_start, n.tie_stop, n.lyric, n.measure_rest, n.tuplet, n.tab_string)
+    return [([sig(n) for n in b.notation.notes] if b.notation else None,
+             [(e.chord, round(e.start, 6), round(e.dur, 6)) for e in b.events],
+             (b.num, b.den, b.repeat_start, b.repeat_end, b.volta, b.volta_end)) for b in song.bars]
+
+
+def convert_musicxml(text: str, ref: str, base_dir: Path, note: str = "") -> Conversion:
+    """Write the bars of a MusicXML file as notes in the .chs (SPEC §2.12b): every `{musicxml: ref}`
+    line (with or without a measure range) becomes a `{start_of_notes}` block (notes.to_notes_text,
+    in the key in force at that line), with a `{time}` line where the file changes the time signature.
+    The reference stays above the block as a comment (followed by `note`), as a trace; the MusicXML
+    file is not touched. Raises OSError or SyntaxError if the file cannot be read."""
+    from .formats.v1 import parse as parse_v1
+    from .musicxml import measure_range, read_musicxml
+    from .notes import to_notes_text
+    measures, _ = read_musicxml((base_dir / ref).resolve())
+    key, time_sig, out, count = "C", (4, 4), [], 0
+    for line in text.splitlines(keepends=True):
+        if line.lstrip().startswith("#"):
+            out.append(line)
+            continue
+        for k in re.findall(r"\{\s*key\s*:\s*([^}]*)\}", line):          # also inside a row of bars
+            key = k.strip() if KEY_RE.match(k.strip()) else key
+        for a, b in re.findall(r"\{\s*time\s*:\s*(\d+)\s*/\s*(\d+)\s*\}", line):
+            time_sig = (int(a), int(b))
+        m = DIRECTIVE_LINE_RE.match(line.strip())
+        name, value = split_directive(m.group(1)) if m else ("", "")
+        file, _, opts = value.partition("|")
+        if name != "musicxml" or file.strip() != ref:
+            out.append(line)
+            continue
+        count += 1
+        part = measure_range(measures, opts)
+        indent = line[:len(line) - len(line.lstrip())]
+        out.append(f"{indent}# {line.strip()}" + (f"  ({note})" if note else "") + "\n")
+        i = 0
+        while i < len(part):                   # one block per run of measures in the same time signature
+            sig = (part[i]["beats"], part[i]["beat_type"])
+            j = i
+            while j < len(part) and (part[j]["beats"], part[j]["beat_type"]) == sig:
+                j += 1
+            if sig != time_sig:
+                out.append(f"{indent}{{time: {sig[0]}/{sig[1]}}}\n")
+                time_sig = sig
+            out.append(to_notes_text(part[i:j], key))
+            i = j
+    new = "".join(out)
+    try:
+        exact = _notated(parse_v1(text, base_dir=base_dir)) == _notated(parse_v1(new, base_dir=base_dir))
+    except Exception:                       # noqa: BLE001  a source the engine cannot read: not checked
+        exact = False
+    return Conversion(new, count, exact)

@@ -205,6 +205,16 @@ class Syncer:
         self._upload(copy, None, report)
 
     def _one(self, rel: str, L: str | None, R: RemoteFile | None, report: Report) -> None:
+        """Decide one file by three-way comparison: L = local content hash, R = remote file (revision),
+        B = both as they were at the last sync (manifest). Only the side that changed since B wins;
+        a deletion is just a change to "nothing".
+
+        Safety rules, all from real failure cases of sync tools:
+        - a file that is listed remotely but cannot be downloaded now (an iCloud placeholder not yet
+          on the disk, a Drive file being processed) is never taken as deleted;
+        - when both sides changed, nothing is lost: an edit beats a deletion on either side, and two
+          different edits keep both versions (the remote one under a "conflict" name);
+        - local deletions decided here go to the app's trash, not away (_to_trash)."""
         B = self.manifest.files.get(rel)
         if R is not None and not R.available:
             # present remotely but not downloadable now: never a deletion; unchanged if we know it
@@ -286,6 +296,8 @@ class Syncer:
             try:
                 self._one(rel, local.get(rel), remote.get(rel), report)
             except RemoteChanged:
+                # uploads and deletions say which remote revision they expect: another device changed
+                # the file after our listing, so we must not overwrite it; the next sync decides again
                 report.skipped.append(rel)
             except AuthRequired as err:
                 report.auth_required = True

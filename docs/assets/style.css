@@ -51,13 +51,16 @@ img { max-width: 100%; height: auto; }
          text-decoration: none; margin-right: auto; }
 .brand img { border-radius: 9px; }
 .menu { display: flex; align-items: center; gap: 4px; }
-.menu a { color: var(--ink); text-decoration: none; padding: 8px 12px; border-radius: 8px; font-size: 15px; }
+.menu a { color: var(--ink); text-decoration: none; padding: 8px 10px; border-radius: 8px; font-size: 15px;
+          white-space: nowrap; }
+.brand { white-space: nowrap; }
 .menu a:hover { background: var(--bg-soft); }
 .menu a[aria-current="page"] { color: var(--blue); font-weight: 600; }
 .menu .lang { color: var(--muted); }
 .menu .gh { border: 1px solid var(--line); }
 .nav-toggle, .nav-button { display: none; }
-@media (max-width: 760px) {
+/* the menu folds into the ☰ button before its items would wrap (8 links with Changelog) */
+@media (max-width: 1100px) {
   .nav-button { display: flex; flex-direction: column; gap: 5px; cursor: pointer; padding: 10px; }
   .nav-button span { width: 22px; height: 2px; background: var(--ink); border-radius: 2px; }
   .menu { display: none; position: absolute; top: 64px; left: 0; right: 0; flex-direction: column;

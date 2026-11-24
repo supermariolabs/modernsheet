@@ -18,7 +18,7 @@ from .layout import THEMES, Layout
 from .model import Bar, Event, Section, Song
 from .parser import parse
 
-__version__ = "0.42.0"
+__version__ = "0.44.0"
 
 
 def layout(song: Song, **opts) -> DisplayList:

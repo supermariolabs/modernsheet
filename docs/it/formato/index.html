@@ -23,7 +23,7 @@
     <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Menu">
     <label for="nav-toggle" class="nav-button" aria-hidden="true"><span></span><span></span><span></span></label>
     <nav class="menu">
-      <a href="/it/">Home</a><a href="/it/download/">Download</a><a href="/it/guida/">Guida all&#x27;app</a><a href="/it/formato/" aria-current="page">Il formato .chs</a><a href="/it/chordsheet/">chordsheet.com</a>
+      <a href="/it/">Home</a><a href="/it/download/">Download</a><a href="/it/guida/">Guida all&#x27;app</a><a href="/it/formato/" aria-current="page">Il formato .chs</a><a href="/it/chordsheet/">chordsheet.com</a><a href="/it/changelog/">Changelog</a>
       <a class="lang" href="/en/format/" hreflang="en">English</a>
       <a class="gh" href="https://github.com/supermariolabs/modernsheet">GitHub</a>
     </nav>
@@ -328,6 +328,7 @@
 {end_of_intro}
 </code></pre>
 <p><code>{musicxml: tema.musicxml | 3-6}</code> usa solo le battute dalla 3 alla 6. Il percorso è relativo alla cartella del brano. Note, accordi e testo del file vengono disegnati sul pentagramma, trasposti insieme al resto.</p>
+<p>Nell'app i MusicXML citati si vedono in una scheda accanto al brano, in sola lettura; per modificarli conviene convertirli in note scritte nel <code>.chs</code> (sotto) con il pulsante <strong>Converti in note nel brano</strong>.</p>
 <h2 id="note-scritte-nel-chs">Note scritte nel .chs<a class="headerlink" href="#note-scritte-nel-chs">#</a></h2>
 <p>In alternativa al MusicXML, poche battute di note si possono scrivere <strong>direttamente nel brano</strong>, dentro una sezione:</p>
 <pre><code>{start_of_intro: Intro}
