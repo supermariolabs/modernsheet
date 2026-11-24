@@ -69,7 +69,8 @@ La ricerca guarda in tutta la libreria, sottocartelle comprese, senza distinguer
 
 Toccando una card il brano si apre in **modalità vista**: solo lo spartito, con le opzioni in alto.
 
-- **Trasposizione** – / +: cambia sigle e armature; **Real Book** o **Clean**; **Griglia** (battute tutte uguali) o **Riempi**; **sigle jazz**; **colori per sezione**.
+- **Trasposizione** – / +: cambia sigle e armature; **Real Book** o **Clean**; **Griglia** (battute tutte uguali) o **Riempi** (un brano o una sezione possono fissarne una nel sorgente con `{bar_width}`); **sigle jazz**; **colori per sezione**.
+- **Pentagramma / Entrambi / Tablatura**: per chi suona la chitarra, le parti in notazione anche in **tablatura**, sotto il pentagramma o al suo posto (con il ritmo sotto i numeri). Corda e tasto li sceglie l'app, per restare in una posizione comoda; con `{capo}` i tasti partono dal capotasto. Dove serve si corregge nel brano: `{tab_position: 5}` (la mano attorno al 5° tasto), `~3` dopo una nota (quella corda), `{tuning: drop D}` (accordatura, anche basso e ukulele).
 - **⛶ Schermo intero**: restano solo le pagine. Per uscire c'è il pulsante in alto a destra, oppure il tasto **Esc**.
 - Le frecce, Pagina su/giù, lo spazio e le **pedaliere Bluetooth** girano le pagine.
 
@@ -77,7 +78,7 @@ La **matita** apre l'editor accanto allo spartito:
 
 - **evidenziazione** della sintassi e **suggerimenti** delle direttive quando scrivi `{` (Invio o Tab per scegliere);
 - l'anteprima si aggiorna mentre scrivi; i **warning** sono elencati sotto l'editor e toccandoli si va alla riga;
-- una **scheda per ogni MusicXML** citato dal brano, modificabile come il sorgente;
+- una **scheda per ogni MusicXML** citato dal brano, modificabile come il sorgente, con una barra per **indentare** il file (solo i rientri, o un elemento per riga) e **comprimere** su una riga una battuta o un altro elemento (*Comprimi* dove si trova il cursore, *Comprimi battute* per tutte, *Espandi*, *Espandi tutto*); comprimere non cambia il file;
 - **Salva** (⌘S / Ctrl+S) diventa verde quando c'è qualcosa da salvare; **Salva con nome** crea una copia accanto al brano;
 - **Esporta PDF**; il **cestino rosso** elimina il brano e i suoi MusicXML, dopo una conferma con l'elenco dei file.
 
@@ -99,4 +100,4 @@ La sincronizzazione parte all'avvio, dopo ogni salvataggio, ogni 5 minuti e con 
 
 ## Impostazioni
 
-Lingua (italiano o inglese), cartella dei brani, cartella per i PDF, opzioni di visualizzazione predefinite (tema, griglia, sigle, colori) e sincronizzazione. Le impostazioni restano salvate sul dispositivo.
+Lingua (italiano o inglese), cartella dei brani, cartella per i PDF, opzioni di visualizzazione predefinite (tema, griglia, spazio fra le righe, sigle, colori) e sincronizzazione. Un brano può fissare il suo spazio fra le righe con `{row_spacing}`. Le impostazioni restano salvate sul dispositivo.

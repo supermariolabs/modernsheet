@@ -1,5 +1,5 @@
 # Brano originale: guida alle basi del formato .chs
-#   intestazione completa, opzioni per brano, righe con e senza stanghette, durate, continuazioni,
+#   intestazione completa, opzioni per brano ({row_spacing}: spazio fra le righe; {bar_width}, anche per una sola sezione), righe con e senza stanghette, durate, continuazioni,
 #   stop, battuta vuota, accordi con basso, tonalità minore, {comment} (non stampato)
 {format: v1}
 {title: Formato base}
@@ -11,6 +11,7 @@
 {tempo: 88}
 {capo: 2}
 {bar_width: fit}
+{row_spacing: wide}
 {label_colors: by_type}
 {bars_per_line: 4}
 {comment: questo commento resta nel file ma non viene stampato}
@@ -28,6 +29,9 @@
 {end_of_verse}
 
 {start_of_chorus: Ritornello}
+# {bar_width} dentro una sezione vale solo per lei: il brano è "fit" (intestazione), il ritornello torna
+# alla griglia, con le battute larghe uguali e le stanghette in colonna
+{bar_width: uniform}
 {text: Una battuta vuota (| |) continua l'accordo precedente e si vede come %.}
 | [F] | [G] | [Em7] | [Am] |
 | [Dm7] [G7] | [C/E] [F] | [Bm7b5] [E7sus4] [E7] | [Am] [/] ||

@@ -19,6 +19,10 @@ def main(argv=None):
     ap.add_argument("--bars-per-line", type=int, default=4, help="default bars per line (default 4)")
     ap.add_argument("--bar-width", choices=["uniform", "fit"], default="uniform",
                     help="uniform: same width for every bar (default); fit: each line fills the page")
+    ap.add_argument("--row-spacing", default="normal", metavar="compact|normal|wide|extra|N%",
+                    help="space between rows: a name or a percentage of the normal one (50%%-300%%)")
+    ap.add_argument("--notation", choices=["staff", "both", "tab"], default="staff",
+                    help="notated bars: staff (default), staff + guitar tablature, or tablature only")
     ap.add_argument("--paper", choices=["A4", "Letter"], default="A4")
     ap.add_argument("--theme", choices=list(THEMES), default="realbook",
                     help="realbook: handwritten jazz look (default); clean: plain sans-serif")
@@ -52,7 +56,7 @@ def main(argv=None):
             print(f"{src}: {len(song.sections)} sections, {len(song.bars)} bars")
         else:
             out = output_path(args, src, ".pdf")
-            render_pdf(song, str(out), bars_per_line=args.bars_per_line, bar_width=args.bar_width,
+            render_pdf(song, str(out), bars_per_line=args.bars_per_line, bar_width=args.bar_width, row_spacing=args.row_spacing, notation=args.notation,
                        paper=args.paper, theme=args.theme, chord_symbols=args.chord_symbols,
                        label_colors=args.label_colors)
             print(f"{src} -> {out}")
@@ -118,7 +122,7 @@ def import_chordsheet(args) -> int:
             print(f"  warning: {w}", file=sys.stderr)
         if args.pdf:
             pdf = out.with_suffix(".pdf")
-            render_pdf(song, str(pdf), bars_per_line=args.bars_per_line, bar_width=args.bar_width,
+            render_pdf(song, str(pdf), bars_per_line=args.bars_per_line, bar_width=args.bar_width, row_spacing=args.row_spacing, notation=args.notation,
                        paper=args.paper, theme=args.theme, chord_symbols=args.chord_symbols,
                        label_colors=args.label_colors)
             print(f"{out} -> {pdf}")

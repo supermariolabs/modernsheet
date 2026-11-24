@@ -4,13 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Il formato .chs · Modern Sheet</title>
-<meta name="description" content="Riferimento completo del formato .chs di Modern Sheet: intestazione, sezioni, accordi e durate, battute, ritornelli, volte, segni, testo, MusicXML.">
+<meta name="description" content="Riferimento completo del formato .chs di Modern Sheet: intestazione, sezioni, accordi e durate, battute, ritornelli, volte, segni, testo, note scritte nel brano, MusicXML.">
 <link rel="canonical" href="https://modernsheet.app/it/formato/">
 <link rel="alternate" hreflang="en" href="https://modernsheet.app/en/format/">
 <link rel="icon" href="/assets/img/favicon.png">
 <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
 <meta property="og:title" content="Il formato .chs · Modern Sheet">
-<meta property="og:description" content="Riferimento completo del formato .chs di Modern Sheet: intestazione, sezioni, accordi e durate, battute, ritornelli, volte, segni, testo, MusicXML.">
+<meta property="og:description" content="Riferimento completo del formato .chs di Modern Sheet: intestazione, sezioni, accordi e durate, battute, ritornelli, volte, segni, testo, note scritte nel brano, MusicXML.">
 <meta property="og:image" content="https://modernsheet.app/assets/img/sheet-demo.png">
 <link rel="stylesheet" href="/assets/style.css">
 </head>
@@ -47,6 +47,7 @@
 <li><a href="#segni-di-navigazione">Segni di navigazione</a></li>
 <li><a href="#righe-di-testo">Righe di testo</a></li>
 <li><a href="#note-da-musicxml">Note da MusicXML</a></li>
+<li><a href="#note-scritte-nel-chs">Note scritte nel .chs</a></li>
 <li><a href="#versioni-del-formato">Versioni del formato</a></li>
 </ul>
 </div>
@@ -121,7 +122,27 @@
 <tr>
 <td><code>bar_width</code></td>
 <td><code>{bar_width: fit}</code></td>
-<td><code>uniform</code> (battute uguali) o <code>fit</code> per questo brano.</td>
+<td><code>uniform</code> (battute uguali, la <em>Griglia</em> dell'app) o <code>fit</code> (<em>Riempi</em>) per questo brano; dentro una sezione vale solo per quella.</td>
+</tr>
+<tr>
+<td><code>tuning</code></td>
+<td><code>{tuning: drop D}</code></td>
+<td>Accordatura per la tablatura: <code>standard</code>, <code>drop D</code>, <code>DADGAD</code>, <code>open G</code>, <code>open D</code>, <code>open E</code>, <code>half step down</code>, <code>bass</code>, <code>ukulele</code>… o le corde a vuoto (<code>D A D G B E</code>).</td>
+</tr>
+<tr>
+<td><code>tab_position</code></td>
+<td><code>{tab_position: 5}</code></td>
+<td>Nella tablatura, la mano attorno al 5° tasto per le note che seguono (<code>auto</code> per tornare alla scelta automatica).</td>
+</tr>
+<tr>
+<td><code>notation</code></td>
+<td><code>{notation: both}</code></td>
+<td>Battute notate: <code>staff</code> (pentagramma), <code>both</code> (pentagramma con tablatura per chitarra) o <code>tab</code> (solo tablatura, con il ritmo); anche dentro una sezione.</td>
+</tr>
+<tr>
+<td><code>row_spacing</code></td>
+<td><code>{row_spacing: wide}</code></td>
+<td>Spazio fra le righe di questo brano: <code>compact</code>, <code>normal</code>, <code>wide</code>, <code>extra</code> o una percentuale (<code>120%</code>, fra 50% e 300%).</td>
 </tr>
 <tr>
 <td><code>bars_per_line</code></td>
@@ -307,6 +328,62 @@
 {end_of_intro}
 </code></pre>
 <p><code>{musicxml: tema.musicxml | 3-6}</code> usa solo le battute dalla 3 alla 6. Il percorso è relativo alla cartella del brano. Note, accordi e testo del file vengono disegnati sul pentagramma, trasposti insieme al resto.</p>
+<h2 id="note-scritte-nel-chs">Note scritte nel .chs<a class="headerlink" href="#note-scritte-nel-chs">#</a></h2>
+<p>In alternativa al MusicXML, poche battute di note si possono scrivere <strong>direttamente nel brano</strong>, dentro una sezione:</p>
+<pre><code>{start_of_intro: Intro}
+{start_of_notes}
+| [Gm7] G8 Bb D F [C7] A G E C | [Am7] C E G B [D7] F# E D16 C Bb A |
+| [Gm7] G4. Bb8 [C7] E Db C Bb | [F7] A2- A4 R |
+{end_of_notes}
+{end_of_intro}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Scrivi</th>
+<th>Significa</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>G</code> <code>Bb</code> <code>F#</code></td>
+<td>le note, come negli accordi; <strong>l'alterazione si scrive sempre</strong>, anche se è in armatura (in Fa il si bemolle è <code>Bb</code>); <code>Bn</code> = bequadro voluto</td>
+</tr>
+<tr>
+<td><code>8</code> <code>4</code> <code>2</code> <code>1</code> <code>16</code>, <code>4.</code></td>
+<td>la figura: croma, semiminima, minima, semibreve, semicroma; il punto. <strong>Vale finché non cambia</strong>: <code>G8 Bb D F</code> sono quattro crome</td>
+</tr>
+<tr>
+<td>ottava</td>
+<td>ogni nota va alla più vicina alla precedente; <code>'</code> la alza, <code>,</code> la abbassa; <code>C@5</code> fissa l'ottava (do centrale = <code>C4</code>; durata dopo una barra: <code>C@5/2</code>)</td>
+</tr>
+<tr>
+<td><code>R4</code> <code>R*</code></td>
+<td>pausa; pausa di battuta intera</td>
+</tr>
+<tr>
+<td><code>F2- F4</code></td>
+<td>legatura di valore</td>
+</tr>
+<tr>
+<td><code>3(F8 E D)</code></td>
+<td>terzina (in generale <code>5:4( … )</code>)</td>
+</tr>
+<tr>
+<td><code>&lt;C E G&gt;2</code></td>
+<td>più note sullo stesso gambo</td>
+</tr>
+<tr>
+<td><code>A4~3</code></td>
+<td>per la tablatura: la nota sulla 3ª corda (1 = la più acuta)</td>
+</tr>
+<tr>
+<td><code>[Gm7]</code></td>
+<td>l'accordo, subito prima della nota su cui cade</td>
+</tr>
+</tbody>
+</table>
+<p>Il testo cantato va su una riga <code>w:</code> sotto la riga di note, una sillaba per nota (<code>lu- ne- dì</code>; <code>_</code> salta una nota, <code>|</code> passa alla battuta dopo). Le travature si fanno da sole. Il risultato è lo stesso del MusicXML: si traspone, si impagina e si stampa allo stesso modo; l'esempio <code>note_nel_chs</code> è il blues con melodia scritto così.</p>
 <h2 id="versioni-del-formato">Versioni del formato<a class="headerlink" href="#versioni-del-formato">#</a></h2>
 <p><code>{format: v1}</code> dichiara la versione. Le aggiunte arrivano nella versione corrente senza cambiare il significato dei file esistenti; se un giorno la sintassi cambiasse in modo incompatibile, l'app saprà ancora leggere i file v1 e offrirà di aggiornarli.</p>
 <hr />

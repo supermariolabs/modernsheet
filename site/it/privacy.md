@@ -32,7 +32,7 @@ Se importi i brani dal tuo account chordsheet.com, email e password vengono invi
 
 ## Il sito modernsheet.app
 
-Il sito è ospitato da GitHub Pages e non usa cookie né strumenti di analisi. GitHub può registrare dati tecnici delle visite (per esempio l'indirizzo IP) per far funzionare e proteggere il servizio: vedi l'[informativa di GitHub](https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement).
+Il sito è ospitato da GitHub Pages e non usa cookie né strumenti di analisi. La pagina Download chiede a GitHub (api.github.com) i dati dell'ultima versione pubblicata, per mostrarne numero e data. GitHub può registrare dati tecnici delle visite (per esempio l'indirizzo IP) per far funzionare e proteggere il servizio: vedi l'[informativa di GitHub](https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement).
 
 ## Contatti
 

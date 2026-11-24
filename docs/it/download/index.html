@@ -32,30 +32,36 @@
 <main id="main" class="wrap">
 <h1 id="download">Download<a class="headerlink" href="#download">#</a></h1>
 <p>Modern Sheet per computer e Android, nell'ultima versione pubblicata. Le app sono gratuite e libere (licenza GPL-3.0).</p>
+<p class="latest" data-release hidden></p>
+
 <div class="grid">
 <div class="card">
 <p><span class="ico">🍎</span></p>
 <h3 id="macos">macOS<a class="headerlink" href="#macos">#</a></h3>
 <p>Mac con chip Apple o Intel.</p>
+<p class="build" data-asset="ModernSheet-macos.zip" hidden="hidden"></p>
 <p><a class="btn primary" href="https://github.com/supermariolabs/modernsheet/releases/latest/download/ModernSheet-macos.zip">Scarica per macOS</a></p>
 </div>
 <div class="card">
 <p><span class="ico">💻</span></p>
 <h3 id="windows">Windows<a class="headerlink" href="#windows">#</a></h3>
 <p>Windows 10 e 11, 64 bit.</p>
+<p class="build" data-asset="ModernSheet-windows.zip" hidden="hidden"></p>
 <p><a class="btn primary" href="https://github.com/supermariolabs/modernsheet/releases/latest/download/ModernSheet-windows.zip">Scarica per Windows</a></p>
 </div>
 <div class="card">
 <p><span class="ico">🐧</span></p>
 <h3 id="linux">Linux<a class="headerlink" href="#linux">#</a></h3>
 <p>x86_64, con GTK 3 (le distribuzioni desktop più diffuse).</p>
+<p class="build" data-asset="ModernSheet-linux.tar.gz" hidden="hidden"></p>
 <p><a class="btn primary" href="https://github.com/supermariolabs/modernsheet/releases/latest/download/ModernSheet-linux.tar.gz">Scarica per Linux</a></p>
 </div>
 <div class="card">
 <p><span class="ico">🤖</span></p>
 <h3 id="android">Android<a class="headerlink" href="#android">#</a></h3>
 <p>Telefoni e tablet a 64 bit (APK). <strong>Sperimentale</strong>: ancora poco provato.</p>
-<p><a class="btn primary" href="https://drive.google.com/file/d/1vwZ0EVc03DHRL17h8emCMKTPHOiS09Ye/view?usp=sharing">Scarica per Android</a></p>
+<p class="build" data-asset="ModernSheet-android.apk" hidden="hidden"></p>
+<p><a class="btn primary" data-asset-link="ModernSheet-android.apk" href="https://drive.google.com/file/d/1vwZ0EVc03DHRL17h8emCMKTPHOiS09Ye/view?usp=sharing">Scarica per Android</a></p>
 </div>
 </div>
 <p>Tutte le versioni, con le novità, sono nella pagina <a href="https://github.com/supermariolabs/modernsheet/releases">Releases</a> del progetto. L'app per iPad è in prova: per ora si prova con l'app <em>Flet</em> (vedi la <a href="/it/guida/">guida</a>).</p>
@@ -84,9 +90,10 @@
 <li>Apri il file scaricato. La prima volta Android chiede di consentire <em>Installa app sconosciute</em> all'app da cui lo apri (Drive, File, Chrome…): consenti e torna indietro.</li>
 <li>Se Play Protect avvisa che l'app è sconosciuta, scegli <strong>Installa comunque</strong>.</li>
 </ol>
-<p>L'APK è per i dispositivi a 64 bit, cioè quasi tutti quelli degli ultimi anni. Gli aggiornamenti si installano sopra la versione precedente, senza perdere la libreria.</p>
+<p>L'APK è per i dispositivi a 64 bit, cioè quasi tutti quelli degli ultimi anni. Gli aggiornamenti si installano sopra la versione precedente, senza perdere la libreria. <strong>Se avevi installato l'APK di prova da Google Drive</strong> (fino alla 0.42), disinstallalo una volta prima di installare questo: è firmato con una chiave diversa. Con la sincronizzazione su Google Drive i brani tornano al primo avvio.</p>
 <h2 id="dopo-linstallazione">Dopo l'installazione<a class="headerlink" href="#dopo-linstallazione">#</a></h2>
 <p>Al primo avvio la libreria contiene la cartella <strong>examples</strong> con i brani di esempio. Per iniziare c'è la <a href="/it/guida/">guida all'app</a>; per scrivere i brani, il <a href="/it/formato/">formato .chs</a>.</p>
+<script src="/assets/releases.js" defer></script>
 </main>
 <footer class="foot">
   <div class="wrap">

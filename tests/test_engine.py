@@ -163,11 +163,12 @@ from modernsheet.settings import Settings  # noqa: E402
 
 
 def test_settings_roundtrip_and_validation():
-    s = Settings(library_root="/x", pdf_dir="/y", theme="clean", bar_width="fit",
-                 chord_symbols="jazz", label_colors="by_type")
+    s = Settings(library_root="/x", pdf_dir="/y", theme="clean", bar_width="fit", row_spacing="wide",
+                 notation="both", chord_symbols="jazz", label_colors="by_type")
     assert Settings.from_json(s.to_json()) == s
-    assert s.layout_options() == dict(theme="clean", bar_width="fit", chord_symbols="jazz", label_colors="by_type")
-    bad = Settings.from_json('{"theme": "neon", "pdf_dir": 3, "library_root": "  ", "extra": 1}')
+    assert s.layout_options() == dict(theme="clean", bar_width="fit", row_spacing="wide", notation="both",
+                                      chord_symbols="jazz", label_colors="by_type")
+    bad = Settings.from_json('{"theme": "neon", "row_spacing": "huge", "pdf_dir": 3, "library_root": "  ", "extra": 1}')
     assert bad == Settings()
     assert Settings.from_json(None) == Settings() == Settings.from_json("not json") == Settings.from_json("[1]")
 
@@ -178,7 +179,7 @@ def test_syntax_tokens_cover_the_source(path):
     toks = syntax.tokens(text)
     assert "".join(s for _, s in toks) == text
     assert {k for k, _ in toks} <= {"text", "comment", "brace", "directive", "section", "value", "chord",
-                                    "duration", "bar"}
+                                    "duration", "bar", "note", "rest"}
 
 
 def test_syntax_token_kinds():
@@ -201,7 +202,8 @@ def test_completion_context_and_suggestions():
     assert "subtitle" in names                                   # contains "t" too, listed after
     inside = "{start_of_chorus: R}\n| [C] |\n{"
     names = [c.name for c in syntax.suggestions(inside, len(inside))]
-    assert names[0] == "end_of_chorus" and not any(n.startswith("start_of_") for n in names)
+    assert names[0] == "end_of_chorus" and not any(n.startswith("start_of_") for n in names if n != "start_of_notes")
+    assert "start_of_notes" in names                             # a notes block goes inside a section
 
 
 def test_completion_apply():
@@ -1426,3 +1428,430 @@ def test_chordsheet_account_import():
     assert vuoto.problems == ["empty"] and "{tags: import_warn}" in vuoto.text
     assert A.imported_ids([amore.text, vuoto.text, "x"]) == {"12", "13"}
     assert "secret" not in "".join(map(str, site.requests))      # the password only travels in the POST body
+
+
+# ---- MusicXML editor: indentation and collapsed elements
+XML_COMPACT = ('<?xml version="1.0"?>\n<score-partwise><part id="P1"><measure number="1"><note><pitch><step>C</step>'
+               '<octave>4</octave></pitch><duration>1</duration></note><note><rest/></note></measure>'
+               '<measure number="2"><note><pitch><step>D</step></pitch></note></measure></part></score-partwise>')
+
+
+def _xml_canon(text):
+    import xml.etree.ElementTree as ET
+    root = ET.fromstring(text.encode())
+    for e in root.iter():
+        e.text = e.text if e.text and e.text.strip() else None
+        e.tail = e.tail if e.tail and e.tail.strip() else None
+    return ET.tostring(root)
+
+
+@pytest.mark.parametrize("path", sorted(EX.glob("*.musicxml")), ids=lambda p: p.stem)
+def test_xml_indent_keeps_the_content(path):
+    text = path.read_text(encoding="utf-8")
+    for fmt in (xml_syntax.format_xml, xml_syntax.reindent_xml):
+        out = fmt(text)
+        assert _xml_canon(out) == _xml_canon(text)
+        assert fmt(out) == out                                  # stable
+    # reindent keeps the lines, only their leading whitespace changes
+    out = xml_syntax.reindent_xml(text)
+    assert [l.strip() for l in out.splitlines()] == [l.strip() for l in text.splitlines()]
+
+
+def test_xml_format_one_element_per_line():
+    out = xml_syntax.format_xml(XML_COMPACT)
+    lines = out.splitlines()
+    assert lines[2] == '  <part id="P1">'
+    assert '          <step>C</step>' in lines                    # text-only elements stay on one line
+    assert '        <rest/>' in lines and lines[-1] == "</score-partwise>"
+    assert xml_syntax.xml_error(XML_COMPACT) is None
+    assert xml_syntax.xml_error("<a>\n<b></a>")[0] == 2
+
+
+def test_xml_folds_collapse_and_expand():
+    text = xml_syntax.format_xml(XML_COMPACT)
+    f = xml_syntax.Folds(text)
+    assert f.fold_all("measure") == 2 and f.full() == text
+    assert '    <measure number="1"> ⋯ </measure>' in f.view.splitlines()
+    # expand measure 2, collapse a note inside it, then the whole part (nested), then back
+    assert f.unfold_at(f.view.index('number="2"'))
+    assert f.fold_at(f.view.index("<note>", f.view.index('number="2"')))
+    assert "      <note> ⋯ </note>" in f.view.splitlines() and f.full() == text
+    assert f.fold_at(f.view.index("<part"))
+    assert f.view.count("\n") == 4 and f.full() == text
+    assert f.unfold_at(f.view.index("<part")) and f.full() == text
+    assert '    <measure number="1"> ⋯ </measure>' in f.view.splitlines()
+    assert [f.view[i] for i in f.ellipses()] == ["⋯", "⋯"]
+    # a single-line element cannot be collapsed; no fold on a line without one
+    g = xml_syntax.Folds(text)
+    assert not g.fold_at(g.view.index("<step>")) or "<pitch> ⋯ </pitch>" in g.view
+    assert not xml_syntax.Folds("<a><b/></a>").fold_at(2)
+    f.unfold_all()
+    assert f.view == text and not f
+
+
+def test_xml_folds_edits():
+    text = xml_syntax.format_xml(XML_COMPACT)
+    f = xml_syntax.Folds(text)
+    f.fold_all("measure")
+    v = f.view
+    # typing before, between and after the collapsed measures is fine and lands in the full text
+    at = v.index('<measure number="2">')
+    assert f.edit(v[:at] + "<!-- x -->\n    " + v[at:])
+    assert f.full() == text.replace('<measure number="2">', '<!-- x -->\n    <measure number="2">')
+    v = f.view
+    assert f.edit(v.replace("</part>", "</part><!-- y -->"))
+    assert "</part><!-- y -->" in f.full() and f.full().count("<note>") == 3
+    # an edit touching a marker is refused, nothing changes
+    v = f.view
+    k = v.index("⋯")
+    assert not f.edit(v[:k] + v[k + 1:])
+    assert not f.edit(v[:k - 3] + "Z" + v[k - 2:])
+    assert f.view == v
+    # the editor showing a collapsed line the folds do not know (drift): refused, the source is safe
+    f.unfold_at(f.view.index('number="2"'))
+    shown = f.view.replace(f.view[f.view.index('<measure number="2">'):f.view.index("</measure>", f.view.index(
+        'number="2"')) + 10], '<measure number="2"> ⋯ </measure>')
+    assert not f.edit(shown)
+    assert f.full().count("<note>") == 3
+
+
+# ---- notes written in the .chs ({start_of_notes}, SPEC §2.12b)
+from modernsheet import notes as notes_mod  # noqa: E402
+
+
+def _notes_song(body, key="F", time="4/4", transpose=0):
+    return parse(f"{{key: {key}}}\n{{time: {time}}}\n{{start_of_intro}}\n{{start_of_notes}}\n{body}\n"
+                 f"{{end_of_notes}}\n{{end_of_intro}}\n", transpose=transpose)
+
+
+def _pitches(bar):
+    return [("R" if n.step is None else n.step + {0: "", 1: "#", -1: "b", 2: "##", -2: "bb"}[n.alter]
+             + str(n.octave)) for n in bar.notation.notes]
+
+
+def test_notes_pitches_durations_octaves():
+    s = _notes_song("| [Gm7] G8 Bb D F [C7] A G E C | [Am7] C E G Bn [D7] C# A 3(F E D) |\n"
+                    "| [Gm7] D4. C8 [C7] E Eb D C | [F7] F2- F4 R4 |\n"
+                    "| [F7] C@5/4 A F D | [Bb7] Bb@3/8 D F Ab C Bb Ab F |")
+    assert s.warnings == []
+    b = s.bars
+    assert _pitches(b[0]) == ["G4", "Bb4", "D5", "F5", "A5", "G5", "E5", "C5"]   # first note near B4, then nearest
+    assert [n.type for n in b[0].notation.notes] == ["eighth"] * 8                # the figure is kept
+    assert [(e.chord, e.start, e.dur) for e in b[0].events] == [("Gm7", 0.0, 2.0), ("C7", 2.0, 2.0)]
+    trip = [n for n in b[1].notation.notes if n.tuplet]
+    assert len(trip) == 3 and trip[0].tuplet == (3, 2) and trip[0].tuplet_start and trip[-1].tuplet_stop
+    assert abs(sum(n.dur for n in b[1].notation.notes) - 4) < 1e-9
+    d = b[2].notation.notes[0]
+    assert (d.type, d.dots, d.dur) == ("quarter", 1, 1.5)
+    f1, f2, r = b[3].notation.notes
+    assert f1.tie_start and f2.tie_stop and r.step is None
+    assert _pitches(b[4]) == ["C5", "A4", "F4", "D4"]                              # @5 fixes the octave
+    assert _pitches(b[5])[:3] == ["Bb3", "D4", "F4"] and b[5].notation.notes[0].type == "eighth"
+
+
+def test_notes_relative_octave_marks_and_stacks():
+    s = _notes_song("| C G G' G,, <C E G>2 |", key="C")
+    assert _pitches(s.bars[0]) == ["C5", "G4", "G5", "G3", "C4", "E4", "G4"]
+    stack = s.bars[0].notation.notes[4:]
+    assert [n.chord for n in stack] == [False, True, True] and all(n.type == "half" for n in stack)
+    rest = _notes_song("| R* |").bars[0].notation.notes[0]
+    assert rest.measure_rest and rest.dur == 4
+
+
+def test_notes_lyrics():
+    s = _notes_song("| [F7] D2 Ab | [Bb7] C4 A- A F |\n"
+                    "w: Blues, blues | del lu- ne-")
+    a, b = s.bars[0].notation.notes, s.bars[1].notation.notes
+    assert [n.lyric for n in a] == ["Blues,", "blues"]
+    assert [n.lyric for n in b] == ["del", "lu-", "", "ne-"]          # tied continuation skipped
+    s = _notes_song("| C D E F |\nw: a _ c")
+    assert [n.lyric for n in s.bars[0].notation.notes] == ["a", "", "c", ""]
+    assert "more than the notes" in _notes_song("| C2 D |\nw: a b c").warnings[0]
+
+
+def test_notes_warnings():
+    def warns(body, **kw):
+        return " ".join(_notes_song(body, **kw).warnings)
+    assert "key signature has Bb" in warns("| B1 |")                     # in F: B without accidental
+    assert warns("| Bn1 |") == "" and warns("| Bb1 |") == ""
+    assert "3 beats in 4/4" in warns("| C2 D4 |")
+    assert "after @N" in warns("| C@54 D E F |")
+    assert "same pitch" in warns("| C2- D2 |")
+    assert "unrecognised note" in warns("| C H |")
+    assert "not closed" in warns("| 3(C8 D E | F2. |")
+    assert "no duration on chords" in warns("| [C:2] C1 |")
+    s = parse("{start_of_verse}\n{start_of_notes}\n| C1 |\n{end_of_verse}\n")
+    assert any("not closed" in w for w in s.warnings) and len(s.bars) == 1
+
+
+def test_notes_chords_only_bar_and_repeats():
+    s = _notes_song("|: [F7] C1 | [Bb7] [F7] :| {volta: 2} [C7] C1 |", key="C")
+    a, b, c = s.bars
+    assert a.repeat_start and a.notation and b.notation is None and b.repeat_end == 2
+    assert [e.chord for e in b.events] == ["Bb7", "F7"] and c.volta == "2."
+
+
+def test_notes_transpose():
+    s = _notes_song("| [F7] F4 A C Eb |", transpose=2)
+    assert _pitches(s.bars[0]) == ["G4", "B4", "D5", "F5"] and s.bars[0].events[0].chord == "G7"
+
+
+def test_notes_beams():
+    s = _notes_song("| G8 A B C D E F G |", key="C")
+    assert [n.beams.get(1) for n in s.bars[0].notation.notes] == ["begin", "continue", "continue", "end"] * 2
+    s = _notes_song("| G8 A B C D4 E |", key="C", time="3/4")         # 3/4: one beam per beat
+    assert [n.beams.get(1) for n in s.bars[0].notation.notes] == ["begin", "end", "begin", "end", None, None]
+    s = _notes_song("| G8 A B C D E |", key="C", time="6/8")          # 6/8: per dotted quarter
+    assert [n.beams.get(1) for n in s.bars[0].notation.notes] == ["begin", "continue", "end"] * 2
+    s = _notes_song("| G8 R A B C2 |", key="C")                       # a rest breaks the beam
+    assert [n.beams.get(1) for n in s.bars[0].notation.notes] == [None, None, "begin", "end", None]
+
+
+def _note_sig(n):
+    return (n.step, n.alter, n.octave, round(n.start, 6), round(n.dur, 6), n.type, n.dots, n.chord, n.tie_start,
+            n.tie_stop, n.lyric, n.measure_rest, n.tuplet, n.tuplet_start, n.tuplet_stop)
+
+
+@pytest.mark.parametrize("path", sorted(EX.glob("*.musicxml")), ids=lambda p: p.stem)
+def test_notes_from_musicxml_round_trip(path):
+    from modernsheet.musicxml import read_musicxml
+    measures, _ = read_musicxml(path)
+    block = notes_mod.to_notes_text(measures, "F")
+    a = parse(f"{{key: F}}\n{{start_of_intro}}\n{{musicxml: {path.name}}}\n{{end_of_intro}}\n", base_dir=EX)
+    b = parse(f"{{key: F}}\n{{start_of_intro}}\n{block}{{end_of_intro}}\n")
+    assert b.warnings == []
+    assert [[_note_sig(n) for n in x.notation.notes] for x in a.bars] == \
+           [[_note_sig(n) for n in x.notation.notes] for x in b.bars]
+    assert [[(e.chord, round(e.start, 6), round(e.dur, 6)) for e in x.events] for x in a.bars] == \
+           [[(e.chord, round(e.start, 6), round(e.dur, 6)) for e in x.events] for x in b.bars]
+    assert [(x.repeat_start, x.repeat_end, x.volta, x.volta_end) for x in a.bars] == \
+           [(x.repeat_start, x.repeat_end, x.volta, x.volta_end) for x in b.bars]
+
+
+def test_notes_example_matches_musicxml_example():
+    a = parse((EX / "blues_con_melodia.chs").read_text(encoding="utf-8"), base_dir=EX)
+    b = parse((EX / "note_nel_chs.chs").read_text(encoding="utf-8"), base_dir=EX)
+    assert a.warnings == b.warnings == []
+    assert [[_note_sig(n) for n in x.notation.notes] if x.notation else None for x in a.bars] == \
+           [[_note_sig(n) for n in x.notation.notes] if x.notation else None for x in b.bars]
+
+
+def test_notes_editor_support():
+    from modernsheet import syntax
+    text = (EX / "note_nel_chs.chs").read_text(encoding="utf-8")
+    toks = syntax.tokens(text)
+    assert "".join(s for _, s in toks) == text
+    kinds = {k for k, _ in toks}
+    assert {"note", "rest", "duration"} <= kinds
+    assert ("directive", "w:") in toks
+    head = "{start_of_verse}\n{"
+    assert "start_of_notes" in [c.name for c in syntax.suggestions(head, len(head))]
+    head = "{start_of_verse}\n{start_of_notes}\n| C1 |\n{"
+    assert syntax.suggestions(head, len(head))[0].name == "end_of_notes"
+    assert syntax.open_section(head, len(head)) == "verse"
+
+
+# ---- bar width per section ({bar_width} inside a section overrides the song's / the app's)
+def _row_widths(song, **opts):
+    from modernsheet.layout import Layout
+    lay = Layout(song, **opts)
+    lay.plan()
+    out = {}
+    for sec, rows, bpl in lay.layout:
+        lay.bar_width = lay.section_mode(sec)
+        x = lay.st.margin + (lay.max_prefix if lay.bar_width == "uniform" else lay.prefix_width(rows[0], False))
+        out[sec.label] = (lay.bar_width, [lay.bar_widths(r, bpl, x) for r in rows])
+    return out
+
+
+def test_bar_width_per_section():
+    src = ("{key: C}\n{start_of_verse: A}\n| [C] | [F] | [G] |\n{end_of_verse}\n"
+           "{start_of_chorus: B}\n{bar_width: fit}\n| [C] | [F] | [G] | [C] |\n{end_of_chorus}\n"
+           "{start_of_bridge: C}\n| [C] | [F] |\n{end_of_bridge}\n{ref: B}\n")
+    s = parse(src)
+    assert s.warnings == [] and "bar_width" not in s.meta
+    assert [sec.bar_width for sec in s.sections] == [None, "fit", None, "fit"]     # the {ref} keeps it
+    w = _row_widths(s)                                                            # app option: uniform
+    mode_a, (a,) = w["A"][0], w["A"][1]
+    assert mode_a == "uniform" and len({round(x, 3) for x in a}) == 1
+    assert w["C"][0] == "uniform" and round(w["C"][1][0][0], 3) == round(a[0], 3)  # same grid as A
+    mode_b, (b,) = w["B"][0], w["B"][1]
+    assert mode_b == "fit" and sum(b) > 4 * a[0] + 10                             # a full row fills the width
+    # the song header and the app option set the rest; a section still wins
+    s = parse("{bar_width: fit}\n" + src.replace("{bar_width: fit}", "{bar_width: uniform}"))
+    assert {k: v[0] for k, v in _row_widths(s, bar_width="uniform").items()} == {"A": "fit", "B": "uniform",
+                                                                                   "C": "fit"}
+    assert {k: v[0] for k, v in _row_widths(parse(src), bar_width="fit").items()} == {"A": "fit", "B": "fit",
+                                                                                       "C": "fit"}
+    assert "expected uniform or fit" in parse("{start_of_verse}\n{bar_width: wide}\n| [C] |\n{end_of_verse}\n").warnings[0]
+
+
+def test_fit_rows_wrap_only_when_needed():
+    """Fit mode: one crowded bar does not push the 4th bar to a new line when the others have room,
+    a row closed for lack of room spans the whole width, no bar is narrower than it needs."""
+    from modernsheet.layout import Layout
+    src = ("{key: C}\n{start_of_verse: A}\n| [Bm7b5:1.5] [E7:2.5] | [Am] [%] [Am/G] | [F] [/] | |\n"
+           "| [Cmaj7] [Am7] [Dm7] [G7] | [Em7] [A7] [Dm7] [G7] | [Cmaj7] [C7] [Fmaj7] [Fm6] | [Em7] [A7] [Dm7] [G7] |\n"
+           "{end_of_verse}\n")
+    for theme in ("realbook", "clean"):
+        lay = Layout(parse(src), theme=theme, bar_width="fit")
+        lay.plan()
+        (sec, rows, bpl), = lay.layout
+        assert len(rows[0]) == 4                                    # was 3 + 1 in the clean theme
+        for i, r in enumerate(rows):
+            x = lay.st.margin + lay.prefix_width(r, i == 0)
+            w = lay.bar_widths(r, bpl, x)
+            assert all(wi >= lay.bar_need(b, j == 0) - 0.5 for j, (b, wi) in enumerate(zip(r, w)))
+            if i < len(rows) - 1:                                   # every row but the last reaches the margin
+                assert abs(x + sum(w) - (lay.page_w - lay.st.margin)) < 0.5
+
+
+# ---- space between rows: app option, a song's {row_spacing} wins
+def test_row_spacing():
+    from modernsheet.layout import Layout
+    from modernsheet.model import row_spacing_factor
+    assert [row_spacing_factor(v) for v in ("compact", "normal", "wide", "extra", "120%", "1,5", "0.4", "x")] == \
+           [0.75, 1.0, 1.3, 1.6, 1.2, 1.5, None, None]
+    body = "{start_of_verse}\n| [C] | [F] |\n| [G] | [C] |\n{end_of_verse}\n"
+
+    def height(src, **opts):
+        lay = Layout(parse(src), **opts)
+        lay.plan()
+        return lay.row_height(lay.layout[0][1][0])
+    normal = height(body)
+    gap = Layout(parse(body)).st.row_height - 20 - Layout(parse(body)).STAFF_H
+    assert abs(height(body, row_spacing="wide") - (normal + 0.3 * gap)) < 1e-6         # the app option
+    assert abs(height(body, row_spacing="compact") - (normal - 0.25 * gap)) < 1e-6
+    assert abs(height("{row_spacing: 150%}\n" + body, row_spacing="compact") - (normal + 0.5 * gap)) < 1e-6
+    assert height("{row_spacing: 120%}\n" + body) > normal
+    s = parse("{row_spacing: huge}\n" + body)
+    assert "row_spacing 'huge'" in s.warnings[0] and "row_spacing" not in s.meta
+    # the page gets longer with more space: a long song needs more pages
+    long = "{start_of_verse}\n" + "| [C] | [F] | [G] | [C] |\n" * 40 + "{end_of_verse}\n"
+    assert len(layout(parse(long), row_spacing="extra").pages) > len(layout(parse(long), row_spacing="compact").pages)
+
+
+# ---- guitar tablature (tab.py; {notation: staff|both|tab})
+from modernsheet import tab as tab_mod  # noqa: E402
+
+
+def _fingered(body, capo=0):
+    s = _notes_song(body, key="C")
+    warnings = tab_mod.assign([b.notation.notes for b in s.bars], capo)
+    return [[(n.string, n.fret) if n.step else None for n in b.notation.notes] for b in s.bars], warnings
+
+
+def test_tab_fingering():
+    # C major scale from middle C (written): first position, open strings where they belong
+    (scale,), w = _fingered("| C@4/8 D E F G A B C |")
+    assert scale == [(1, 3), (2, 0), (2, 2), (2, 3), (3, 0), (3, 2), (4, 0), (4, 1)] and w == []
+    # open chord shapes: one string per note, within reach
+    (bar,), _ = _fingered("| <C@4 E G C>2 <G@3 B D>2 |")
+    assert bar == [(1, 3), (2, 2), (3, 0), (4, 1), (0, 3), (1, 2), (2, 0)]
+    # a tie keeps string and fret; a rest has none
+    (bar,), _ = _fingered("| A@4/2- A4 R4 |")
+    assert bar[0] == bar[1] and bar[2] is None
+    # capo: frets from the capo; a note under it moves up an octave, with a warning
+    (bar,), w = _fingered("| F#@3/4 G A E |", capo=2)
+    assert bar[:3] == [(0, 0), (0, 1), (0, 3)] and "out of the instrument's range" in w[0]
+    # notes no guitar can play together (E3 and G3 live on the low E string only): warned, not hidden
+    (bar,), w = _fingered("| <E@3 G B>1 |")
+    assert any("cannot play together" in x for x in w) and all(p is not None for p in bar)
+
+
+def _texts(dl):
+    return [op[3] for p in dl.pages for op in p if op[0] == "text"]
+
+
+def test_tab_modes_render():
+    src = ("{key: C}\n{capo: 0}\n{start_of_intro: Riff}\n{start_of_notes}\n"
+           "| [C] C@4/8 E G C [G] B, G D2 | [Am] A@3/4 C E2 |\nw: la la la la la la la la la la\n"
+           "{end_of_notes}\n| [F] | [G] |\n{end_of_intro}\n")
+    staff = layout(parse(src))
+    both = layout(parse(src), notation="both")
+    tab = layout(parse(src), notation="tab")
+    assert "T" not in _texts(staff) and {"T", "A", "B"} <= set(_texts(both)) and {"T", "A", "B"} <= set(_texts(tab))
+    assert "3" in _texts(both) and "3" in _texts(tab)                           # fret of middle C
+    # the option, the song and the section: the most specific wins
+    s = parse("{notation: tab}\n" + src.replace("{start_of_notes}", "{notation: both}\n{start_of_notes}"))
+    assert s.meta["notation"] == "tab" and s.sections[0].notation == "both"
+    assert "notation 'piano'" in parse("{notation: piano}\n" + src).warnings[0]
+    # the reader's switch over the sheet (notation_force) beats the song and its sections
+    from modernsheet.layout import Layout as _L
+    lay = _L(s, notation="staff", notation_force=True)
+    assert [lay.section_notation(x) for x in s.sections] == ["staff"]
+    lay = _L(parse("{notation: tab}\n" + src), notation="staff")
+    assert lay.section_notation(lay.song.sections[0]) == "tab"
+    # staff mode draws exactly what it drew before tablature existed: no strings assigned at all
+    s = parse(src)
+    layout(s)
+    assert all(n.fret is None for b in s.bars if b.notation for n in b.notation.notes)
+
+    from modernsheet.layout import Layout
+
+    def height(**opts):
+        lay = Layout(parse(src), **opts)
+        lay.plan()
+        lay.notation_mode = lay.section_notation(lay.song.sections[0])
+        return lay.row_height(lay.layout[0][1][0])
+    assert height(notation="both") > height(notation="tab") > height() - 1     # room for the six lines
+
+
+def test_tab_example_has_no_warnings():
+    s = parse((EX / "riff_per_chitarra.chs").read_text(encoding="utf-8"))
+    for mode in ("staff", "both", "tab"):
+        layout(s, notation=mode)
+    assert s.warnings == []
+
+
+def test_tab_phase2_hints_position_tuning():
+    def fingered(body, key="C", head=""):
+        s = parse(f"{head}{{key: {key}}}\n{{start_of_verse}}\n{{start_of_notes}}\n{body}\n{{end_of_notes}}\n{{end_of_verse}}\n")
+        lay_warn = tab_mod.assign([b.notation.notes for b in s.bars], 0,
+                                  tab_mod.parse_tuning(s.meta.get("tuning", "standard")))
+        return [[(n.string, n.fret) for n in b.notation.notes if n.step] for b in s.bars], s.warnings + lay_warn
+    # {tab_position: 5}: the scale moves up the neck
+    (bar,), w = fingered("{tab_position: 5}\n| C@4/8 D E F G A B C |")
+    assert w == [] and all(4 <= f <= 9 for _, f in bar)
+    (bar,), _ = fingered("| C@4/8 D E F G A B C |")
+    assert max(f for _, f in bar) <= 3                                   # without it: first position
+    # ~N: the note on that string (guitar numbering, 1 = high E)
+    (bar,), w = fingered("| E@4/4~5 G~4 B~3 E~2 |")
+    assert bar == [(1, 7), (2, 5), (3, 4), (4, 5)] and w == []
+    (bar,), w = fingered("| E@4/1~1 |")
+    assert "cannot be played on string 1" in w[0]
+    (bar,), _ = fingered("| <C@4~5 E~4 G~3>1 |")
+    assert bar == [(1, 3), (2, 2), (3, 0)]
+    # tunings: drop D reaches the low D without moving it; bass and ukulele have 4 strings
+    (bar,), w = fingered("| D@3/4 A@3 D@4/2 |", head="{tuning: drop D}\n")
+    assert bar[0] == (0, 0) and w == []
+    (_,), w = fingered("| D@3/1 |")
+    assert "out of the instrument's range" in w[0]
+    assert tab_mod.parse_tuning("D A D G B E") == tab_mod.TUNINGS["drop d"]
+    assert tab_mod.parse_tuning("DADGAD") == tab_mod.TUNINGS["dadgad"] and tab_mod.parse_tuning("x y") is None
+    assert tab_mod.string_names(tab_mod.TUNINGS["half step down"]) == ["Eb", "Ab", "Db", "Gb", "Bb", "Eb"]
+    assert "tuning 'banjo'" in parse("{tuning: banjo}\n").warnings[0]
+    assert "tab_position 'x'" in parse("{start_of_verse}\n{tab_position: x}\n{end_of_verse}\n").warnings[0]
+
+
+def test_tab_phase2_layout_and_musicxml(tmp_path):
+    from modernsheet.layout import Layout
+    src = "{key: C}\n{tuning: bass}\n{start_of_verse}\n{start_of_notes}\n| E@3/4 A D G |\n{end_of_notes}\n{end_of_verse}\n"
+    lay = Layout(parse(src), notation="tab")
+    assert lay.tab_n == 4 and abs(lay.TAB_H - 3 * lay.TAB_SP) < 1e-9
+    texts = _texts(layout(parse(src.replace("bass", "drop D")), notation="both"))
+    assert texts.count("D") >= 2 and "T" not in texts                    # string names instead of TAB
+    # MusicXML guitar parts: string and fret from the file
+    xml = (EX / "blues_tema.musicxml").read_text(encoding="utf-8")
+    first = xml.index("<note>", xml.index('<measure number="1"'))
+    end = xml.index("</note>", first)
+    xml = xml[:end] + "<notations><technical><string>4</string><fret>12</fret></technical></notations>" + xml[end:]
+    f = tmp_path / "g.musicxml"
+    f.write_text(xml, encoding="utf-8")
+    s = parse("{key: F}\n{start_of_verse}\n{musicxml: g.musicxml}\n{end_of_verse}\n", base_dir=tmp_path)
+    n = s.bars[0].notation.notes[0]
+    assert (n.tab_string, n.tab_fret) == (4, 12)
+    tab_mod.assign([b.notation.notes for b in s.bars])
+    assert (n.string, n.fret) == (2, 12)                                 # D5 on the D string, as the file says
+    block = notes_mod.to_notes_text([dict(notes=[n], harmonies=[], length=4)], "F")
+    assert "~4" in block

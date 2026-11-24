@@ -10,11 +10,14 @@ import copy
 import dataclasses
 import re
 from datetime import datetime
+from fractions import Fraction
 from pathlib import Path
 
 from ..theory import *  # noqa: F401,F403
 from ..model import *  # noqa: F401,F403
 from ..musicxml import *  # noqa: F401,F403
+from .. import notes as notes_mod
+from .. import tab as tab_mod
 
 # =============================================================================
 # Parser
@@ -30,7 +33,7 @@ TOKEN_RE = re.compile(
     r"|[^\[\]{}|:]+|:"           # lyrics
 )
 DIRECTIVE_LINE_RE = re.compile(r"^\{([^}]*)\}$")
-META_KEYS = {"title", "subtitle", "artist", "composer", "tempo", "capo", "bar_width", "label_colors",
+META_KEYS = {"title", "subtitle", "artist", "composer", "tempo", "capo", "bar_width", "row_spacing", "label_colors",
              "section_colors"}
 HALF = 0.5
 START_MARKS = ("segno", "coda")                  # signs at the start of the next bar
@@ -89,6 +92,9 @@ class Parser:
         self.open_volta_label = None
         self.lineno = 0
         self.text_pending: list[str] = []        # {text: …} waiting for the next bar of the section
+        self.notes: notes_mod.NoteReader | None = None   # inside {start_of_notes} … {end_of_notes}
+        self.notes_row: list[Bar] = []           # bars of the last row of notes (for its w: line)
+        self.tab_pos: int | None = None          # {tab_position: N}: hand position for the tablature
 
     # -- helpers ---------------------------------------------------------------
     def warn(self, msg: str) -> None:
@@ -221,6 +227,36 @@ class Parser:
                 self.section.bars_per_line = n
             else:
                 self.bpl = n
+        elif name == "tuning":
+            if tab_mod.parse_tuning(value) is None:
+                self.warn(f"tuning '{value}': expected a name (standard, drop D, DADGAD, open G, open D, open E, "
+                          "half step down, bass, ukulele) or the open strings (D A D G B E)")
+            else:
+                self.song.meta["tuning"] = value
+        elif name == "tab_position":
+            v = value.strip().lower()
+            if v in ("", "auto"):
+                self.tab_pos = None
+            elif v.isdigit() and 0 <= int(v) <= 20:
+                self.tab_pos = int(v)
+            else:
+                self.warn(f"tab_position '{value}': expected a fret (0-20) or auto")
+            if self.notes is not None:
+                self.notes.tab_pos = self.tab_pos
+        elif name == "notation":
+            mode = value.strip().lower()
+            if mode not in NOTATIONS:
+                self.warn(f"notation '{value}': expected staff, both or tab")
+            elif self.section is not None:
+                self.section.notation = mode        # this section only; in the header: the whole song
+            else:
+                self.song.meta["notation"] = mode
+        elif name == "bar_width" and self.section is not None:
+            mode = value.strip().lower()
+            if mode in ("uniform", "fit"):
+                self.section.bar_width = mode       # this section only; in the header: the whole song
+            else:
+                self.warn(f"bar_width '{value}': expected uniform or fit")
         elif name == "br":
             self.pending["br"] = True
         elif name == "volta":
@@ -229,11 +265,22 @@ class Parser:
             self.pending["volta"] = ", ".join(f"{x}." for x in nums)
         elif name == "volta_end":
             self.close_volta("hook" if value.strip().lower() in ("hook", "closed", "chiusa") else "open")
+        elif name == "row_spacing" and row_spacing_factor(value) is None:
+            self.warn(f"row_spacing '{value}': expected compact, normal, wide, extra or a percentage (50%-300%)")
         elif name in META_KEYS:
             self.song.meta[name] = value
+        elif name == "start_of_notes":
+            self.start_notes()
+        elif name == "end_of_notes":
+            if self.notes is None:
+                self.warn("{end_of_notes} without {start_of_notes}")
+            self.end_notes()
         elif name.startswith("start_of_"):
             self.start_section(name[9:], value)
         elif name.startswith("end_of_"):
+            if self.notes is not None:
+                self.warn("{start_of_notes} not closed before the end of the section")
+                self.end_notes()
             self.close_volta("open")
             if self.section is not None and self.text_pending:
                 self.section.text_after += self.text_pending
@@ -280,6 +327,7 @@ class Parser:
             bar.double_after = True
 
     def start_section(self, kind: str, label: str) -> None:
+        self.tab_pos = None                      # a hand position lasts until the end of its section
         if self.section is not None:
             self.warn(f"section '{self.section.label}' not closed before '{kind}'")
         self.section = Section(kind=kind, label=label or kind.replace("_", " ").capitalize(),
@@ -301,7 +349,8 @@ class Parser:
             return
         semis = semitones_between(src.key, self.key)
         sec = Section(kind=src.kind, label=src.label, key=self.key, note=note, is_ref=True,
-                      times=times, bars_per_line=src.bars_per_line or self.bpl)
+                      times=times, bars_per_line=src.bars_per_line or self.bpl, bar_width=src.bar_width,
+                      notation=src.notation)
         self.song.sections.append(sec)
         outer, self.section = self.section, sec
         for _ in range(times):
@@ -350,6 +399,8 @@ class Parser:
             if abs(ms["length"] - bar.beats) > 1e-6:
                 self.warn(f"musicxml measure {ms['number']}: {ms['length']:g} beats in {bar.num}/{bar.den}")
             notes = copy.deepcopy(ms["notes"])
+            for n in notes:
+                n.tab_pos = self.tab_pos
             transpose_notes(notes, self.transpose, self.key)
             bar.notation = Notation(notes, path.name)
             if ms["repeat_start"]:
@@ -368,6 +419,119 @@ class Parser:
                 bar.double_after = True
             if ms["volta_end"]:
                 self.close_volta(ms["volta_end"])
+
+    # -- notes written in the source (SPEC §2.12b) --------------------------------
+    def start_notes(self) -> None:
+        if self.notes is not None:
+            self.warn("{start_of_notes} inside a notes block")
+            return
+        if self.section is None:
+            self.warn("{start_of_notes} outside a section: opening an untitled one")
+            self.start_section("instrumental", "")
+        # notes are written in the source's key; accidentals are checked against it before transposing
+        self.notes = notes_mod.NoteReader(transpose_key(self.key, -self.transpose), self.warn)
+        self.notes.tab_pos = self.tab_pos
+        self.notes_row = []
+
+    def end_notes(self) -> None:
+        if self.notes is not None:
+            self.notes.end_block()
+        self.notes, self.notes_row = None, []
+
+    def notes_line(self, line: str) -> None:
+        """One row of notated bars: bar lines and directives as in the explicit mode, chords before
+        the note they sit on, notes and rests read by notes.NoteReader."""
+        reader = self.notes
+        notes: list[Note] = []
+        chords: list[tuple[Fraction, Event]] = []
+        t = Fraction(0)
+        opened = False
+        ends: list[tuple[str, str]] = []
+        self.notes_row = []
+
+        def close(force: bool) -> Bar | None:
+            nonlocal notes, chords, t
+            reader.end_bar()
+            if not (notes or chords or force):
+                return None
+            bar = self.new_bar()
+            beats = Fraction(bar.num * 4, bar.den)
+            if notes:
+                if t != beats:
+                    self.warn(f"notes bar {len(self.section.bars) + 1}: {float(t):g} beats in {bar.num}/{bar.den}")
+                transpose_notes(notes, self.transpose, self.key)
+                notes_mod.beam_bar(notes, bar.num, bar.den)
+                bar.notation = Notation(notes, "notes")
+                events = [ev for _, ev in chords]
+                if not chords or chords[0][0] > 0:
+                    events.insert(0, Event(None))
+                    starts = [Fraction(0)] + [at for at, _ in chords]
+                else:
+                    starts = [at for at, _ in chords]
+                for j, ev in enumerate(events):
+                    end = starts[j + 1] if j + 1 < len(starts) else beats
+                    ev.start, ev.dur = float(starts[j]), float(end - starts[j])
+                bar.events = events
+            else:                                   # chords only: an ordinary bar
+                bar.events = [ev for _, ev in chords] or [Event(None)]
+                self.resolve(bar)
+            self.push_bar(bar)
+            self.notes_row.append(bar)
+            for name, value in ends:
+                self.end_mark(name, value, bar)
+            ends.clear()
+            notes, chords, t = [], [], Fraction(0)
+            return bar
+
+        for tk in notes_mod.tokenize(line):
+            if tk in ("|", "||", "|:") or tk.startswith(":|"):
+                bar = close(force=opened and tk != "|:")
+                opened = True
+                last = bar or (self.section.bars[-1] if self.section.bars else None)
+                if tk == "||" and last:
+                    last.double_after = True
+                elif tk == "|:":
+                    self.pending["repeat_start"] = True
+                elif tk.startswith(":|") and last:
+                    m = re.search(r"x(\d+)", tk)
+                    last.repeat_end = int(m.group(1)) if m else 2
+                    self.close_volta("hook")
+            elif tk.startswith("{"):
+                name, value = split_directive(tk[1:-1])
+                if name in END_MARKS and (notes or chords):
+                    ends.append((name, value))
+                else:
+                    self.directive(tk[1:-1])
+            elif tk.startswith("["):
+                ev = self.event(tk[1:-1])
+                if ev.dur is not None:
+                    self.warn(f"'{tk}': no duration on chords between notes (they sit on the next note)")
+                    ev.dur = None
+                chords.append((t, ev))
+            elif tk.endswith("(") and tk[0].isdigit():
+                reader.open_tuplet(tk)
+            elif tk == ")":
+                reader.close_tuplet()
+            else:
+                beats = Fraction(self.num * 4, self.den)
+                got = reader.read(tk, t, beats)
+                if got:
+                    notes += got[0]
+                    t += got[1]
+        if notes or chords:
+            close(force=False)
+        if chords and not notes:
+            pass
+        for name, value in ends:
+            self.end_mark(name, value, self.song.bars[-1] if self.song.bars else None)
+        self.close_volta("open")
+
+    def notes_lyrics(self, text: str) -> None:
+        bars = [b.notation.notes if b.notation else [] for b in self.notes_row]
+        if not bars:
+            self.warn("w: line without a row of notes before it")
+            return
+        notes_mod.assign_lyrics(bars, text, self.warn)
 
     # -- music lines -----------------------------------------------------------
     def resolve(self, bar: Bar) -> None:
@@ -502,6 +666,14 @@ class Parser:
             if m:
                 self.directive(m.group(1))
                 continue
+            if self.notes is not None:
+                if line.startswith("w:"):
+                    self.notes_lyrics(line[2:])
+                elif re.search(r"\||:\|", line):
+                    self.notes_line(line)
+                else:
+                    self.warn("inside {start_of_notes}: a row of bars (| … |) or a w: line expected")
+                continue
             if self.section is None:
                 self.warn("music outside a section: opening an untitled one")
                 self.start_section("verse", "")
@@ -510,6 +682,9 @@ class Parser:
                 self.explicit_line(tokens)
             else:
                 self.implicit_line(tokens)
+        if self.notes is not None:
+            self.warn("{start_of_notes} not closed at end of file")
+            self.end_notes()
         if self.section is not None:
             self.warn(f"section '{self.section.label}' not closed at end of file")
         self.song.meta.setdefault("key", self.key)

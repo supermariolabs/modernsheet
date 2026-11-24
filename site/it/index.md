@@ -42,7 +42,7 @@ Ritornelli con `x3`, case di volta 1/2/3, Segno, Coda, D.C./D.S. al Fine, richia
 </div>
 <div class="card" markdown="1"><span class="ico">🎵</span>
 ### Note vere dove servono
-Intro, riff e temi scritti in un editor di partiture e importati da MusicXML, nella stessa pagina delle sigle.
+Intro, riff e temi scritti direttamente nel brano (`G8 Bb D F`) o importati da MusicXML, nella stessa pagina delle sigle. Per i chitarristi anche in **tablatura**, calcolata dall'app.
 </div>
 <div class="card" markdown="1"><span class="ico">↕️</span>
 ### Trasposizione e sigle jazz

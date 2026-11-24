@@ -42,7 +42,7 @@ Repeats with `x3`, 1st/2nd/3rd endings, Segno, Coda, D.C./D.S. al Fine, referenc
 </div>
 <div class="card" markdown="1"><span class="ico">🎵</span>
 ### Real notes where needed
-Intros, riffs and heads written in a notation editor and imported from MusicXML, on the same page as the chord symbols.
+Intros, riffs and heads written right in the song (`G8 Bb D F`) or imported from MusicXML, on the same page as the chord symbols. For guitar players also as **tablature**, worked out by the app.
 </div>
 <div class="card" markdown="1"><span class="ico">↕️</span>
 ### Transposition and jazz symbols

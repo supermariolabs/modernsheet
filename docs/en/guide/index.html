@@ -146,7 +146,8 @@ python modernsheet_cli.py --check *.chs                  # check for errors only
 <h2 id="reading-and-editing-a-song">Reading and editing a song<a class="headerlink" href="#reading-and-editing-a-song">#</a></h2>
 <p>Tapping a card opens the song in <strong>view mode</strong>: just the sheet, with the options above it.</p>
 <ul>
-<li><strong>Transpose</strong> – / +: changes chords and key signatures; <strong>Real Book</strong> or <strong>Clean</strong>; <strong>Grid</strong> (all bars equal) or <strong>Fill</strong>; <strong>jazz symbols</strong>; <strong>colours by section</strong>.</li>
+<li><strong>Transpose</strong> – / +: changes chords and key signatures; <strong>Real Book</strong> or <strong>Clean</strong>; <strong>Grid</strong> (all bars equal) or <strong>Fill</strong> (a song or a section can set one in the source with <code>{bar_width}</code>); <strong>jazz symbols</strong>; <strong>colours by section</strong>.</li>
+<li><strong>Staff / Both / Tab</strong>: for guitar players, the notated parts also as <strong>tablature</strong>, under the staff or in its place (with the rhythm under the numbers). The app chooses string and fret to stay in a comfortable position; with <code>{capo}</code> frets start from the capo. Where needed, correct it in the song: <code>{tab_position: 5}</code> (the hand around the 5th fret), <code>~3</code> after a note (that string), <code>{tuning: drop D}</code> (tuning, also bass and ukulele).</li>
 <li><strong>⛶ Full screen</strong>: only the pages remain. To leave, use the button at the top right or the <strong>Esc</strong> key.</li>
 <li>Arrow keys, Page Up/Down, the space bar and <strong>Bluetooth pedals</strong> that send those keys turn the pages.</li>
 </ul>
@@ -154,7 +155,7 @@ python modernsheet_cli.py --check *.chs                  # check for errors only
 <ul>
 <li><strong>syntax highlighting</strong> and <strong>suggestions</strong> for directives when you type <code>{</code> (Enter or Tab to choose);</li>
 <li>the preview updates as you type; <strong>warnings</strong> are listed under the editor, and tapping one jumps to the line;</li>
-<li>a <strong>tab for every MusicXML file</strong> the song cites, editable like the source;</li>
+<li>a <strong>tab for every MusicXML file</strong> the song cites, editable like the source, with a bar to <strong>indent</strong> the file (just the indentation, or one element per line) and <strong>collapse</strong> a measure or another element to one line (<em>Collapse</em> at the cursor, <em>Collapse measures</em> for all of them, <em>Expand</em>, <em>Expand all</em>); collapsing does not change the file;</li>
 <li><strong>Save</strong> (⌘S / Ctrl+S) turns green when there is something to save; <strong>Save as</strong> makes a copy next to the song;</li>
 <li><strong>Export PDF</strong>; the <strong>red bin</strong> deletes the song and its MusicXML files, after a confirmation listing the files.</li>
 </ul>
@@ -172,7 +173,7 @@ python modernsheet_cli.py --check *.chs                  # check for errors only
 <li><strong>Import from chordsheet.com</strong>: log in to your account, pick the songs from a list and they are imported converted. Details on the <a href="/en/chordsheet/">chordsheet.com</a> page.</li>
 </ul>
 <h2 id="settings">Settings<a class="headerlink" href="#settings">#</a></h2>
-<p>Language (Italian or English), songs folder, PDF folder, default display options (theme, grid, chord symbols, colours) and sync. Settings are kept on the device.</p>
+<p>Language (Italian or English), songs folder, PDF folder, default display options (theme, grid, row spacing, chord symbols, colours) and sync. A song can set its own row spacing with <code>{row_spacing}</code>. Settings are kept on the device.</p>
 </main>
 <footer class="foot">
   <div class="wrap">

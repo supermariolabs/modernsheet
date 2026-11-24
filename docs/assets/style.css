@@ -138,3 +138,7 @@ figcaption { color: var(--muted); font-size: 14.5px; margin-top: 8px; text-align
   .beta-ribbon { display: none; }
   .beta-tag { display: inline-block; }
 }
+
+/* Download page: latest version and build time (filled in by /assets/releases.js) */
+.latest { margin: 4px 0 18px; font-size: .95rem; }
+.card .build { margin: 6px 0 0; font-size: .8rem; color: var(--muted, #6b7280); }

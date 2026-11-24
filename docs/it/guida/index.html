@@ -146,7 +146,8 @@ python modernsheet_cli.py --check *.chs                  # solo controllo degli 
 <h2 id="leggere-e-modificare-un-brano">Leggere e modificare un brano<a class="headerlink" href="#leggere-e-modificare-un-brano">#</a></h2>
 <p>Toccando una card il brano si apre in <strong>modalità vista</strong>: solo lo spartito, con le opzioni in alto.</p>
 <ul>
-<li><strong>Trasposizione</strong> – / +: cambia sigle e armature; <strong>Real Book</strong> o <strong>Clean</strong>; <strong>Griglia</strong> (battute tutte uguali) o <strong>Riempi</strong>; <strong>sigle jazz</strong>; <strong>colori per sezione</strong>.</li>
+<li><strong>Trasposizione</strong> – / +: cambia sigle e armature; <strong>Real Book</strong> o <strong>Clean</strong>; <strong>Griglia</strong> (battute tutte uguali) o <strong>Riempi</strong> (un brano o una sezione possono fissarne una nel sorgente con <code>{bar_width}</code>); <strong>sigle jazz</strong>; <strong>colori per sezione</strong>.</li>
+<li><strong>Pentagramma / Entrambi / Tablatura</strong>: per chi suona la chitarra, le parti in notazione anche in <strong>tablatura</strong>, sotto il pentagramma o al suo posto (con il ritmo sotto i numeri). Corda e tasto li sceglie l'app, per restare in una posizione comoda; con <code>{capo}</code> i tasti partono dal capotasto. Dove serve si corregge nel brano: <code>{tab_position: 5}</code> (la mano attorno al 5° tasto), <code>~3</code> dopo una nota (quella corda), <code>{tuning: drop D}</code> (accordatura, anche basso e ukulele).</li>
 <li><strong>⛶ Schermo intero</strong>: restano solo le pagine. Per uscire c'è il pulsante in alto a destra, oppure il tasto <strong>Esc</strong>.</li>
 <li>Le frecce, Pagina su/giù, lo spazio e le <strong>pedaliere Bluetooth</strong> girano le pagine.</li>
 </ul>
@@ -154,7 +155,7 @@ python modernsheet_cli.py --check *.chs                  # solo controllo degli 
 <ul>
 <li><strong>evidenziazione</strong> della sintassi e <strong>suggerimenti</strong> delle direttive quando scrivi <code>{</code> (Invio o Tab per scegliere);</li>
 <li>l'anteprima si aggiorna mentre scrivi; i <strong>warning</strong> sono elencati sotto l'editor e toccandoli si va alla riga;</li>
-<li>una <strong>scheda per ogni MusicXML</strong> citato dal brano, modificabile come il sorgente;</li>
+<li>una <strong>scheda per ogni MusicXML</strong> citato dal brano, modificabile come il sorgente, con una barra per <strong>indentare</strong> il file (solo i rientri, o un elemento per riga) e <strong>comprimere</strong> su una riga una battuta o un altro elemento (<em>Comprimi</em> dove si trova il cursore, <em>Comprimi battute</em> per tutte, <em>Espandi</em>, <em>Espandi tutto</em>); comprimere non cambia il file;</li>
 <li><strong>Salva</strong> (⌘S / Ctrl+S) diventa verde quando c'è qualcosa da salvare; <strong>Salva con nome</strong> crea una copia accanto al brano;</li>
 <li><strong>Esporta PDF</strong>; il <strong>cestino rosso</strong> elimina il brano e i suoi MusicXML, dopo una conferma con l'elenco dei file.</li>
 </ul>
@@ -172,7 +173,7 @@ python modernsheet_cli.py --check *.chs                  # solo controllo degli 
 <li><strong>Importa da chordsheet.com</strong>: accedi al tuo account, scegli i brani da un elenco e vengono importati convertiti. Dettagli nella pagina <a href="/it/chordsheet/">chordsheet.com</a>.</li>
 </ul>
 <h2 id="impostazioni">Impostazioni<a class="headerlink" href="#impostazioni">#</a></h2>
-<p>Lingua (italiano o inglese), cartella dei brani, cartella per i PDF, opzioni di visualizzazione predefinite (tema, griglia, sigle, colori) e sincronizzazione. Le impostazioni restano salvate sul dispositivo.</p>
+<p>Lingua (italiano o inglese), cartella dei brani, cartella per i PDF, opzioni di visualizzazione predefinite (tema, griglia, spazio fra le righe, sigle, colori) e sincronizzazione. Un brano può fissare il suo spazio fra le righe con <code>{row_spacing}</code>. Le impostazioni restano salvate sul dispositivo.</p>
 </main>
 <footer class="foot">
   <div class="wrap">

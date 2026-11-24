@@ -32,30 +32,36 @@
 <main id="main" class="wrap">
 <h1 id="download">Download<a class="headerlink" href="#download">#</a></h1>
 <p>Modern Sheet for computers and Android, in the latest published version. The apps are free and open source (GPL-3.0 license).</p>
+<p class="latest" data-release hidden></p>
+
 <div class="grid">
 <div class="card">
 <p><span class="ico">🍎</span></p>
 <h3 id="macos">macOS<a class="headerlink" href="#macos">#</a></h3>
 <p>Macs with Apple silicon or Intel.</p>
+<p class="build" data-asset="ModernSheet-macos.zip" hidden="hidden"></p>
 <p><a class="btn primary" href="https://github.com/supermariolabs/modernsheet/releases/latest/download/ModernSheet-macos.zip">Download for macOS</a></p>
 </div>
 <div class="card">
 <p><span class="ico">💻</span></p>
 <h3 id="windows">Windows<a class="headerlink" href="#windows">#</a></h3>
 <p>Windows 10 and 11, 64-bit.</p>
+<p class="build" data-asset="ModernSheet-windows.zip" hidden="hidden"></p>
 <p><a class="btn primary" href="https://github.com/supermariolabs/modernsheet/releases/latest/download/ModernSheet-windows.zip">Download for Windows</a></p>
 </div>
 <div class="card">
 <p><span class="ico">🐧</span></p>
 <h3 id="linux">Linux<a class="headerlink" href="#linux">#</a></h3>
 <p>x86_64, with GTK 3 (the most common desktop distributions).</p>
+<p class="build" data-asset="ModernSheet-linux.tar.gz" hidden="hidden"></p>
 <p><a class="btn primary" href="https://github.com/supermariolabs/modernsheet/releases/latest/download/ModernSheet-linux.tar.gz">Download for Linux</a></p>
 </div>
 <div class="card">
 <p><span class="ico">🤖</span></p>
 <h3 id="android">Android<a class="headerlink" href="#android">#</a></h3>
 <p>64-bit phones and tablets (APK). <strong>Experimental</strong>: not much tested yet.</p>
-<p><a class="btn primary" href="https://drive.google.com/file/d/1vwZ0EVc03DHRL17h8emCMKTPHOiS09Ye/view?usp=sharing">Download for Android</a></p>
+<p class="build" data-asset="ModernSheet-android.apk" hidden="hidden"></p>
+<p><a class="btn primary" data-asset-link="ModernSheet-android.apk" href="https://drive.google.com/file/d/1vwZ0EVc03DHRL17h8emCMKTPHOiS09Ye/view?usp=sharing">Download for Android</a></p>
 </div>
 </div>
 <p>Every version, with its changes, is on the project's <a href="https://github.com/supermariolabs/modernsheet/releases">Releases</a> page. The iPad app is in testing: for now you can try it with the <em>Flet</em> app (see the <a href="/en/guide/">guide</a>).</p>
@@ -84,9 +90,10 @@
 <li>Open the downloaded file. The first time, Android asks to allow <em>Install unknown apps</em> for the app you open it from (Drive, Files, Chrome…): allow it and go back.</li>
 <li>If Play Protect warns that the app is unknown, choose <strong>Install anyway</strong>.</li>
 </ol>
-<p>The APK is for 64-bit devices, which means nearly all recent ones. Updates install over the previous version, keeping the library.</p>
+<p>The APK is for 64-bit devices, which means nearly all recent ones. Updates install over the previous version, keeping the library. <strong>If you installed the test APK from Google Drive</strong> (up to 0.42), uninstall it once before installing this one: it is signed with a different key. With Google Drive sync your songs come back on first start.</p>
 <h2 id="after-installing">After installing<a class="headerlink" href="#after-installing">#</a></h2>
 <p>On first start the library holds the <strong>examples</strong> folder with the example songs. To get started there is the <a href="/en/guide/">app guide</a>; to write songs, the <a href="/en/format/">.chs format</a>.</p>
+<script src="/assets/releases.js" defer></script>
 </main>
 <footer class="foot">
   <div class="wrap">

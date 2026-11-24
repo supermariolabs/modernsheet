@@ -6,6 +6,7 @@ import re
 from dataclasses import dataclass
 
 from . import fonts
+from . import tab as tab_mod
 from .display import DisplayList, Surface
 from .model import *  # noqa: F401,F403
 from .musicxml import NOTE_TYPES, STEPS, Note  # noqa: F401
@@ -134,7 +135,8 @@ class Layout:
     """Layout layer: places everything on pages and records it as a DisplayList.
     It draws on a recording Surface, so it needs no rendering library."""
 
-    def __init__(self, song: Song, *, bars_per_line: int = 4, bar_width: str = "uniform",
+    def __init__(self, song: Song, *, bars_per_line: int = 4, bar_width: str = "uniform", row_spacing="normal",
+                 notation: str = "staff", notation_force: bool = False,
                  paper: str = "A4", theme: str = "realbook", chord_symbols: str = "text",
                  label_colors: str = "theme", style: Style | None = None):
         self.metrics = fonts.registry(theme)
@@ -149,6 +151,23 @@ class Layout:
         if self.bar_width not in ("uniform", "fit"):
             song.warnings.append(f"bar_width '{self.bar_width}' unknown, using 'uniform'")
             self.bar_width = "uniform"
+        self.song_bar_width = self.bar_width      # sections may override it ({bar_width} inside a section)
+        # space between rows: the song's {row_spacing}, else the option; scales the free space under each staff
+        self.row_spacing = row_spacing_factor(song.meta.get("row_spacing", row_spacing)) or \
+            row_spacing_factor(row_spacing) or 1.0
+        # notated bars: staff, staff + guitar tablature, or tablature only (song's {notation}, else the option)
+        # notation_force: the viewer's own choice (the app's switch over the sheet) beats song and sections
+        self.notation_force = notation_force
+        self.song_notation = notation if notation_force else song.meta.get("notation", notation)
+        if self.song_notation not in NOTATIONS:
+            song.warnings.append(f"notation '{self.song_notation}' unknown, using 'staff'")
+            self.song_notation = "staff"
+        self.notation_mode = self.song_notation
+        self.tuning = tab_mod.parse_tuning(song.meta.get("tuning", "standard")) or tab_mod.STANDARD
+        self.tab_n = len(self.tuning)
+        self.TAB_H = (self.tab_n - 1) * self.TAB_SP        # as many lines as strings
+        if any(self.section_notation(s) != "staff" for s in song.sections):
+            self.assign_tab()
         self.page_w, self.page_h = PAGE_SIZES.get(paper.lower(), PAGE_SIZES["a4"])
         self.c = Surface((self.page_w, self.page_h), self.metrics)
         self.c.setTitle(song.meta.get("title", "Chord sheet"))
@@ -512,6 +531,11 @@ class Layout:
              ("16th", "up"): "", ("16th", "down"): ""}
     NOTATION_ABOVE = 26     # extra room above the staff in rows with notation (chord symbols)
     NOTATION_BELOW = 22     # extra room below the staff (lyrics, low notes)
+    TAB_SP = 6.0            # guitar tablature: space between its six lines
+    TAB_H = 5 * TAB_SP
+    TAB_GAP = 10            # "both": between the staff (or its lyrics) and the tablature
+    RHYTHM_ROOM = 20        # "tab": stems and beams under the tablature
+    TAB_NUM = 7.6           # fret numbers
 
     def row_has_notation(self, row) -> bool:
         return any(b.notation for b in row)
@@ -523,6 +547,10 @@ class Layout:
         if not nbars:
             return 0.0, 0.0
         notes = [n for b in nbars for n in b.notation.notes if n.step]
+        if self.notation_mode == "tab":              # six lines in place of the staff, the rhythm under them
+            above = self.NOTATION_ABOVE if any(e.chord for b in nbars for e in b.events) else 8
+            below = (self.TAB_H - self.STAFF_H) + self.RHYTHM_ROOM + (9 if any(n.tuplet for n in notes) else 0)
+            return above, below + (self.NOTATION_BELOW if any(n.lyric for n in notes) else 0)
         high = max([n.diatonic - 30 for n in notes] + [0])
         low = min([n.diatonic - 30 for n in notes] + [8])
         above = (self.NOTATION_ABOVE if any(e.chord for b in nbars for e in b.events) else 8)
@@ -531,6 +559,8 @@ class Layout:
             above += 1.2 * self.SP
         below = self.NOTATION_BELOW if any(n.lyric for n in notes) else 0
         below += max(0, 1 - low) * self.SP / 2
+        if self.notation_mode == "both":             # the tablature under the staff (and the lyrics)
+            below += self.TAB_GAP + self.TAB_H + 4
         return above, below
 
     VOLTA_ROOM = 15
@@ -571,8 +601,9 @@ class Layout:
 
     def row_height(self, row) -> float:
         above, below = self.notation_room(row)
-        return (self.st.row_height + above + below + (self.VOLTA_ROOM if self.row_has_volta(row) else 0)
-                + self.mark_room(row) + self.note_room(row))
+        gap = self.st.row_height - 20 - self.STAFF_H          # the free space under a plain row's staff
+        return (self.st.row_height + gap * (self.row_spacing - 1) + above + below
+                + (self.VOLTA_ROOM if self.row_has_volta(row) else 0) + self.mark_room(row) + self.note_room(row))
 
     # -- navigation marks and free text -------------------------------------------
     END_MARK_TEXT = {"to_coda": "To Coda", "fine": "Fine", "dc": "D.C.", "ds": "D.S."}
@@ -842,148 +873,153 @@ class Layout:
             for s in g:
                 s["beam"] = g_info
 
-        # ---- draw: ledger lines, heads, accidentals, dots
         ink = th.ink
-        c.setStrokeColorRGB(*th.staff_ink)
-        c.setLineWidth(th.staff_line_width + 0.2)
         hi, lo = top, bottom
-        for s in stems:
-            n, x = s["n"], s["x"]
-            if n.step is None:
-                if n.measure_rest or (n.type == "whole" and len(stems) == 1):
-                    gx = (ax + right) / 2 - 5
-                    self.nglyph(gx, top - sp, self.REST_GLYPHS["whole"])
-                else:
-                    self.nglyph(x, top - 2 * sp, self.REST_GLYPHS.get(n.type, self.REST_GLYPHS["quarter"]))
-                    if n.dots:
-                        c.setFillColorRGB(*ink)
-                        c.circle(x + hw + 0.5 * sp, top - 1.5 * sp, 0.22 * sp, stroke=0, fill=1)
-                continue
-            for h in s["heads"]:
-                pos = h.diatonic - 30
-                y = ypos(h)
-                for p in (range(-2, pos - 1, -2) if pos <= -2 else range(10, pos + 1, 2) if pos >= 10 else []):
-                    ly = bottom + p * sp / 2
-                    c.setStrokeColorRGB(*th.staff_ink)
-                    c.line(x - 0.45 * sp, ly, x + hw + 0.45 * sp, ly)
-                self.nglyph(x, y, self.NOTE_GLYPHS.get(h.type, ""))
-                if id(h) in acc:
-                    g = SMUFL[acc[id(h)]]
-                    aw = self.metrics.stringWidth(g, "Petaluma", self.STAFF_H)
-                    self.nglyph(x - aw - 0.25 * sp, y, g)
-                for k in range(h.dots):
-                    dy = sp / 2 if pos % 2 == 0 else 0
-                    c.setFillColorRGB(*ink)
-                    c.circle(x + hw + (0.55 + 0.5 * k) * sp, y + dy, 0.22 * sp, stroke=0, fill=1)
-                hi, lo = max(hi, y + sp), min(lo, y - sp)
-                # ties
-                key_ = h.midi
-                if h.tie_stop:
-                    if key_ in self.pending_ties:
-                        x1, ty, below = self.pending_ties.pop(key_)
-                        self.tie_arc(x1, x - 1, ty, below)
+        if self.notation_mode == "tab":              # fret numbers on six lines, the rhythm under them
+            lo = self.draw_tab(stems, groups, hw, top, rhythm=True, ax=ax, right=right)
+        else:
+            if self.notation_mode == "both":         # the tablature goes under the row (draw_row)
+                self.row_tabs.append((stems, groups, hw))
+            # ---- draw: ledger lines, heads, accidentals, dots
+            c.setStrokeColorRGB(*th.staff_ink)
+            c.setLineWidth(th.staff_line_width + 0.2)
+            for s in stems:
+                n, x = s["n"], s["x"]
+                if n.step is None:
+                    if n.measure_rest or (n.type == "whole" and len(stems) == 1):
+                        gx = (ax + right) / 2 - 5
+                        self.nglyph(gx, top - sp, self.REST_GLYPHS["whole"])
                     else:
-                        self.tie_arc(x - 14, x - 1, y, s.get("up", True))
-                if h.tie_start:
-                    self.pending_ties[key_] = (x + hw + 1, y, s.get("up", True))
-
-            # stems and flags
-            if "tip" in s:
-                c.setStrokeColorRGB(*ink)
-                c.setLineWidth(0.85)
-                c.line(s["stem_x"], s["base_y"], s["stem_x"], s["tip"])
-                hi, lo = max(hi, s["tip"]), min(lo, s["tip"])
-                if "beam" not in s and n.type in ("eighth", "16th"):
-                    up = s["up"]
-                    self.nglyph(s["stem_x"] - (0.4 if up else 0.45), s["tip"], self.FLAGS[(n.type, "up" if up else "down")])
-
-        # beams (primary + secondary for 16ths)
-        thick = 0.5 * sp
-        for g in groups:
-            up, line, shift = g[0]["beam"]
-            sgn = -1 if up else 1                         # beam thickness grows towards the heads
-
-            def beam(xa, xb, level):
-                off = sgn * level * 0.75 * sp
-                ya, yb = line(xa) + shift + off, line(xb) + shift + off
-                p = c.beginPath()
-                p.moveTo(xa, ya)
-                p.lineTo(xb, yb)
-                p.lineTo(xb, yb + sgn * thick)
-                p.lineTo(xa, ya + sgn * thick)
-                p.close()
-                c.setFillColorRGB(*ink)
-                c.drawPath(p, stroke=0, fill=1)
-
-            beam(g[0]["stem_x"] - 0.4, g[-1]["stem_x"] + 0.4, 0)
-            for i, s in enumerate(g):
-                if s["n"].type != "16th":
+                        self.nglyph(x, top - 2 * sp, self.REST_GLYPHS.get(n.type, self.REST_GLYPHS["quarter"]))
+                        if n.dots:
+                            c.setFillColorRGB(*ink)
+                            c.circle(x + hw + 0.5 * sp, top - 1.5 * sp, 0.22 * sp, stroke=0, fill=1)
                     continue
-                nxt = g[i + 1] if i + 1 < len(g) else None
-                prv = g[i - 1] if i > 0 else None
-                if nxt and nxt["n"].type == "16th":
-                    beam(s["stem_x"] - 0.4, nxt["stem_x"] + 0.4, 1)
-                elif not (prv and prv["n"].type == "16th"):
-                    stub = 1.1 * sp
-                    if nxt:
-                        beam(s["stem_x"], s["stem_x"] + stub, 1)
-                    else:
-                        beam(s["stem_x"] - stub, s["stem_x"], 1)
+                for h in s["heads"]:
+                    pos = h.diatonic - 30
+                    y = ypos(h)
+                    for p in (range(-2, pos - 1, -2) if pos <= -2 else range(10, pos + 1, 2) if pos >= 10 else []):
+                        ly = bottom + p * sp / 2
+                        c.setStrokeColorRGB(*th.staff_ink)
+                        c.line(x - 0.45 * sp, ly, x + hw + 0.45 * sp, ly)
+                    self.nglyph(x, y, self.NOTE_GLYPHS.get(h.type, ""))
+                    if id(h) in acc:
+                        g = SMUFL[acc[id(h)]]
+                        aw = self.metrics.stringWidth(g, "Petaluma", self.STAFF_H)
+                        self.nglyph(x - aw - 0.25 * sp, y, g)
+                    for k in range(h.dots):
+                        dy = sp / 2 if pos % 2 == 0 else 0
+                        c.setFillColorRGB(*ink)
+                        c.circle(x + hw + (0.55 + 0.5 * k) * sp, y + dy, 0.22 * sp, stroke=0, fill=1)
+                    hi, lo = max(hi, y + sp), min(lo, y - sp)
+                    # ties
+                    key_ = h.midi
+                    if h.tie_stop:
+                        if key_ in self.pending_ties:
+                            x1, ty, below = self.pending_ties.pop(key_)
+                            self.tie_arc(x1, x - 1, ty, below)
+                        else:
+                            self.tie_arc(x - 14, x - 1, y, s.get("up", True))
+                    if h.tie_start:
+                        self.pending_ties[key_] = (x + hw + 1, y, s.get("up", True))
 
-        # ---- tuplets: SMuFL digit over the beam, or a bracket when not all beamed together
-        tgroups, curt = [], []
-        for s in stems:
-            n = s["n"]
-            if not n.tuplet:
-                if curt:
+                # stems and flags
+                if "tip" in s:
+                    c.setStrokeColorRGB(*ink)
+                    c.setLineWidth(0.85)
+                    c.line(s["stem_x"], s["base_y"], s["stem_x"], s["tip"])
+                    hi, lo = max(hi, s["tip"]), min(lo, s["tip"])
+                    if "beam" not in s and n.type in ("eighth", "16th"):
+                        up = s["up"]
+                        self.nglyph(s["stem_x"] - (0.4 if up else 0.45), s["tip"], self.FLAGS[(n.type, "up" if up else "down")])
+
+            # beams (primary + secondary for 16ths)
+            thick = 0.5 * sp
+            for g in groups:
+                up, line, shift = g[0]["beam"]
+                sgn = -1 if up else 1                         # beam thickness grows towards the heads
+
+                def beam(xa, xb, level):
+                    off = sgn * level * 0.75 * sp
+                    ya, yb = line(xa) + shift + off, line(xb) + shift + off
+                    p = c.beginPath()
+                    p.moveTo(xa, ya)
+                    p.lineTo(xb, yb)
+                    p.lineTo(xb, yb + sgn * thick)
+                    p.lineTo(xa, ya + sgn * thick)
+                    p.close()
+                    c.setFillColorRGB(*ink)
+                    c.drawPath(p, stroke=0, fill=1)
+
+                beam(g[0]["stem_x"] - 0.4, g[-1]["stem_x"] + 0.4, 0)
+                for i, s in enumerate(g):
+                    if s["n"].type != "16th":
+                        continue
+                    nxt = g[i + 1] if i + 1 < len(g) else None
+                    prv = g[i - 1] if i > 0 else None
+                    if nxt and nxt["n"].type == "16th":
+                        beam(s["stem_x"] - 0.4, nxt["stem_x"] + 0.4, 1)
+                    elif not (prv and prv["n"].type == "16th"):
+                        stub = 1.1 * sp
+                        if nxt:
+                            beam(s["stem_x"], s["stem_x"] + stub, 1)
+                        else:
+                            beam(s["stem_x"] - stub, s["stem_x"], 1)
+
+            # ---- tuplets: SMuFL digit over the beam, or a bracket when not all beamed together
+            tgroups, curt = [], []
+            for s in stems:
+                n = s["n"]
+                if not n.tuplet:
+                    if curt:
+                        tgroups.append(curt)
+                    curt = []
+                    continue
+                if n.tuplet_start and curt:
                     tgroups.append(curt)
-                curt = []
-                continue
-            if n.tuplet_start and curt:
+                    curt = []
+                curt.append(s)
+                span = sum(x["n"].dur for x in curt)
+                normal_span = NOTE_TYPES.get(curt[0]["n"].type, 1) * n.tuplet[1] * (1.5 if curt[0]["n"].dots else 1)
+                if n.tuplet_stop or (not any(x["n"].tuplet_start for x in curt) and span >= normal_span - 1e-6):
+                    tgroups.append(curt)
+                    curt = []
+            if curt:
                 tgroups.append(curt)
-                curt = []
-            curt.append(s)
-            span = sum(x["n"].dur for x in curt)
-            normal_span = NOTE_TYPES.get(curt[0]["n"].type, 1) * n.tuplet[1] * (1.5 if curt[0]["n"].dots else 1)
-            if n.tuplet_stop or (not any(x["n"].tuplet_start for x in curt) and span >= normal_span - 1e-6):
-                tgroups.append(curt)
-                curt = []
-        if curt:
-            tgroups.append(curt)
-        for tg in tgroups:
-            actual = tg[0]["n"].tuplet[0]
-            pitched = [x for x in tg if "ys" in x]
-            ups = [x["up"] for x in pitched if "up" in x]
-            above = (sum(ups) >= len(ups) / 2) if ups else True
-            x0 = tg[0]["x"]
-            x1 = tg[-1]["x"] + hw
-            cx = (x0 + x1) / 2
-            beamed = all("beam" in x for x in tg) and len({id(x["beam"]) for x in tg}) == 1
-            ext = []
-            for x in tg:
-                ext += x.get("ys", [top - 2 * sp]) + ([x["tip"]] if "tip" in x else [])
-            if above:
-                y = max(ext + [top]) + 0.9 * sp
-            else:
-                y = min(ext + [bottom]) - 0.9 * sp - 0.9 * sp
-            digit = "".join(chr(0xE880 + int(d)) for d in str(actual))
-            dw = self.metrics.stringWidth(digit, "Petaluma", self.STAFF_H * 0.75)
-            c.setFillColorRGB(*ink)
-            c.setFont("Petaluma", self.STAFF_H * 0.75)
-            c.drawString(cx - dw / 2, y + (0 if above else 0.2 * sp), digit)
-            if not beamed:                                   # bracket with a gap for the number
-                c.setStrokeColorRGB(*ink)
-                c.setLineWidth(0.7)
-                yb = y + 0.45 * sp
-                hook = -0.6 * sp if above else 0.6 * sp
-                c.line(x0, yb + hook, x0, yb)
-                c.line(x0, yb, cx - dw / 2 - 2, yb)
-                c.line(cx + dw / 2 + 2, yb, x1, yb)
-                c.line(x1, yb, x1, yb + hook)
-            if above:
-                hi = max(hi, y + 1.2 * sp)
-            else:
-                lo = min(lo, y - 0.3 * sp)
+            for tg in tgroups:
+                actual = tg[0]["n"].tuplet[0]
+                pitched = [x for x in tg if "ys" in x]
+                ups = [x["up"] for x in pitched if "up" in x]
+                above = (sum(ups) >= len(ups) / 2) if ups else True
+                x0 = tg[0]["x"]
+                x1 = tg[-1]["x"] + hw
+                cx = (x0 + x1) / 2
+                beamed = all("beam" in x for x in tg) and len({id(x["beam"]) for x in tg}) == 1
+                ext = []
+                for x in tg:
+                    ext += x.get("ys", [top - 2 * sp]) + ([x["tip"]] if "tip" in x else [])
+                if above:
+                    y = max(ext + [top]) + 0.9 * sp
+                else:
+                    y = min(ext + [bottom]) - 0.9 * sp - 0.9 * sp
+                digit = "".join(chr(0xE880 + int(d)) for d in str(actual))
+                dw = self.metrics.stringWidth(digit, "Petaluma", self.STAFF_H * 0.75)
+                c.setFillColorRGB(*ink)
+                c.setFont("Petaluma", self.STAFF_H * 0.75)
+                c.drawString(cx - dw / 2, y + (0 if above else 0.2 * sp), digit)
+                if not beamed:                                   # bracket with a gap for the number
+                    c.setStrokeColorRGB(*ink)
+                    c.setLineWidth(0.7)
+                    yb = y + 0.45 * sp
+                    hook = -0.6 * sp if above else 0.6 * sp
+                    c.line(x0, yb + hook, x0, yb)
+                    c.line(x0, yb, cx - dw / 2 - 2, yb)
+                    c.line(cx + dw / 2 + 2, yb, x1, yb)
+                    c.line(x1, yb, x1, yb + hook)
+                if above:
+                    hi = max(hi, y + 1.2 * sp)
+                else:
+                    lo = min(lo, y - 0.3 * sp)
 
         # ---- chord symbols above, lyrics below
         chords = [e for e in b.events if e.chord]
@@ -1006,6 +1042,146 @@ class Layout:
                 self.row_lyrics.append((s["x"] + hw / 2 - w / 2, n.lyric))
         self.row_hi = max(self.row_hi, hi)
         self.row_lo = min(self.row_lo, lo)
+
+    # -- guitar tablature --------------------------------------------------------
+    def tab_lines(self, x0, x1, top):
+        self.c.setStrokeColorRGB(*self.th.staff_lines)
+        self.c.setLineWidth(self.th.staff_line_width)
+        for i in range(self.tab_n):
+            self.c.line(x0, top - i * self.TAB_SP, x1, top - i * self.TAB_SP)
+
+    def tab_clef(self, x, top) -> float:
+        """T A B written down the left of the tablature, or the names of the open strings on their lines
+        for any tuning but the standard one; returns the width (as the treble clef's)."""
+        if self.tuning != tab_mod.STANDARD:
+            names = tab_mod.string_names(self.tuning)
+            size = self.TAB_SP * 1.1
+            for i, name in enumerate(reversed(names)):            # highest string on top
+                w = self.text_width(name, self.th.label, size)
+                self.knockout(x + 9 - w / 2 - 1, top - i * self.TAB_SP - size * 0.42, w + 2, size * 0.84)
+                self.text(x + 9 - w / 2, top - i * self.TAB_SP - size * 0.34, name, self.th.label, size,
+                          self.th.staff_ink, bold=True)
+            return 24 if self.th.smufl else 22
+        size = self.TAB_SP * 1.45
+        for k, ch in enumerate("TAB"):
+            w = self.text_width(ch, self.th.label, size)
+            self.text(x + 8 - w / 2, top - self.TAB_H / 2 - size * 0.36 + (1 - k) * 1.62 * self.TAB_SP, ch,
+                      self.th.label, size,
+                      self.th.staff_ink, bold=True)
+        return 24 if self.th.smufl else 22
+
+    def tab_barline(self, x, top, bottom):
+        self.c.setStrokeColorRGB(*self.th.staff_ink)
+        self.c.setLineWidth(self.th.barline_width)
+        self.c.line(x, top, x, bottom)
+
+    def draw_tab(self, stems, groups, hw, tab_top, rhythm, ax=None, right=None) -> float:
+        """Fret numbers of a notated bar on six lines from `tab_top` (1st string on top), aligned with
+        the note columns; with `rhythm`, stems, beams, flags, dots, rests and tuplet numbers under the
+        lines. Returns the lowest y used."""
+        c, th, sp = self.c, self.th, self.TAB_SP
+        bottom = tab_top - self.TAB_H
+        low = bottom
+        size = self.TAB_NUM
+        y_end = bottom - 3 - 12                       # where the stems end (and the beams sit)
+        for s in stems:
+            n = s["n"]
+            cx = s["x"] + hw / 2
+            if n.step is None:
+                if rhythm:
+                    if n.measure_rest and ax is not None:
+                        self.nglyph((ax + right) / 2 - 5, tab_top - 2 * sp, self.REST_GLYPHS["whole"])
+                    else:
+                        self.nglyph(cx - hw / 2, tab_top - 2.5 * sp,
+                                    self.REST_GLYPHS.get(n.type, self.REST_GLYPHS["quarter"]))
+                continue
+            for h in s["heads"]:
+                if h.fret is None:
+                    continue
+                y = tab_top - (self.tab_n - 1 - h.string) * sp
+                label = f"({h.fret})" if h.tie_stop else str(h.fret)
+                w = self.text_width(label, th.text, size)
+                self.knockout(cx - w / 2 - 1, y - size * 0.4, w + 2, size * 0.8)
+                self.text(cx - w / 2, y - size * 0.34, label, th.text, size, th.ink)
+            if rhythm and n.type != "whole":
+                length = 8 if n.type == "half" else 12
+                c.setStrokeColorRGB(*th.ink)
+                c.setLineWidth(0.85)
+                c.line(cx, bottom - 3, cx, bottom - 3 - length)
+                s["tab_x"] = cx
+                if n.dots:
+                    c.setFillColorRGB(*th.ink)
+                    for k in range(n.dots):
+                        c.circle(cx + 2.6 + 2.2 * k, bottom - 3 - length + 1.6, 0.85, stroke=0, fill=1)
+                if "beam" not in s and n.type in ("eighth", "16th", "32nd"):
+                    levels = {"eighth": 1, "16th": 2, "32nd": 3}[n.type]
+                    for k in range(levels):
+                        yy = bottom - 3 - length + 2.6 * k
+                        c.line(cx, yy, cx + 4, yy + 3.5)
+                low = min(low, bottom - 3 - length)
+        if not rhythm:
+            return low
+        for g in groups:                              # flat beams at the end of the stems
+            xs = [s["x"] + hw / 2 for s in g]
+            c.setFillColorRGB(*th.ink)
+            c.rect(xs[0] - 0.4, y_end, xs[-1] - xs[0] + 0.8, 1.9, stroke=0, fill=1)
+            for i, s in enumerate(g):
+                if s["n"].type not in ("16th", "32nd"):
+                    continue
+                nxt = g[i + 1] if i + 1 < len(g) else None
+                prv = g[i - 1] if i > 0 else None
+                if nxt and nxt["n"].type in ("16th", "32nd"):
+                    c.rect(xs[i] - 0.4, y_end + 3, xs[i + 1] - xs[i] + 0.8, 1.9, stroke=0, fill=1)
+                elif not (prv and prv["n"].type in ("16th", "32nd")):
+                    stub = 4.5
+                    x0 = xs[i] if nxt else xs[i] - stub
+                    c.rect(x0, y_end + 3, stub, 1.9, stroke=0, fill=1)
+            low = min(low, y_end)
+        run: list = []                               # tuplet numbers under the rhythm
+        for s in stems + [None]:
+            n = s["n"] if s else None
+            if n is not None and n.tuplet and not (n.tuplet_start and run):
+                run.append(s)
+                if not n.tuplet_stop:
+                    continue
+            if run:
+                x0, x1 = run[0]["x"] + hw / 2, run[-1]["x"] + hw / 2
+                label = str(run[0]["n"].tuplet[0])
+                w = self.text_width(label, th.text, 7.5)
+                self.text((x0 + x1) / 2 - w / 2, low - 8, label, th.text, 7.5, th.ink)
+                low = min(low, low - 9)
+                run = [s] if (n is not None and n.tuplet and n.tuplet_start and not n.tuplet_stop) else []
+        return low
+
+    def row_lines(self, left, x, widths, row, top):
+        """The staff of a row; with tablature only, six lines under the notated bars instead."""
+        if self.notation_mode != "tab" or not any(b.notation for b in row):
+            self.staff_lines(left, x + sum(widths), top)
+            return
+        spans = [(left, x, row[0].notation is not None)]
+        bx = x
+        for b, w in zip(row, widths):
+            spans.append((bx, bx + w, b.notation is not None))
+            bx += w
+        for x0, x1, tabbed in spans:
+            if x1 > x0:
+                (self.tab_lines if tabbed else self.staff_lines)(x0, x1, top)
+
+    def draw_row_tab(self, row, spans, left, tab_top):
+        """"both": the six lines under the notated bars of the row, with their bar lines and numbers."""
+        bottom = tab_top - self.TAB_H
+        for i, (b, (x0, x1)) in enumerate(zip(row, spans)):
+            if not b.notation:
+                continue
+            start = left if i == 0 else x0
+            self.tab_lines(start, x1, tab_top)
+            if i == 0:
+                self.tab_clef(left, tab_top)
+            elif not row[i - 1].notation:
+                self.tab_barline(x0, tab_top, bottom)
+            self.tab_barline(x1, tab_top, bottom)
+        for stems, groups, hw in self.row_tabs:
+            self.draw_tab(stems, groups, hw, tab_top, rhythm=False)
 
     # -- layout --------------------------------------------------------------
     def prefix_width(self, row, first_row):
@@ -1051,13 +1227,15 @@ class Layout:
         for b in sec.bars:
             if self.bar_width == "uniform":
                 cost, cap = self.slots(b, bpl), bpl
-            else:   # fit: estimate widths, wrap early if crowded bars would not fit
-                cost = max(fit_avail / bpl * b.beats / (sec.bars[0].beats or 4), self.bar_need(b))
+            else:   # fit: wrap only when what the bars really need would not fit (bar_widths shares the rest)
+                cost = self.bar_need(b, not row)
                 cap = fit_avail
             full = len(row) >= bpl if self.bar_width == "fit" else False
             # a 2nd (3rd…) ending starts its own line, right-aligned under the 1st ending
             starts_late = bool(b.volta) and not b.volta.startswith("1.")
             if row and (b.break_before or full or used + cost > cap + 1e-6 or starts_late or break_next):
+                if self.bar_width == "fit" and not (b.break_before or starts_late or break_next):
+                    self.full_rows.add(id(row[0]))   # closed for lack of room: it spans the whole width
                 rows.append(row)
                 row, used = [], 0.0
             break_next = False
@@ -1072,17 +1250,50 @@ class Layout:
             rows.append(row)
         return rows, bpl
 
+    def section_notation(self, sec: Section) -> str:
+        if self.notation_force:
+            return self.song_notation
+        return sec.notation if sec.notation in NOTATIONS else self.song_notation
+
+    def assign_tab(self):
+        """String and fret for the notes of every run of consecutive notated bars (tab.py)."""
+        capo = int(self.song.meta.get("capo", "0")) if str(self.song.meta.get("capo", "0")).strip().isdigit() else 0
+        seen = set(self.song.warnings)
+        for sec in self.song.sections:
+            run: list = []
+            for b in sec.bars + [None]:
+                if b is not None and b.notation:
+                    run.append(b.notation.notes)
+                    continue
+                if run:
+                    for w in tab_mod.assign(run, capo, self.tuning):
+                        if w not in seen:
+                            seen.add(w)
+                            self.song.warnings.append(w)
+                run = []
+
+    def section_mode(self, sec: Section) -> str:
+        """Bar width of a section: its own {bar_width}, else the song's (header or app option)."""
+        return sec.bar_width if sec.bar_width in ("uniform", "fit") else self.song_bar_width
+
     def plan(self):
         self.right_rows = set()
-        self.max_bars = max([s.bars_per_line or self.bpl_default for s in self.song.sections] or [4])
+        self.full_rows: set[int] = set()        # fit rows that wrapped because the next bar did not fit
+        # the grid (uniform bar width, aligned columns) is shared by all the uniform sections
+        uniform = [s for s in self.song.sections if self.section_mode(s) == "uniform"]
+        self.max_bars = max([s.bars_per_line or self.bpl_default for s in uniform] or [4])
         self.max_prefix = self.prefix_width([Bar(4, 4, self.song.meta["key"])], True)
         for _ in range(3):                      # prefix width and row breaks depend on each other
             self.uniform_bw = (self.page_w - 2 * self.st.margin - self.max_prefix) / self.max_bars
             self.layout = []
+            self.full_rows = set()
             for sec in self.song.sections:
+                self.bar_width = self.section_mode(sec)
                 rows, bpl = self.build_rows(sec)
                 self.layout.append((sec, rows, bpl))
-            flat = [(r, i == 0 and j == 0) for i, (_, rows, _) in enumerate(self.layout) for j, r in enumerate(rows)]
+            self.bar_width = self.song_bar_width
+            flat = [(r, i == 0 and j == 0) for i, (sec, rows, _) in enumerate(self.layout) for j, r in enumerate(rows)
+                    if self.section_mode(sec) == "uniform"]
             new_prefix = max(self.prefix_width(r, f) for r, f in flat) if flat else 60
             if abs(new_prefix - self.max_prefix) < 0.5:
                 break
@@ -1095,12 +1306,30 @@ class Layout:
         else:
             base = avail / bpl
             ref = row[0].beats
-            widths = [max(base * b.beats / ref + (self.bar_extra(b, i == 0) - 7), self.bar_need(b, i == 0))
-                      for i, b in enumerate(row)]
-            if len(row) == bpl or sum(widths) > avail:
-                k = avail / sum(widths)
-                widths = [w * k for w in widths]
+            needs = [self.bar_need(b, i == 0) for i, b in enumerate(row)]
+            prefs = [base * b.beats / ref + (self.bar_extra(b, i == 0) - 7) for i, b in enumerate(row)]
+            widths = [max(p, n) for p, n in zip(prefs, needs)]
+            if len(row) == bpl or id(row[0]) in self.full_rows or sum(widths) > avail:
+                widths = self.share(prefs, needs, avail)
         return widths
+
+    @staticmethod
+    def share(prefs: list[float], needs: list[float], avail: float) -> list[float]:
+        """Widths summing to `avail`, proportional to `prefs` but never below `needs`: bars that need
+        more keep their need, the others share what is left. If even the needs do not fit, scale them."""
+        if sum(needs) >= avail:
+            k = avail / sum(needs)
+            return [n * k for n in needs]
+        fixed: set[int] = set()
+        while True:
+            left = avail - sum(needs[i] for i in fixed)
+            free = [i for i in range(len(prefs)) if i not in fixed]
+            total = sum(prefs[i] for i in free)
+            widths = [needs[i] if i in fixed else prefs[i] * left / total for i in range(len(prefs))]
+            short = [i for i in free if widths[i] < needs[i] - 1e-9]
+            if not short:
+                return widths
+            fixed.update(short)
 
     # -- drawing -------------------------------------------------------------
     def run(self) -> DisplayList:
@@ -1109,6 +1338,8 @@ class Layout:
         first_row = True
         last_bar = self.song.bars[-1] if self.song.bars else None
         for sec, rows, bpl in self.layout:
+            self.bar_width = self.section_mode(sec)
+            self.notation_mode = self.section_notation(sec)
             first_h = (self.texts_height(rows[0][0].text_before) + self.row_height(rows[0])) if rows else \
                 self.texts_height(sec.text_after) or self.st.row_height
             self.ensure(self.st.section_height + first_h)
@@ -1199,9 +1430,15 @@ class Layout:
             x += max(0.0, full_end - staff_end)
             staff_end = x + sum(widths)                # a later ending longer than the 1st runs past it
             left = x                                   # just the bars: no clef, no key signature
-            self.staff_lines(left, staff_end, top)
+            self.row_lines(left, x, widths, row, top)
             if not b0.repeat_start:
                 self.barline(left, top, "single")
+        elif self.notation_mode == "tab" and b0.notation:    # tablature: TAB instead of clef and key
+            cx = left + self.tab_clef(left, top)
+            cx += 6
+            if first_row or b0.time_change:                  # centred on the six lines
+                self.time_signature(cx, top - (self.TAB_H - self.STAFF_H) / 2, b0.num, b0.den)
+            self.row_lines(left, x, widths, row, top)
         else:
             cx = left + self.clef(left, top)
             if b0.key_change:
@@ -1209,10 +1446,11 @@ class Layout:
             cx += self.draw_key_signature(cx + 2, top, key_signature(b0.key), prev) + 4
             if first_row or b0.time_change:
                 self.time_signature(cx, top, b0.num, b0.den)
-            self.staff_lines(left, staff_end, top)
+            self.row_lines(left, x, widths, row, top)
         bx1 = x
         spans = []
         self.row_chords, self.row_lyrics, self.row_events = [], [], []
+        self.row_tabs = []
         self.row_hi, self.row_lo = top, top - self.STAFF_H
         for i, b in enumerate(row):
             bx0, bx1 = bx1, bx1 + widths[i]
@@ -1227,16 +1465,21 @@ class Layout:
             else:
                 last = is_last_row and i == len(row) - 1
                 self.barline(bx1, top, "final" if last else "double" if b.double_after else "single")
+            if self.notation_mode == "tab" and (b.notation or (i + 1 < len(row) and row[i + 1].notation)):
+                self.tab_barline(bx1 - (1.6 if b.repeat_end else 0), top - self.STAFF_H, top - self.TAB_H)
         self.flush_ties(bx1 - 2)          # a tie that crosses the end of the line
         self.draw_ties(x - 8, bx1 - 4)    # ties between chord symbols ([C~]); a carried one starts by the key
         if self.row_chords:                # notated bars: one baseline for every chord symbol of the row
             chord_y = max(top + 10, self.row_hi + 5)
             for cx, chord, size in self.row_chords:
                 self.draw_chord(cx, chord_y, chord, size)
+        lyric_y = min(top - self.STAFF_H - 14, self.row_lo - 11)
         if self.row_lyrics:
-            lyric_y = min(top - self.STAFF_H - 14, self.row_lo - 11)
             for lx, lyr in self.row_lyrics:
                 self.text(lx, lyric_y, lyr, self.th.text, self.th.lyric_size, self.th.lyric_ink)
+        if self.row_tabs:                  # "both": the tablature under the staff and its lyrics
+            tab_top = (lyric_y - self.TAB_GAP) if self.row_lyrics else (self.row_lo - self.TAB_GAP)
+            self.draw_row_tab(row, spans, left, tab_top)
         if has_volta:
             self.draw_voltas(row, spans, row_top - 4 - mark_room)
         if mark_room:

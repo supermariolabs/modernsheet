@@ -82,7 +82,10 @@ nella libreria "Modern Sheet" di una nuova installazione).
 - `|:` non crea mai una battuta vuota prima di sé; una volta (`{volta: N}`) si chiude a `:|`, a
   `{volta_end}` o a fine riga del sorgente; la 2ª volta va a capo, allineata a destra sotto la 1ª, solo
   battute (niente chiave/armatura); l'ultima volta chiude con doppia stanghetta.
-- Battute notate (MusicXML): sigle sopra il rigo e testo sotto, **una sola linea per riga**.
+- Battute notate (MusicXML o note scritte nel `.chs`, `{start_of_notes}`, SPEC §2.12b, modulo `notes.py`): sigle sopra il rigo e testo sotto, **una sola linea per riga**. Note scritte: alterazioni sempre esplicite, durate come figure (mantenute), ottava relativa con `@N` facoltativa.
+- Tablatura (SPEC §4.8b, `tab.py`): `{notation: staff|both|tab}` (opzione, brano, sezione); diteggiatura per programmazione dinamica,
+  nota scritta = notazione per chitarra (corde a vuoto Mi3…Mi5 scritti), capotasto; default `staff` (i brani esistenti non cambiano).
+  Correzioni: `{tab_position: N}`, `~N` (corda) sulle note, `{tuning}` (anche basso/ukulele), corda/tasto dal MusicXML.
 - Intestazione solo in prima pagina, titolo a sinistra.
 - Icona: disegno `MS icon.jpeg` → `python tools/make_icons.py` → `src/assets/icon*.png` e `src/assets/icons/` (+ `icon_background` in
   `pyproject.toml`); non modificare a mano le PNG generate (SPEC §8.3). `src/assets/manifest.json` dà nome e icona

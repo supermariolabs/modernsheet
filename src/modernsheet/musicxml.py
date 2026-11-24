@@ -42,6 +42,11 @@ class Note:
     tuplet: tuple | None = None   # (actual, normal), e.g. (3, 2) for a triplet
     tuplet_start: bool = False
     tuplet_stop: bool = False
+    string: int | None = None   # guitar tablature (tab.py): string index, 0 = lowest … n-1 = highest
+    fret: int | None = None
+    tab_string: int | None = None   # wanted string, guitar numbering (1 = highest): "~3", MusicXML <string>
+    tab_fret: int | None = None     # fret given by a MusicXML file (<fret>, with <string>)
+    tab_pos: int | None = None      # hand position asked by {tab_position: N} for this note
 
     @property
     def diatonic(self) -> int:
@@ -143,6 +148,11 @@ def read_musicxml(path: Path, text: str | None = None) -> tuple[list[dict], list
                 for tp in el.findall("notations/tuplet"):
                     n.tuplet_start |= tp.get("type") == "start"
                     n.tuplet_stop |= tp.get("type") == "stop"
+                tech_s, tech_f = _text(el, "notations/technical/string"), _text(el, "notations/technical/fret")
+                if tech_s and tech_s.isdigit():                  # guitar parts: string and fret from the file
+                    n.tab_string = int(tech_s)
+                    if tech_f and tech_f.isdigit():
+                        n.tab_fret = int(tech_f)
                 lyr = el.find("lyric")
                 if lyr is not None and _text(lyr, "text"):
                     syl = _text(lyr, "syllabic", "single")

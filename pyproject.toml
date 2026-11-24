@@ -1,6 +1,6 @@
 [project]
 name = "modernsheet"
-version = "0.36.1"
+version = "0.42.0"
 description = "Modern Sheet: chord sheets (.chs) → lead sheets in Real Book style: CLI, PDF and Flet app"
 readme = "README.md"
 license = "GPL-3.0-or-later"

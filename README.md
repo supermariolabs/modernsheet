@@ -38,7 +38,8 @@ Scrivi gli accordi in un formato di testo leggibile (`.chs`) e Modern Sheet li i
 - Ritornelli (`x3`), case di volta 1/2/3, Segno, Coda, To Coda, D.C./D.S. al Fine, richiami di sezioni già scritte con **trasposizione automatica**.
 - Cambi di tonalità (con bequadri di cortesia e nome della nuova tonalità) e di metro, anche a metà riga.
 - Segni ritmici (anticipi, legature, barre ritmiche, corona, rombo), accordi opzionali, annotazioni, righe di testo.
-- **Note vere da MusicXML** per intro, riff e temi, nella stessa pagina delle sigle.
+- **Tablatura per chitarra** delle parti notate, sotto il pentagramma o al suo posto, con corda e tasto scelti dall'app.
+- **Note vere** per intro, riff e temi, nella stessa pagina delle sigle: **scritte direttamente nel `.chs`** (`| [Gm7] G8 Bb D F [C7] A G E C |`) oppure da MusicXML.
 - Formato versionato (`{format: v1}`): i file di oggi resteranno leggibili.
 
 **L'impaginazione**
@@ -49,7 +50,7 @@ Scrivi gli accordi in un formato di testo leggibile (`.chs`) e Modern Sheet li i
 **L'app** (Flet: macOS, Windows, Linux; iPad e Android in prova)
 - Libreria con card, gruppi A–Z, ordinamenti, cartelle (con rinomina), ricerca con `A*`, `*testo*`, `#tag`, `&`, `|`.
 - Modalità vista, schermo intero per il palco, pagine girate con tastiera o pedaliera.
-- Editor scuro con evidenziazione, suggerimenti delle direttive, schede per i MusicXML, anteprima dal vivo.
+- Editor scuro con evidenziazione, suggerimenti delle direttive, schede per i MusicXML (con indentazione e battute comprimibili), anteprima dal vivo.
 - Sincronizzazione **local-first** con Google Drive o con una cartella (iCloud, Dropbox…): funziona offline, non perde nulla.
 - Importazione dal tuo account **chordsheet.com** e di singoli file `.chs`.
 - Interfaccia in italiano e inglese.

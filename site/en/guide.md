@@ -69,7 +69,8 @@ Search looks through the whole library, subfolders included, ignoring case and a
 
 Tapping a card opens the song in **view mode**: just the sheet, with the options above it.
 
-- **Transpose** – / +: changes chords and key signatures; **Real Book** or **Clean**; **Grid** (all bars equal) or **Fill**; **jazz symbols**; **colours by section**.
+- **Transpose** – / +: changes chords and key signatures; **Real Book** or **Clean**; **Grid** (all bars equal) or **Fill** (a song or a section can set one in the source with `{bar_width}`); **jazz symbols**; **colours by section**.
+- **Staff / Both / Tab**: for guitar players, the notated parts also as **tablature**, under the staff or in its place (with the rhythm under the numbers). The app chooses string and fret to stay in a comfortable position; with `{capo}` frets start from the capo. Where needed, correct it in the song: `{tab_position: 5}` (the hand around the 5th fret), `~3` after a note (that string), `{tuning: drop D}` (tuning, also bass and ukulele).
 - **⛶ Full screen**: only the pages remain. To leave, use the button at the top right or the **Esc** key.
 - Arrow keys, Page Up/Down, the space bar and **Bluetooth pedals** that send those keys turn the pages.
 
@@ -77,7 +78,7 @@ The **pencil** opens the editor next to the sheet:
 
 - **syntax highlighting** and **suggestions** for directives when you type `{` (Enter or Tab to choose);
 - the preview updates as you type; **warnings** are listed under the editor, and tapping one jumps to the line;
-- a **tab for every MusicXML file** the song cites, editable like the source;
+- a **tab for every MusicXML file** the song cites, editable like the source, with a bar to **indent** the file (just the indentation, or one element per line) and **collapse** a measure or another element to one line (*Collapse* at the cursor, *Collapse measures* for all of them, *Expand*, *Expand all*); collapsing does not change the file;
 - **Save** (⌘S / Ctrl+S) turns green when there is something to save; **Save as** makes a copy next to the song;
 - **Export PDF**; the **red bin** deletes the song and its MusicXML files, after a confirmation listing the files.
 
@@ -99,4 +100,4 @@ Sync runs at start, after every save, every 5 minutes and with *Sync now*. Nothi
 
 ## Settings
 
-Language (Italian or English), songs folder, PDF folder, default display options (theme, grid, chord symbols, colours) and sync. Settings are kept on the device.
+Language (Italian or English), songs folder, PDF folder, default display options (theme, grid, row spacing, chord symbols, colours) and sync. A song can set its own row spacing with `{row_spacing}`. Settings are kept on the device.

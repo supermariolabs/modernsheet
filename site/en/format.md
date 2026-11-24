@@ -3,7 +3,7 @@ title: The .chs format
 slug: format
 nav: 4
 other: formato
-description: Complete reference of the Modern Sheet .chs format: header, sections, chords and durations, bars, repeats, endings, signs, text, MusicXML.
+description: Complete reference of the Modern Sheet .chs format: header, sections, chords and durations, bars, repeats, endings, signs, text, notes written in the song, MusicXML.
 ---
 
 # The .chs format
@@ -45,7 +45,11 @@ A song is a UTF-8 text file with the `.chs` extension. It holds **directives** i
 | `tempo` | `{tempo: 96}` | BPM, shown as ♩ = 96. |
 | `capo` | `{capo: 2}` | Capo. |
 | `tags` | `{tags: jazz, ballad}` | Labels for the library (search with `#jazz`). |
-| `bar_width` | `{bar_width: fit}` | `uniform` (equal bars) or `fit` for this song. |
+| `bar_width` | `{bar_width: fit}` | `uniform` (equal bars, the app's *Grid*) or `fit` (*Fill*) for this song; inside a section, for that section only. |
+| `tuning` | `{tuning: drop D}` | Tuning for the tablature: `standard`, `drop D`, `DADGAD`, `open G`, `open D`, `open E`, `half step down`, `bass`, `ukulele`… or the open strings (`D A D G B E`). |
+| `tab_position` | `{tab_position: 5}` | In the tablature, the hand around the 5th fret for the notes that follow (`auto` goes back to the automatic choice). |
+| `notation` | `{notation: both}` | Notated bars: `staff`, `both` (staff with guitar tablature) or `tab` (tablature only, with the rhythm); also inside a section. |
+| `row_spacing` | `{row_spacing: wide}` | Space between rows for this song: `compact`, `normal`, `wide`, `extra` or a percentage (`120%`, between 50% and 300%). |
 | `bars_per_line` | `{bars_per_line: 6}` | Bars per line (also inside a section). |
 | `label_colors`, `section_colors` | `{section_colors: verse=#33cc66}` | Colours of the section boxes. |
 | `created`, `modified` | | Dates written by the app when saving. |
@@ -153,6 +157,33 @@ Written parts (intros, riffs, heads) are prepared in a notation editor (MuseScor
 ```
 
 `{musicxml: head.musicxml | 3-6}` uses bars 3 to 6 only. The path is relative to the song's folder. Notes, chords and lyrics from the file are drawn on the staff, transposed along with the rest.
+
+## Notes written in the .chs
+
+Instead of MusicXML, a few bars of notes can be written **right in the song**, inside a section:
+
+```
+{start_of_intro: Intro}
+{start_of_notes}
+| [Gm7] G8 Bb D F [C7] A G E C | [Am7] C E G B [D7] F# E D16 C Bb A |
+| [Gm7] G4. Bb8 [C7] E Db C Bb | [F7] A2- A4 R |
+{end_of_notes}
+{end_of_intro}
+```
+
+| Write | Means |
+|---|---|
+| `G` `Bb` `F#` | the notes, as in chords; **the accidental is always written**, also when it is in the key signature (in F the B flat is `Bb`); `Bn` = a natural you mean |
+| `8` `4` `2` `1` `16`, `4.` | the note value: eighth, quarter, half, whole, sixteenth; the dot. **It stays until it changes**: `G8 Bb D F` are four eighths |
+| octave | each note goes to the nearest one from the previous note; `'` raises it, `,` lowers it; `C@5` sets the octave (middle C = `C4`; duration after a slash: `C@5/2`) |
+| `R4` `R*` | rest; whole-bar rest |
+| `F2- F4` | tie |
+| `3(F8 E D)` | triplet (in general `5:4( … )`) |
+| `<C E G>2` | several notes on one stem |
+| `A4~3` | for the tablature: the note on the 3rd string (1 = the highest) |
+| `[Gm7]` | the chord, right before the note it falls on |
+
+Lyrics go on a `w:` line under the row of notes, one syllable per note (`lu- ne- dì`; `_` skips a note, `|` moves to the next bar). Beams are added automatically. The result is the same as with MusicXML: it transposes, lays out and prints the same way; the `note_nel_chs` example is the blues with melody written like this.
 
 ## Format versions
 

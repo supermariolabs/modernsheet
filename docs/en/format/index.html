@@ -4,13 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>The .chs format · Modern Sheet</title>
-<meta name="description" content="Complete reference of the Modern Sheet .chs format: header, sections, chords and durations, bars, repeats, endings, signs, text, MusicXML.">
+<meta name="description" content="Complete reference of the Modern Sheet .chs format: header, sections, chords and durations, bars, repeats, endings, signs, text, notes written in the song, MusicXML.">
 <link rel="canonical" href="https://modernsheet.app/en/format/">
 <link rel="alternate" hreflang="it" href="https://modernsheet.app/it/formato/">
 <link rel="icon" href="/assets/img/favicon.png">
 <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
 <meta property="og:title" content="The .chs format · Modern Sheet">
-<meta property="og:description" content="Complete reference of the Modern Sheet .chs format: header, sections, chords and durations, bars, repeats, endings, signs, text, MusicXML.">
+<meta property="og:description" content="Complete reference of the Modern Sheet .chs format: header, sections, chords and durations, bars, repeats, endings, signs, text, notes written in the song, MusicXML.">
 <meta property="og:image" content="https://modernsheet.app/assets/img/sheet-demo.png">
 <link rel="stylesheet" href="/assets/style.css">
 </head>
@@ -47,6 +47,7 @@
 <li><a href="#navigation-signs">Navigation signs</a></li>
 <li><a href="#text-lines">Text lines</a></li>
 <li><a href="#notes-from-musicxml">Notes from MusicXML</a></li>
+<li><a href="#notes-written-in-the-chs">Notes written in the .chs</a></li>
 <li><a href="#format-versions">Format versions</a></li>
 </ul>
 </div>
@@ -121,7 +122,27 @@
 <tr>
 <td><code>bar_width</code></td>
 <td><code>{bar_width: fit}</code></td>
-<td><code>uniform</code> (equal bars) or <code>fit</code> for this song.</td>
+<td><code>uniform</code> (equal bars, the app's <em>Grid</em>) or <code>fit</code> (<em>Fill</em>) for this song; inside a section, for that section only.</td>
+</tr>
+<tr>
+<td><code>tuning</code></td>
+<td><code>{tuning: drop D}</code></td>
+<td>Tuning for the tablature: <code>standard</code>, <code>drop D</code>, <code>DADGAD</code>, <code>open G</code>, <code>open D</code>, <code>open E</code>, <code>half step down</code>, <code>bass</code>, <code>ukulele</code>… or the open strings (<code>D A D G B E</code>).</td>
+</tr>
+<tr>
+<td><code>tab_position</code></td>
+<td><code>{tab_position: 5}</code></td>
+<td>In the tablature, the hand around the 5th fret for the notes that follow (<code>auto</code> goes back to the automatic choice).</td>
+</tr>
+<tr>
+<td><code>notation</code></td>
+<td><code>{notation: both}</code></td>
+<td>Notated bars: <code>staff</code>, <code>both</code> (staff with guitar tablature) or <code>tab</code> (tablature only, with the rhythm); also inside a section.</td>
+</tr>
+<tr>
+<td><code>row_spacing</code></td>
+<td><code>{row_spacing: wide}</code></td>
+<td>Space between rows for this song: <code>compact</code>, <code>normal</code>, <code>wide</code>, <code>extra</code> or a percentage (<code>120%</code>, between 50% and 300%).</td>
 </tr>
 <tr>
 <td><code>bars_per_line</code></td>
@@ -307,6 +328,62 @@
 {end_of_intro}
 </code></pre>
 <p><code>{musicxml: head.musicxml | 3-6}</code> uses bars 3 to 6 only. The path is relative to the song's folder. Notes, chords and lyrics from the file are drawn on the staff, transposed along with the rest.</p>
+<h2 id="notes-written-in-the-chs">Notes written in the .chs<a class="headerlink" href="#notes-written-in-the-chs">#</a></h2>
+<p>Instead of MusicXML, a few bars of notes can be written <strong>right in the song</strong>, inside a section:</p>
+<pre><code>{start_of_intro: Intro}
+{start_of_notes}
+| [Gm7] G8 Bb D F [C7] A G E C | [Am7] C E G B [D7] F# E D16 C Bb A |
+| [Gm7] G4. Bb8 [C7] E Db C Bb | [F7] A2- A4 R |
+{end_of_notes}
+{end_of_intro}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Write</th>
+<th>Means</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>G</code> <code>Bb</code> <code>F#</code></td>
+<td>the notes, as in chords; <strong>the accidental is always written</strong>, also when it is in the key signature (in F the B flat is <code>Bb</code>); <code>Bn</code> = a natural you mean</td>
+</tr>
+<tr>
+<td><code>8</code> <code>4</code> <code>2</code> <code>1</code> <code>16</code>, <code>4.</code></td>
+<td>the note value: eighth, quarter, half, whole, sixteenth; the dot. <strong>It stays until it changes</strong>: <code>G8 Bb D F</code> are four eighths</td>
+</tr>
+<tr>
+<td>octave</td>
+<td>each note goes to the nearest one from the previous note; <code>'</code> raises it, <code>,</code> lowers it; <code>C@5</code> sets the octave (middle C = <code>C4</code>; duration after a slash: <code>C@5/2</code>)</td>
+</tr>
+<tr>
+<td><code>R4</code> <code>R*</code></td>
+<td>rest; whole-bar rest</td>
+</tr>
+<tr>
+<td><code>F2- F4</code></td>
+<td>tie</td>
+</tr>
+<tr>
+<td><code>3(F8 E D)</code></td>
+<td>triplet (in general <code>5:4( … )</code>)</td>
+</tr>
+<tr>
+<td><code>&lt;C E G&gt;2</code></td>
+<td>several notes on one stem</td>
+</tr>
+<tr>
+<td><code>A4~3</code></td>
+<td>for the tablature: the note on the 3rd string (1 = the highest)</td>
+</tr>
+<tr>
+<td><code>[Gm7]</code></td>
+<td>the chord, right before the note it falls on</td>
+</tr>
+</tbody>
+</table>
+<p>Lyrics go on a <code>w:</code> line under the row of notes, one syllable per note (<code>lu- ne- dì</code>; <code>_</code> skips a note, <code>|</code> moves to the next bar). Beams are added automatically. The result is the same as with MusicXML: it transposes, lays out and prints the same way; the <code>note_nel_chs</code> example is the blues with melody written like this.</p>
 <h2 id="format-versions">Format versions<a class="headerlink" href="#format-versions">#</a></h2>
 <p><code>{format: v1}</code> declares the version. Additions arrive in the current version without changing the meaning of existing files; should the syntax ever change incompatibly, the app will still read v1 files and offer to upgrade them.</p>
 <hr />

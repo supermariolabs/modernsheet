@@ -12,6 +12,26 @@ if TYPE_CHECKING:
 # =============================================================================
 
 
+NOTATIONS = ("staff", "both", "tab")     # notated bars: staff, staff + guitar tablature, tablature only
+ROW_SPACINGS = {"compact": 0.75, "normal": 1.0, "wide": 1.3, "extra": 1.6}   # space between rows
+
+
+def row_spacing_factor(value) -> float | None:
+    """A row spacing as a factor of the normal one: a name (compact, normal, wide, extra), a percentage
+    ("120%") or a number ("1.2"), between 0.5 and 3; None if not valid."""
+    if isinstance(value, (int, float)):
+        f = float(value)
+    else:
+        v = str(value).strip().lower()
+        if v in ROW_SPACINGS:
+            return ROW_SPACINGS[v]
+        try:
+            f = float(v[:-1]) / 100 if v.endswith("%") else float(v.replace(",", "."))
+        except ValueError:
+            return None
+    return f if 0.5 <= f <= 3 else None
+
+
 @dataclass
 class Event:
     chord: str | None          # None = no new chord (continuation); "/" = stop
@@ -64,6 +84,8 @@ class Section:
     key: str
     bars: list[Bar] = field(default_factory=list)
     bars_per_line: int | None = None
+    bar_width: str | None = None       # "uniform" | "fit": {bar_width} inside the section (else the song's)
+    notation: str | None = None        # "staff" | "both" | "tab": {notation} inside the section (else the song's)
     text_after: list[str] = field(default_factory=list)    # {text: …} lines after the last row
     note: str = ""
     is_ref: bool = False

@@ -13,10 +13,12 @@ def env(name: str) -> str | None:
     return os.environ.get(f"MODERNSHEET_{name}") or os.environ.get(f"CHORDSHEET_{name}")
 
 
-LAYOUT_KEYS = ("theme", "bar_width", "chord_symbols", "label_colors")
+LAYOUT_KEYS = ("theme", "bar_width", "row_spacing", "notation", "chord_symbols", "label_colors")
 CHOICES = {
     "theme": ("realbook", "clean"),
     "bar_width": ("uniform", "fit"),
+    "row_spacing": ("compact", "normal", "wide", "extra"),
+    "notation": ("staff", "both", "tab"),
     "chord_symbols": ("text", "jazz"),
     "label_colors": ("theme", "by_type"),
     "library_view": ("cards", "list"),
@@ -32,6 +34,8 @@ class Settings:
     pdf_dir: str | None = None          # None: the file dialog decides
     theme: str = "realbook"
     bar_width: str = "uniform"
+    row_spacing: str = "normal"         # space between rows (a song's {row_spacing} wins)
+    notation: str = "staff"             # notated bars: staff, staff + guitar tablature, tablature
     chord_symbols: str = "text"
     label_colors: str = "theme"
     library_view: str = "cards"         # library screen: cards or list

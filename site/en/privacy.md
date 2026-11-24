@@ -32,7 +32,7 @@ If you import songs from your chordsheet.com account, the email and password are
 
 ## The modernsheet.app website
 
-The website is hosted by GitHub Pages and uses no cookies or analytics. GitHub may record technical data about visits (for example the IP address) to run and protect the service: see [GitHub's privacy statement](https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement).
+The website is hosted by GitHub Pages and uses no cookies or analytics. The Download page asks GitHub (api.github.com) for the details of the latest published version, to show its number and date. GitHub may record technical data about visits (for example the IP address) to run and protect the service: see [GitHub's privacy statement](https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement).
 
 ## Contact
 

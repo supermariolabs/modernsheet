@@ -3,7 +3,7 @@ title: Il formato .chs
 slug: formato
 nav: 4
 other: format
-description: Riferimento completo del formato .chs di Modern Sheet: intestazione, sezioni, accordi e durate, battute, ritornelli, volte, segni, testo, MusicXML.
+description: Riferimento completo del formato .chs di Modern Sheet: intestazione, sezioni, accordi e durate, battute, ritornelli, volte, segni, testo, note scritte nel brano, MusicXML.
 ---
 
 # Il formato .chs
@@ -45,7 +45,11 @@ Un brano è un file di testo UTF-8 con estensione `.chs`. Contiene **direttive**
 | `tempo` | `{tempo: 96}` | BPM, mostrato come ♩ = 96. |
 | `capo` | `{capo: 2}` | Capotasto. |
 | `tags` | `{tags: jazz, ballad}` | Etichette per la libreria (ricerca con `#jazz`). |
-| `bar_width` | `{bar_width: fit}` | `uniform` (battute uguali) o `fit` per questo brano. |
+| `bar_width` | `{bar_width: fit}` | `uniform` (battute uguali, la *Griglia* dell'app) o `fit` (*Riempi*) per questo brano; dentro una sezione vale solo per quella. |
+| `tuning` | `{tuning: drop D}` | Accordatura per la tablatura: `standard`, `drop D`, `DADGAD`, `open G`, `open D`, `open E`, `half step down`, `bass`, `ukulele`… o le corde a vuoto (`D A D G B E`). |
+| `tab_position` | `{tab_position: 5}` | Nella tablatura, la mano attorno al 5° tasto per le note che seguono (`auto` per tornare alla scelta automatica). |
+| `notation` | `{notation: both}` | Battute notate: `staff` (pentagramma), `both` (pentagramma con tablatura per chitarra) o `tab` (solo tablatura, con il ritmo); anche dentro una sezione. |
+| `row_spacing` | `{row_spacing: wide}` | Spazio fra le righe di questo brano: `compact`, `normal`, `wide`, `extra` o una percentuale (`120%`, fra 50% e 300%). |
 | `bars_per_line` | `{bars_per_line: 6}` | Battute per riga (anche dentro una sezione). |
 | `label_colors`, `section_colors` | `{section_colors: verse=#33cc66}` | Colori dei box delle sezioni. |
 | `created`, `modified` | | Date scritte dall'app al salvataggio. |
@@ -153,6 +157,33 @@ Le parti scritte (intro, riff, temi) si preparano in un editor di partiture (Mus
 ```
 
 `{musicxml: tema.musicxml | 3-6}` usa solo le battute dalla 3 alla 6. Il percorso è relativo alla cartella del brano. Note, accordi e testo del file vengono disegnati sul pentagramma, trasposti insieme al resto.
+
+## Note scritte nel .chs
+
+In alternativa al MusicXML, poche battute di note si possono scrivere **direttamente nel brano**, dentro una sezione:
+
+```
+{start_of_intro: Intro}
+{start_of_notes}
+| [Gm7] G8 Bb D F [C7] A G E C | [Am7] C E G B [D7] F# E D16 C Bb A |
+| [Gm7] G4. Bb8 [C7] E Db C Bb | [F7] A2- A4 R |
+{end_of_notes}
+{end_of_intro}
+```
+
+| Scrivi | Significa |
+|---|---|
+| `G` `Bb` `F#` | le note, come negli accordi; **l'alterazione si scrive sempre**, anche se è in armatura (in Fa il si bemolle è `Bb`); `Bn` = bequadro voluto |
+| `8` `4` `2` `1` `16`, `4.` | la figura: croma, semiminima, minima, semibreve, semicroma; il punto. **Vale finché non cambia**: `G8 Bb D F` sono quattro crome |
+| ottava | ogni nota va alla più vicina alla precedente; `'` la alza, `,` la abbassa; `C@5` fissa l'ottava (do centrale = `C4`; durata dopo una barra: `C@5/2`) |
+| `R4` `R*` | pausa; pausa di battuta intera |
+| `F2- F4` | legatura di valore |
+| `3(F8 E D)` | terzina (in generale `5:4( … )`) |
+| `<C E G>2` | più note sullo stesso gambo |
+| `A4~3` | per la tablatura: la nota sulla 3ª corda (1 = la più acuta) |
+| `[Gm7]` | l'accordo, subito prima della nota su cui cade |
+
+Il testo cantato va su una riga `w:` sotto la riga di note, una sillaba per nota (`lu- ne- dì`; `_` salta una nota, `|` passa alla battuta dopo). Le travature si fanno da sole. Il risultato è lo stesso del MusicXML: si traspone, si impagina e si stampa allo stesso modo; l'esempio `note_nel_chs` è il blues con melodia scritto così.
 
 ## Versioni del formato
 

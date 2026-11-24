@@ -69,6 +69,8 @@ SYNTAX_COLORS = {
     "chord": "#FFD866",
     "duration": "#A9DC76",
     "bar": "#78A6FF",
+    "note": "#7FDBCA",               # notes written in the source ({start_of_notes})
+    "rest": "#9AA3B5",
 }
 XML_COLORS = {                                # MusicXML token kind -> colour of SYNTAX_COLORS
     "text": "text", "comment": "comment", "decl": "comment", "brace": "brace",
@@ -79,6 +81,24 @@ TAB_BG = "#16171B"
 POPUP_ROWS = 8
 POPUP_ROW_H = 30
 POPUP_W = 330
+
+
+FOLD_STYLE = {"color": "#FFCC00", "bgcolor": "#4A4320"}    # the ⋯ of a collapsed MusicXML element
+
+
+def mark_folds(spans: list[ft.TextSpan]) -> list[ft.TextSpan]:
+    """Split the ⋯ of collapsed elements out of the highlighted spans, in their own colours."""
+    out = []
+    for sp in spans:
+        if xml_syntax.FOLD not in sp.text:
+            out.append(sp)
+            continue
+        for i, part in enumerate(sp.text.split(xml_syntax.FOLD)):
+            if i:
+                out.append(ft.TextSpan(xml_syntax.FOLD, code_style(**FOLD_STYLE)))
+            if part:
+                out.append(ft.TextSpan(part, sp.style))
+    return out
 
 
 def code_style(color: str | None = EDITOR_FG, **kw) -> ft.TextStyle:
@@ -126,6 +146,12 @@ class Doc:
     missing: bool = False           # referenced but not on disk (yet)
     note: str | None = None         # why it cannot be edited (compressed, unreadable)
     scroll: float = 0.0
+    folds: xml_syntax.Folds | None = None   # collapsed elements (MusicXML): the editor shows folds.view
+
+    @property
+    def view(self) -> str:
+        """The text in the editor: `text`, with the collapsed elements on one line each."""
+        return self.folds.view if self.folds else self.text
 
     @property
     def dirty(self) -> bool:
@@ -189,6 +215,15 @@ def theme_selector(on_change) -> ft.SegmentedButton:
         selected=["realbook"], show_selected_icon=False,
         segments=[ft.Segment(value="realbook", label=ft.Text("Real Book")),
                   ft.Segment(value="clean", label=ft.Text("Clean"))],
+        on_change=lambda e: on_change(e.control.selected[0]))
+
+
+def notation_selector(on_change) -> ft.SegmentedButton:
+    """Notated bars: staff, staff + guitar tablature, tablature only."""
+    return ft.SegmentedButton(
+        selected=["staff"], show_selected_icon=False,
+        segments=[ft.Segment(value=v, label=ft.Text(tr(f"opt.notation.{v}")), tooltip=tr(f"opt.notation.{v}_tip"))
+                  for v in ("staff", "both", "tab")],
         on_change=lambda e: on_change(e.control.selected[0]))
 
 
@@ -1085,6 +1120,12 @@ class App:
                 ft.IconButton(ft.Icons.CLEAR, tooltip=tr("set.no_pdf_folder"), on_click=self.reset_pdf_dir)]))
         self.set_theme = theme_selector(lambda v: self.set_default("theme", v))
         self.set_width = bar_width_selector(lambda v: self.set_default("bar_width", v))
+        self.set_notation = notation_selector(lambda v: self.set_default("notation", v))
+        self.set_spacing = ft.SegmentedButton(
+            selected=["normal"], show_selected_icon=False,
+            segments=[ft.Segment(value=v, label=ft.Text(tr(f"opt.spacing.{v}")))
+                      for v in ("compact", "normal", "wide", "extra")],
+            on_change=lambda e: self.set_default("row_spacing", e.control.selected[0]))
         self.set_chords = ft.SegmentedButton(
             selected=["text"], show_selected_icon=False,
             segments=[ft.Segment(value="text", label=ft.Text(tr("opt.standard"))),
@@ -1136,6 +1177,8 @@ class App:
                     option(tr("set.theme"), tr("set.theme_help"), self.set_theme),
                     option(tr("set.bar_width"), tr("set.bar_width_help"),
                            self.set_width),
+                    option(tr("set.row_spacing"), tr("set.row_spacing_help"), self.set_spacing),
+                    option(tr("set.notation"), tr("set.notation_help"), self.set_notation),
                     option(tr("set.chords"), tr("set.chords_help"),
                            self.set_chords),
                     option(tr("set.colors"), tr("set.colors_help"), self.set_colors),
@@ -1187,6 +1230,8 @@ class App:
                                          color=ft.Colors.BLUE_GREY_600)
         self.set_theme.selected = [st.theme]
         self.set_width.selected = [st.bar_width]
+        self.set_spacing.selected = [st.row_spacing]
+        self.set_notation.selected = [st.notation]
         self.set_chords.selected = [st.chord_symbols]
         self.set_colors.value = st.label_colors == "by_type"
         self.set_lang.selected = [st.language]
@@ -1241,6 +1286,7 @@ class App:
             ])
         self.theme_seg = theme_selector(lambda v: self.set_opt("theme", v))
         self.width_seg = bar_width_selector(lambda v: self.set_opt("bar_width", v))
+        self.notation_seg = notation_selector(self.choose_notation)
         self.jazz_sw = ft.Switch(value=False, on_change=lambda e: self.set_opt(
             "chord_symbols", "jazz" if e.control.value else "text"))
         self.colors_sw = ft.Switch(value=False, on_change=lambda e: self.set_opt(
@@ -1257,6 +1303,7 @@ class App:
                 ]),
                 self.theme_seg,
                 self.width_seg,
+                self.notation_seg,
                 # the two switches stay together on one line (the toolbar wraps between groups)
                 ft.Row(spacing=16, tight=True, controls=[
                     ft.Row(spacing=4, tight=True, controls=[self.jazz_sw, ft.Text(tr("ed.jazz"))]),
@@ -1305,10 +1352,35 @@ class App:
         self.tabs = ft.Row(spacing=0, scroll=ft.ScrollMode.AUTO)
         self.tab_banner = ft.Container(visible=False, bgcolor="#2A2D35",
                                        padding=ft.Padding.symmetric(horizontal=12, vertical=8))
+        # MusicXML tools: indentation and collapsing of elements (at the caret, all measures)
+        tool = ft.ButtonStyle(color="#B8C0D0", padding=ft.Padding.symmetric(horizontal=8))
+        self.xml_bar = ft.Container(
+            visible=False, bgcolor="#262A31", padding=ft.Padding.symmetric(horizontal=4, vertical=2),
+            width=float("inf"),                     # the bar spans the whole editor
+            content=ft.Row(spacing=0, wrap=True, controls=[
+                ft.PopupMenuButton(
+                    content=ft.Row(tight=True, spacing=6, controls=[
+                        ft.Icon(ft.Icons.FORMAT_INDENT_INCREASE, size=18, color="#B8C0D0"),
+                        ft.Text(tr("xml.indent"), size=13, color="#B8C0D0")]),
+                    tooltip=tr("xml.indent_tip"), padding=ft.Padding.symmetric(horizontal=8, vertical=6),
+                    items=[ft.PopupMenuItem(content=ft.Text(tr("xml.reindent")),
+                                            on_click=lambda e: self.run(self.indent_xml(False))),
+                           ft.PopupMenuItem(content=ft.Text(tr("xml.format")),
+                                            on_click=lambda e: self.run(self.indent_xml(True)))]),
+                ft.TextButton(tr("xml.fold"), icon=ft.Icons.UNFOLD_LESS, tooltip=tr("xml.fold_tip"), style=tool,
+                              on_click=lambda e: self.run(self.fold_xml("fold"))),
+                ft.TextButton(tr("xml.unfold"), icon=ft.Icons.UNFOLD_MORE, tooltip=tr("xml.unfold_tip"), style=tool,
+                              on_click=lambda e: self.run(self.fold_xml("unfold"))),
+                ft.TextButton(tr("xml.fold_measures"), icon=ft.Icons.UNFOLD_LESS_DOUBLE,
+                              tooltip=tr("xml.fold_measures_tip"), style=tool,
+                              on_click=lambda e: self.run(self.fold_xml("fold_all"))),
+                ft.TextButton(tr("xml.unfold_all"), icon=ft.Icons.UNFOLD_MORE_DOUBLE, style=tool,
+                              on_click=lambda e: self.run(self.fold_xml("unfold_all"))),
+            ]))
         self.editor_panel = ft.Container(
             expand=1, bgcolor=EDITOR_BG,
             content=ft.Column(expand=True, spacing=0, controls=[
-                ft.Container(self.tabs, bgcolor=TAB_BG), self.tab_banner,
+                ft.Container(self.tabs, bgcolor=TAB_BG), self.tab_banner, self.xml_bar,
                 self.code_view, ft.Divider(height=1, color="#3A3F4B"), self.warn_list,
                 ft.Container(ft.Row([ft.Container(self.status, expand=True), self.upgrade_btn],
                                     vertical_alignment=ft.CrossAxisAlignment.CENTER),
@@ -1425,10 +1497,11 @@ class App:
                 ft.FilledTonalButton(tr("tab.create"), icon=ft.Icons.NOTE_ADD_OUTLINED, on_click=self.create_musicxml)])
         self.tab_banner.visible = bool(d.note or (d.missing and not d.text))
         self.editor.read_only = bool(d.note) or (d.missing and not d.text)
+        self.xml_bar.visible = d.kind == "xml" and not self.editor.read_only
 
     def show_doc(self):
         """Put the active document in the editor."""
-        self.editor.value = self.doc.text
+        self.editor.value = self.doc.view
         self.hide_completions()
         self.paint_source()
         self.draw_tabs()
@@ -1454,6 +1527,7 @@ class App:
         except (ValueError, KeyError):
             fifths = 0
         self.doc.text = library.new_musicxml_text(int(num or 4), int(den or 4), fifths)
+        self.doc.folds = None
         self.show_doc()
         self.update_chrome()
         self.page.update()
@@ -1538,6 +1612,8 @@ class App:
         self.highlight.spans = [ft.TextSpan(s, code_style(SYNTAX_COLORS[colors.get(k, k)],
                                                           italic=(k == "comment")))
                                 for k, s in self.lang.tokens(text)]
+        if self.doc.folds:
+            self.highlight.spans = mark_folds(self.highlight.spans)
         # a trailing newline needs a character after it, or the Text is one line shorter than the field
         if text.endswith("\n") or not text:
             self.highlight.spans.append(ft.TextSpan(" ", code_style()))
@@ -1548,15 +1624,32 @@ class App:
         self.page.update()
         await self.editor.focus()
 
+    def set_view(self, new: str) -> bool:
+        """The editor's text changed to `new`: update the document. False (nothing changes) if the edit
+        touches a collapsed element, which must be expanded first."""
+        d = self.doc
+        if d.folds:
+            if not d.folds.edit(new):
+                return False
+            d.text = d.folds.full()
+        else:
+            d.text = new
+        return True
+
     async def on_edit(self, e):
-        old, new = self.doc.text, self.editor.value or ""
+        old, new = self.doc.view, self.editor.value or ""
         caret = edit_caret(old, new)
         if self.ac_popup.visible and new in (old[:self.ac_caret] + ch + old[self.ac_caret:] for ch in "\n\t"):
             # Enter (or Tab) while the popup is open: accept the highlighted completion instead
             self.editor.value = old
             await self.accept_completion(self.ac_index, caret=self.ac_caret)
             return
-        self.doc.text = new
+        if not self.set_view(new):
+            self.editor.value = old               # back to what the document holds
+            self.paint_source()
+            self.toast(tr("xml.folded_edit"))
+            self.page.update()
+            return
         self.paint_source()
         if len(new) >= len(old) and self.lang.context(new, caret):
             self.show_completions(caret)
@@ -1576,9 +1669,19 @@ class App:
     async def on_caret(self, e: ft.TextSelectionChangeEvent):
         """Close the popup when the caret leaves the directive name (clicks, arrows outside the popup)."""
         self.last_selection = e.selection
+        caret = e.selection.extent_offset
+        folds = self.doc.folds
+        # a tap on the "… ⋯ …" line of a collapsed element expands it. Only a real tap: events without a
+        # cause (all of them in the web build, and the echo of selections set by the app, possibly with a
+        # stale offset) must never change the folds, or the editor and the document would drift apart
+        if folds and e.cause == ft.TextSelectionChangeCause.TAP and e.selection.is_collapsed:
+            i = folds.fold_index(caret, line=False)
+            if i is not None:
+                folds.unfold(i)
+                self.show_folds(caret)
+                return
         if e.cause is None:                   # set by the app (completion accepted, popup navigation)
             return
-        caret = e.selection.extent_offset
         await asyncio.sleep(0.05)             # the text change of the same keystroke may come later
         if not self.ac_popup.visible or time.monotonic() < self._nav_until:
             return
@@ -1611,7 +1714,8 @@ class App:
                 bgcolor="#3D5A99" if sel else None, on_click=lambda e, i=i: self.run(self.accept_completion(i)),
                 content=ft.Row(spacing=10, vertical_alignment=ft.CrossAxisAlignment.CENTER, controls=[
                     ft.Text(c.name, style=code_style(SYNTAX_COLORS[
-                        "section" if self.doc.kind == "xml" or c.name.startswith(("start_of_", "end_of_"))
+                        "section" if self.doc.kind == "xml" or (c.name.startswith(("start_of_", "end_of_"))
+                                                                 and "notes" not in c.name)
                         else "directive"])),
                     ft.Text(c.hint, size=11, color="#9AA3B5", expand=True, no_wrap=True,
                             overflow=ft.TextOverflow.ELLIPSIS)])))
@@ -1627,12 +1731,78 @@ class App:
         text = self.editor.value or ""
         new, a, b = self.lang.apply(text, self.ac_caret if caret is None else caret, self.ac_items[index])
         self.hide_completions()
-        self.editor.value = self.doc.text = new
+        if not self.set_view(new):
+            self.toast(tr("xml.folded_edit"))
+            self.page.update()
+            return
+        self.editor.value = new
         self.paint_source()
         self.editor.selection = ft.TextSelection(base_offset=a, extent_offset=b)
         self.update_chrome()
         self.page.update()
         await self.editor.focus()
+        await self.schedule_render()
+
+    # ---- MusicXML: indentation and collapsed elements
+    def caret(self) -> int | None:
+        sel = self.last_selection
+        return None if sel is None else min(sel.extent_offset, len(self.editor.value or ""))
+
+    def show_folds(self, caret: int | None = None):
+        """Redraw the editor after collapsing or expanding (the document's text does not change)."""
+        self.hide_completions()
+        self.editor.value = self.doc.view
+        self.paint_source()
+        if caret is not None:
+            caret = min(caret, len(self.doc.view))
+            self.editor.selection = ft.TextSelection(base_offset=caret, extent_offset=caret)
+        self.page.update()
+
+    async def fold_xml(self, action: str):
+        d = self.doc
+        if d.kind != "xml":
+            return
+        folds = d.folds or xml_syntax.Folds(d.text)
+        caret = self.caret()
+        if action in ("fold", "unfold") and caret is None:
+            self.toast(tr("xml.no_caret"))
+            return
+        if action == "fold":
+            if not folds.fold_at(caret):
+                self.toast(tr("xml.nothing_to_fold"))
+                return
+            caret = folds.view.rfind("\n", 0, min(caret, len(folds.view))) + 1
+        elif action == "unfold":
+            if not folds.unfold_at(caret):
+                self.toast(tr("xml.nothing_to_unfold"))
+                return
+        elif action == "fold_all":
+            if not folds.fold_all("measure"):
+                self.toast(tr("xml.no_measures"))
+                return
+            caret = 0
+        else:
+            folds.unfold_all()
+            caret = 0
+        d.folds = folds if folds else None
+        self.show_folds(caret)
+        await self.editor.focus()
+
+    async def indent_xml(self, one_per_line: bool):
+        d = self.doc
+        full = d.text
+        err = xml_syntax.xml_error(full)
+        if err:
+            self.toast(tr("xml.invalid", line=err[0]))
+            return
+        new = xml_syntax.format_xml(full) if one_per_line else xml_syntax.reindent_xml(full)
+        if new == full:
+            self.toast(tr("xml.already_indented"))
+            return
+        d.text, d.folds = new, None
+        self.show_doc()
+        self.update_chrome()
+        self.page.update()
         await self.schedule_render()
 
     def caret_row_col(self, caret: int) -> tuple[int, int]:
@@ -1674,13 +1844,15 @@ class App:
         On an engine error the last good preview stays and the error is shown above it."""
         text, semis, opts, base, files = self.text, self.transpose, dict(self.opts), self.base_dir, self.xml_files()
         try:
-            dl, title = await asyncio.to_thread(self.build, text, semis, opts, base, files)
+            dl, title, song_notation = await asyncio.to_thread(self.build, text, semis, opts, base, files)
         except Exception as err:          # keep typing even if the engine chokes on a half-written line
             self.error = f"{type(err).__name__}: {err}"
         else:
             if text != self.text or semis != self.transpose or opts != self.opts or files != self.xml_files():
                 return                    # stale: a newer render is on its way
             self.dl, self.error, self.song_title = dl, None, title
+            if not opts.get("notation_force"):      # until the reader switches: show the song's own choice
+                self.notation_seg.selected = [song_notation or opts["notation"]]
         self.draw()
 
     def xml_files(self) -> dict[Path, str]:
@@ -1690,7 +1862,7 @@ class App:
     @staticmethod
     def build(text, transpose, opts, base_dir, files=None):
         song = parse(text, transpose=transpose, base_dir=base_dir, files=files)
-        return layout(song, **opts), song.meta.get("title")
+        return layout(song, **opts), song.meta.get("title"), song.meta.get("notation")
 
     def draw(self):
         if self.screen != "editor":
@@ -1748,6 +1920,7 @@ class App:
     def sync_option_controls(self):
         self.theme_seg.selected = [self.opts["theme"]]
         self.width_seg.selected = [self.opts["bar_width"]]
+        self.notation_seg.selected = [self.opts["notation"]]
         self.jazz_sw.value = self.opts["chord_symbols"] == "jazz"
         self.colors_sw.value = self.opts["label_colors"] == "by_type"
 
@@ -1757,6 +1930,12 @@ class App:
 
     def set_opt(self, key, value):
         self.opts[key] = value
+        self.run(self.render())
+
+    def choose_notation(self, value):
+        """The switch over the sheet is the reader's choice: it beats the song's {notation} and its sections'."""
+        self.opts["notation"] = value
+        self.opts["notation_force"] = True
         self.run(self.render())
 
     # ---- saving

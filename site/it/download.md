@@ -10,10 +10,14 @@ description: Scarica Modern Sheet per macOS, Windows, Linux e Android.
 
 Modern Sheet per computer e Android, nell'ultima versione pubblicata. Le app sono gratuite e libere (licenza GPL-3.0).
 
+<p class="latest" data-release hidden></p>
+
 <div class="grid" markdown="1">
 <div class="card" markdown="1"><span class="ico">🍎</span>
 ### macOS
 Mac con chip Apple o Intel.
+
+<p class="build" data-asset="ModernSheet-macos.zip" hidden></p>
 
 <a class="btn primary" href="{{repo}}/releases/latest/download/ModernSheet-macos.zip">Scarica per macOS</a>
 </div>
@@ -21,11 +25,15 @@ Mac con chip Apple o Intel.
 ### Windows
 Windows 10 e 11, 64 bit.
 
+<p class="build" data-asset="ModernSheet-windows.zip" hidden></p>
+
 <a class="btn primary" href="{{repo}}/releases/latest/download/ModernSheet-windows.zip">Scarica per Windows</a>
 </div>
 <div class="card" markdown="1"><span class="ico">🐧</span>
 ### Linux
 x86_64, con GTK 3 (le distribuzioni desktop più diffuse).
+
+<p class="build" data-asset="ModernSheet-linux.tar.gz" hidden></p>
 
 <a class="btn primary" href="{{repo}}/releases/latest/download/ModernSheet-linux.tar.gz">Scarica per Linux</a>
 </div>
@@ -33,7 +41,9 @@ x86_64, con GTK 3 (le distribuzioni desktop più diffuse).
 ### Android
 Telefoni e tablet a 64 bit (APK). **Sperimentale**: ancora poco provato.
 
-<a class="btn primary" href="https://drive.google.com/file/d/1vwZ0EVc03DHRL17h8emCMKTPHOiS09Ye/view?usp=sharing">Scarica per Android</a>
+<p class="build" data-asset="ModernSheet-android.apk" hidden></p>
+
+<a class="btn primary" data-asset-link="ModernSheet-android.apk" href="https://drive.google.com/file/d/1vwZ0EVc03DHRL17h8emCMKTPHOiS09Ye/view?usp=sharing">Scarica per Android</a>
 </div>
 </div>
 
@@ -70,8 +80,10 @@ mkdir -p ~/modernsheet && tar -xzf ModernSheet-linux.tar.gz -C ~/modernsheet
 2. Apri il file scaricato. La prima volta Android chiede di consentire *Installa app sconosciute* all'app da cui lo apri (Drive, File, Chrome…): consenti e torna indietro.
 3. Se Play Protect avvisa che l'app è sconosciuta, scegli **Installa comunque**.
 
-L'APK è per i dispositivi a 64 bit, cioè quasi tutti quelli degli ultimi anni. Gli aggiornamenti si installano sopra la versione precedente, senza perdere la libreria.
+L'APK è per i dispositivi a 64 bit, cioè quasi tutti quelli degli ultimi anni. Gli aggiornamenti si installano sopra la versione precedente, senza perdere la libreria. **Se avevi installato l'APK di prova da Google Drive** (fino alla 0.42), disinstallalo una volta prima di installare questo: è firmato con una chiave diversa. Con la sincronizzazione su Google Drive i brani tornano al primo avvio.
 
 ## Dopo l'installazione
 
 Al primo avvio la libreria contiene la cartella **examples** con i brani di esempio. Per iniziare c'è la [guida all'app](/it/guida/); per scrivere i brani, il [formato .chs](/it/formato/).
+
+<script src="/assets/releases.js" defer></script>

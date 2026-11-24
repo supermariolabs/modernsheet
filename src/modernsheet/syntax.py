@@ -13,7 +13,17 @@ from .i18n import tr
 
 OPEN, CLOSE = "‹", "›"            # placeholder in a completion snippet: selected after inserting ("‹›" = caret)
 
-# token kinds: text, comment, brace, directive, section, value, chord, duration, bar
+# token kinds: text, comment, brace, directive, section, value, chord, duration, bar, note, rest
+_NOTES_RE = re.compile(                # a row of bars inside {start_of_notes} … {end_of_notes}
+    r"(?P<directive>\{[^}\n]*\}?)"
+    r"|(?P<chord>\[[^\]\n]*\]?)"
+    r"|(?P<bar>\|:|:\|(?:\s*x\d+)?|\|\||\||\d+(?::\d+)?\(|\)|-|~[1-9])"
+    r"|(?P<brace>[<>])"
+    r"|(?P<rest>[Rr]\*?)"
+    r"|(?P<note>[A-Ga-g](?:##|bb|#|b|n)?(?:[',]+|@-?\d*)?)"
+    r"|(?P<duration>/?(?:32|16|[1248])\.{0,2}|/|\.+)"
+    r"|(?P<text>\s+|.)"
+)
 _PIECE_RE = re.compile(
     r"(?P<directive>\{[^}\n]*\}?)"
     r"|(?P<chord>\[[^\]\n]*\]?)"
@@ -36,11 +46,27 @@ def tokens(text: str) -> list[tuple[str, str]]:
         else:
             out.append((kind, s))
 
+    in_notes = False
     for line in text.splitlines(keepends=True):
         body = line.rstrip("\r\n")
         eol = line[len(body):]
+        stripped = body.strip().lower().replace(" ", "")
         if body.lstrip().startswith("#"):
             add("comment", body)
+        elif in_notes and body.lstrip().startswith("w:"):
+            lead = len(body) - len(body.lstrip())
+            add("text", body[:lead])
+            add("directive", "w:")
+            add("text", body[lead + 2:])
+        elif in_notes and not stripped.startswith("{"):
+            for m in _NOTES_RE.finditer(body):
+                kind, s = m.lastgroup, m.group()
+                if kind == "directive":
+                    _directive(s, add)
+                elif kind == "chord":
+                    _chord(s, add)
+                else:
+                    add(kind, s)
         else:
             for m in _PIECE_RE.finditer(body):
                 kind, s = m.lastgroup, m.group()
@@ -51,6 +77,10 @@ def tokens(text: str) -> list[tuple[str, str]]:
                 else:
                     add(kind, s)
         add("text", eol)
+        if stripped.startswith("{start_of_notes"):
+            in_notes = True
+        elif stripped.startswith("{end_of_"):
+            in_notes = False
     return out
 
 
@@ -111,8 +141,13 @@ _PLAIN = [
     ("fine", "fine}‹›"),
     ("coda", "coda}‹›"),
     ("musicxml", "musicxml: ‹›}"),
+    ("start_of_notes", "start_of_notes}\n| ‹C4 D E F› |\n{end_of_notes}"),
     ("bars_per_line", "bars_per_line: ‹4›}"),
     ("bar_width", "bar_width: ‹fit›}"),
+    ("row_spacing", "row_spacing: ‹wide›}"),
+    ("notation", "notation: ‹both›}"),
+    ("tuning", "tuning: ‹drop D›}"),
+    ("tab_position", "tab_position: ‹5›}"),
     ("label_colors", "label_colors: ‹by_type›}"),
     ("section_colors", "section_colors: ‹verse=#33cc66›}"),
     ("comment", "comment: ‹›}"),
@@ -152,8 +187,18 @@ def open_section(text: str, upto: int) -> str | None:
     """Kind of the section still open at offset `upto` (start_of_X without its end_of_X)."""
     kind = None
     for m in re.finditer(r"\{\s*(start|end)_of_([A-Za-z_]+)", text[:upto]):
+        if m.group(2).lower() == "notes":
+            continue                       # a notes block sits inside a section, it is not one
         kind = m.group(2).lower() if m.group(1) == "start" else None
     return kind
+
+
+def open_notes(text: str, upto: int) -> bool:
+    """True if a {start_of_notes} block is still open at offset `upto`."""
+    state = False
+    for m in re.finditer(r"\{\s*(start_of_notes|end_of_[A-Za-z_]+)", text[:upto]):
+        state = m.group(1).lower() == "start_of_notes"
+    return state
 
 
 def suggestions(text: str, caret: int) -> list[Completion]:
@@ -167,7 +212,10 @@ def suggestions(text: str, caret: int) -> list[Completion]:
     items = directives()
     if section:
         items = [Completion(f"end_of_{section}", f"end_of_{section}}}‹›", tr("hint.end_section"))] + \
-                [c for c in items if not c.name.startswith("start_of_")]
+                [c for c in items if not c.name.startswith("start_of_") or c.name == "start_of_notes"]
+    if open_notes(text, start - 1):
+        items = [Completion("end_of_notes", "end_of_notes}‹›", tr("hint.end_of_notes"))] + \
+                [c for c in items if c.name != "start_of_notes"]
     p = prefix.lower()
     first = [c for c in items if c.name.startswith(p)]
     return first + [c for c in items if p in c.name and c not in first]
