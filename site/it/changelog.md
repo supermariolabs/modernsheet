@@ -12,6 +12,17 @@ Le versioni di Modern Sheet pubblicate, dalla più recente. Le app da scaricare 
 [Download](/it/download/); ogni versione con le app compilate ha la sua pagina di
 [release su GitHub]({{repo}}/releases).
 
+## 0.46.1 — 25 novembre 2026 {#v0.46.1}
+
+[Release su GitHub]({{repo}}/releases/tag/v0.46.1) · app per macOS, Windows, Linux e Android
+
+- Le opzioni dei richiami si scrivono con il **`$`**: `{ref: Ritornello $volta 2}`, `{ref: Strofa $once}`,
+  `{ref: Ritornello x2 $short}`. Senza `$` sono parole del nome della sezione, così "Prima volta 2" si può
+  richiamare per nome; un richiamo scritto nel modo vecchio dà un avviso con la riga corretta.
+- Un richiamo il cui testo è il nome di una sezione la trova anche se il nome contiene `x2`, `=` o `|`.
+- `:|` attaccato a una parola (`Dico:|`) è testo più una stanghetta, non più una fine di ritornello.
+- Una riga di solo testo, senza accordi né stanghette, ora dà un avviso invece di sparire.
+
 ## 0.46.0 — 25 novembre 2026 {#v0.46.0}
 
 [Release su GitHub]({{repo}}/releases/tag/v0.46.0) · app per macOS, Windows, Linux e Android

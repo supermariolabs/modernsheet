@@ -35,6 +35,16 @@
 <p>The released versions of Modern Sheet, newest first. The apps are on the
 <a href="/en/download/">Download</a> page; every version with built apps has its own
 <a href="https://github.com/supermariolabs/modernsheet/releases">release on GitHub</a>.</p>
+<h2 id="v0.46.1">0.46.1 — 25 November 2026<a class="headerlink" href="#v0.46.1">#</a></h2>
+<p><a href="https://github.com/supermariolabs/modernsheet/releases/tag/v0.46.1">Release on GitHub</a> · apps for macOS, Windows, Linux and Android</p>
+<ul>
+<li>Reference options are written with <strong><code>$</code></strong>: <code>{ref: Chorus $volta 2}</code>, <code>{ref: Verse $once}</code>,
+  <code>{ref: Chorus x2 $short}</code>. Without <code>$</code> they are words of the section's name, so "First time 2" can be
+  referenced by name; a reference written the old way gives a warning with the right line.</li>
+<li>A reference whose text is a section's name finds it even if the name holds <code>x2</code>, <code>=</code> or <code>|</code>.</li>
+<li><code>:|</code> glued to a word (<code>I say:|</code>) is lyrics plus a bar line, no longer the end of a repeat.</li>
+<li>A line of text only, with no chords and no bar lines, now gives a warning instead of disappearing.</li>
+</ul>
 <h2 id="v0.46.0">0.46.0 — 25 November 2026<a class="headerlink" href="#v0.46.0">#</a></h2>
 <p><a href="https://github.com/supermariolabs/modernsheet/releases/tag/v0.46.0">Release on GitHub</a> · apps for macOS, Windows, Linux and Android</p>
 <ul>

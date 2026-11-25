@@ -334,7 +334,7 @@ def test_reference_straight_to_one_ending():
     the other endings or the brackets; repeats outside the endings stay; no such ending: a warning."""
     src = ("{start_of_chorus: Rit}\n|: [C] | [D] |\n{volta: 1} [E] :|\n{volta: 2} [F] | [G] ||\n| [A] |\n{end_of_chorus}\n"
            "{start_of_verse: V}\n|: [C] :|\n{end_of_verse}\n")
-    s = parse(src + "{ref: Rit volta 2 = Finale | dritti}\n{ref: Rit x2 volta 1}\n{ref: V volta 2}\n")
+    s = parse(src + "{ref: Rit $volta 2 = Finale | dritti}\n{ref: Rit x2 $volta 1}\n{ref: V $volta 2}\n")
     rit, verse, fin, twice, whole = s.sections
     assert [[e.chord for e in b.events] for b in fin.bars] == [["C"], ["D"], ["F"], ["G"], ["A"]]
     assert (fin.label, fin.note) == ("Finale", "dritti")
@@ -361,13 +361,13 @@ def test_reference_of_a_section_with_its_own_key():
 
 
 def test_reference_once_without_repeats():
-    """{ref: Label once}: the section without repeats, each repeated part once; at a group of endings
+    """{ref: Label $once}: the section without repeats, each repeated part once; at a group of endings
     the last one (the way out), or ending N with `volta N`; combines with xN and = label."""
     src = ("{start_of_intro: I}\n|: [G] | [C] :| x3\n{end_of_intro}\n"
            "{start_of_chorus: Rit}\n|: [C] | [D] |\n{volta: 1} [E] :|\n{volta: 2} [F] ||\n| [A] |\n|: [B] :|\n"
            "{end_of_chorus}\n")
-    s = parse(src + "{ref: I once}\n{ref: Rit once = Fine | piano}\n{ref: Rit once volta 1}\n{ref: Rit x2 once}\n"
-                    "{ref: Rit volta 3 once}\n")
+    s = parse(src + "{ref: I $once}\n{ref: Rit $once = Fine | piano}\n{ref: Rit $once $volta 1}\n{ref: Rit x2 $once}\n"
+                    "{ref: Rit $volta 3 $once}\n")
     chords = lambda sec: [e.chord for b in sec.bars for e in b.events]
     intro, rit, i1, fin, v1, twice, missing = s.sections
     assert chords(i1) == ["G", "C"] and chords(fin) == ["C", "D", "F", "A", "B"]
@@ -382,10 +382,10 @@ def test_reference_once_without_repeats():
 
 
 def test_short_reference_is_just_the_box():
-    """{ref: Label short}: a section with no bars (only its box: label, xN, note); in another key the box
+    """{ref: Label $short}: a section with no bars (only its box: label, xN, note); in another key the box
     says it, and the key change is drawn on the next bar written."""
     s = parse("{key: G}\n{start_of_chorus: Rit}\n|: [G] | [C] :|\n{end_of_chorus}\n"
-              "{ref: Rit x2 short | tutti}\n{key: A}\n{ref: Rit short = Fine}\n{start_of_outro: O}\n| [A] |\n{end_of_outro}\n")
+              "{ref: Rit x2 $short | tutti}\n{key: A}\n{ref: Rit $short = Fine}\n{start_of_outro: O}\n| [A] |\n{end_of_outro}\n")
     assert s.warnings == []
     _, same, other, outro = s.sections
     assert (same.short, same.bars, same.times, same.note, same.ref_key) == (True, [], 2, "tutti", "")
@@ -395,3 +395,53 @@ def test_short_reference_is_just_the_box():
     assert "Rit  x2" in texts and "reprise - tutti" in texts and "reprise - Key A" in texts
     ex = load(EX / "tempi_e_tonalita.chs")
     assert ex.warnings == [] and any(sec.short and sec.ref_key == "Eb" for sec in ex.sections)
+
+
+def test_reference_options_with_dollar():
+    """$volta N, $once, $short are the options of a {ref}; without the $ the words belong to the section's
+    name, so a section called "Prima volta 2" (or "Coro once") is referenced by its name."""
+    src = ("{start_of_chorus: Rit}\n|: [C] | [D] |\n{volta: 1} [E] :|\n{volta: 2} [F] ||\n{end_of_chorus}\n"
+           "{start_of_verse: Prima volta 2}\n| [G] |\n{end_of_verse}\n")
+    s = parse(src + "{ref: Rit $volta 2}\n{ref: Rit x2 $once = Fine | piano}\n{ref: Rit $short}\n"
+                    "{ref: Prima volta 2}\n{ref: Prima volta 2 $short}\n{ref: Rit once}\n")
+    chords = lambda sec: [e.chord for b in sec.bars for e in b.events]
+    v2, once, short, named, named_short = s.sections[2:]
+    assert chords(v2) == ["C", "D", "F"]
+    assert chords(once) == ["C", "D", "F"] * 2 and (once.label, once.note) == ("Fine", "piano")
+    assert short.short and short.bars == []
+    assert named.label == "Prima volta 2" and chords(named) == ["G"]
+    assert named_short.short and named_short.label == "Prima volta 2"
+    assert s.warnings == ["line 14: ref: 'once' is an old syntax, now written with $: {ref: Rit $once}"]
+    s = parse(src + "{ref: Rit x2 volta 2 short}\n{ref: Nessuna once}\n{ref: Rit once = Fine | piano}\n")
+    assert s.warnings == ["line 9: ref: 'volta 2', 'short' is an old syntax, now written with $: "
+                          "{ref: Rit x2 $volta 2 $short}",
+                          "line 10: ref: section 'Nessuna once' not found (only earlier sections can be referenced)",
+                          "line 11: ref: 'once' is an old syntax, now written with $: {ref: Rit $once = Fine | piano}"]
+
+
+def test_text_and_option_ambiguities():
+    """A {ref} whose whole text is a section's name refers to it even if the name looks like options
+    ("Strofa x2", "Do = La", "A | B"); a line of text with no chord and no bar line gives a warning
+    instead of disappearing."""
+    s = parse("{start_of_verse: Strofa x2}\n| [C] |\n{end_of_verse}\n{start_of_bridge: Do = La}\n| [D] |\n"
+              "{end_of_bridge}\n{start_of_chorus: A | B}\n| [E] |\n{end_of_chorus}\n"
+              "{ref: Strofa x2}\n{ref: Do = La}\n{ref: A | B}\n{ref: Strofa x2 x2}\n")
+    assert s.warnings == []
+    refs = [sec for sec in s.sections if sec.is_ref]
+    assert [(r.label, r.times, [e.chord for b in r.bars for e in b.events]) for r in refs] == [
+        ("Strofa x2", 1, ["C"]), ("Do = La", 1, ["D"]), ("A | B", 1, ["E"]), ("Strofa x2", 2, ["C", "C"])]
+    s = parse("{start_of_verse: V}\n| [C]Prima |\nsolo testo senza accordi\n{end_of_verse}\n")
+    assert s.warnings == ["line 3: text without chords or bar lines: ignored (a line of text in the sheet: {text: …})"]
+
+
+def test_repeat_end_glued_to_lyrics_is_text():
+    """`:|` ends a repeat at the start of a line or after a space, a chord, a bar line or a directive;
+    glued to a word the colon is lyrics ("Dico:|" = "Dico:" and a bar line)."""
+    s = parse("{start_of_verse: V}\n| [C]Dico:| [G]sì |\n|: [C] | [G]:|\n|: [F] | [G] {fine}:|\n| [A] |\n:| x3\n"
+              "{end_of_verse}\n")
+    assert s.warnings == []
+    b = s.bars
+    assert (b[0].events[0].lyric, b[0].repeat_end, len(b)) == ("Dico:", 0, 7)
+    assert b[3].repeat_end == 2                              # [G]:| right after a chord
+    assert b[5].repeat_end == 2                              # right after a directive
+    assert b[6].repeat_end == 3                              # at the start of a line

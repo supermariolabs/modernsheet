@@ -25,7 +25,9 @@ from .. import tab as tab_mod
 
 TOKEN_RE = re.compile(
     r"\|:"                       # repeat start
-    r"|:\|(?:\s*x\d+)?"          # repeat end, optional count
+    # repeat end, optional count: only at the start, after a space, a chord, a bar line or a directive;
+    # glued to a word ("Dico:|") the colon is part of the lyrics and the | a plain bar line
+    r"|(?<![^\s\]|}]):\|(?:\s*x\d+)?"
     r"|\|\|"                     # double bar
     r"|\|"                       # bar
     r"|\{[^}]*\}"                # inline directive
@@ -355,11 +357,11 @@ class Parser:
         self.song.sections.append(self.section)
 
     def reference(self, value: str) -> None:
-        """{ref: Label} / {ref: Label x2 volta 2 = New label | note}: repeat an earlier section here, as
+        """{ref: Label} / {ref: Label x2 $volta 2 = New label | note}: repeat an earlier section here, as
         copies of its bars, optionally shown under another label (`= …`; the colour stays the original's).
-        `volta N`: the section played once straight to its ending N (see ending_pass).
-        `once`: the section without any repeat, each repeated part played once (see once_pass).
-        `short`: only the section's box (label, xN, note) and no bars, to save room on the page; if the
+        `$volta N`: the section played once straight to its ending N (see ending_pass).
+        `$once`: the section without any repeat, each repeated part played once (see once_pass).
+        `$short`: only the section's box (label, xN, note) and no bars, to save room on the page; if the
         key has changed since the original, the box says the new key, since no bar shows it.
 
         The copy is transposed from the original's key to the key in force here, so a chorus
@@ -369,9 +371,17 @@ class Parser:
         target, _, note = value.partition("|")
         target, _, shown = target.partition("=")
         target, note, shown = target.strip(), note.strip(), shown.strip()
+        whole = " ".join(value.split())
+        labels = {s.label.lower() for s in self.song.sections if not s.is_ref}
+        named = whole.lower() in labels
+        if named:
+            # the whole text is a section's name ("Strofa x2", "Do = La", "A | B"): no options in it
+            target, note, shown = whole, "", ""
         times, volta, once, short = 1, None, False, False
-        while True:                    # modifiers after the label, in any order: xN, volta N, once, short
-            m = re.search(r"\s+(?:x(\d+)|volta\s*(\d+)\.?|(once)|(short))\s*$", target, re.I)
+        # options after the label, in any order: xN, $volta N, $once, $short. The $ tells them apart from
+        # the words of a label: {ref: Prima volta 2} is the section "Prima volta 2"
+        while not named and target.lower() not in labels:    # stop at a section's name ("Strofa x2" x2)
+            m = re.search(r"\s+(?:x(\d+)|\$volta\s*(\d+)\.?|\$(once)|\$(short))\s*$", target, re.I)
             if not m:
                 break
             if m.group(1):
@@ -387,6 +397,18 @@ class Parser:
         src = next((s for s in originals if s.label.lower() == target.lower()), None) or \
             next((s for s in originals if s.kind == target.lower()), None)
         if src is None:
+            # the options of 0.45.0-0.46.0 were written without $: say how to write them now
+            words, rest = [], target
+            while (m := re.search(r"\s+(x\d+|volta\s*\d+\.?|once|short)\s*$", rest, re.I)):
+                words.insert(0, " ".join(m.group(1).lower().rstrip(".").split()))
+                rest = rest[: m.start()].strip()
+            old = [w for w in words if not w.startswith("x")]
+            if old and (rest.lower() in labels or any(s.kind == rest.lower() for s in originals)):
+                written = ", ".join(f"'{w}'" for w in old)
+                wanted = " ".join(w if w.startswith("x") else f"${w}" for w in words)
+                tail = (f" = {shown}" if shown else "") + (f" | {note}" if note else "")
+                self.warn(f"ref: {written} is an old syntax, now written with $: {{ref: {rest} {wanted}{tail}}}")
+                return
             self.warn(f"ref: section '{target}' not found (only earlier sections can be referenced)")
             return
         bars = src.bars
@@ -767,6 +789,10 @@ class Parser:
                     self.directive(tk[1:-1])
             elif items:
                 items[-1].lyric += tk
+            elif tk.strip():
+                # text before any chord, with no bar line: it has no bar to go to and would be lost
+                self.warn("text without chords or bar lines: ignored (a line of text in the sheet: {text: …})")
+                break
         first_bar: dict[int, Bar] = {}           # item index → bar where it starts / ends
         last_bar: dict[int, Bar] = {}
         bar, t = None, 0.0

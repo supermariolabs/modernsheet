@@ -14,7 +14,8 @@ Un brano è un file di testo UTF-8 con estensione `.chs`. Contiene **direttive**
 
 ## Regole generali
 
-- Le righe che iniziano con `#` sono **commenti**; le righe vuote non contano.
+- Le righe che iniziano con `#` sono **commenti** (anche se volevano essere testo: "#1 in classifica" va scritto dopo l'accordo, `| [C]#1 in classifica |`); le righe vuote non contano.
+- Il testo cantato sta nelle battute, dopo un accordo o una stanghetta: una riga di solo testo, senza accordi né stanghette, non ha una battuta a cui appartenere e dà un avviso. Per una riga di testo nello spartito c'è `{text: …}`.
 - Una direttiva è `{nome}` oppure `{nome: valore}`: può stare su una riga propria o **dentro** una riga di musica. I nomi delle direttive non distinguono maiuscole e minuscole, quelli degli accordi sì.
 - La musica sta **dentro una sezione** (`{start_of_…}` … `{end_of_…}`); fuori, l'app ne apre una senza titolo e lo segnala.
 - Il file non si "rompe" mai: ciò che non si capisce diventa un **avviso** (warning) con il numero di riga, mostrato sotto l'editor, e il resto si disegna comunque (vedi [Diagnostica](#diagnostica)).
@@ -82,11 +83,11 @@ Le direttive in cima al file descrivono il brano. Quelle che regolano l'impagina
 | `{ref: Ritornello x2}` | la ripete due volte (nel box: `x2`) |
 | `{ref: chorus \| tutti insieme}` | con una nota accanto al box ("reprise – tutti insieme") |
 | `{ref: Strofa 1 = Strofa finale}` | mostrata con un **altro nome** (si combina: `{ref: Ritornello x2 = Finale \| tutti}`) |
-| `{ref: Ritornello volta 2}` | **un giro solo, dritto alla 2ª volta**: battute comuni e 2ª volta, senza ritornello né 1ª volta |
-| `{ref: Strofa once}` | **senza ritornelli**: ogni parte ripetuta una volta sola; dove ci sono volte, l'ultima (o quella scelta con `volta N`) |
-| `{ref: Ritornello x2 short}` | **solo il box**, senza ristampare le battute (se la tonalità è cambiata, il box la indica) |
+| `{ref: Ritornello $volta 2}` | **un giro solo, dritto alla 2ª volta**: battute comuni e 2ª volta, senza ritornello né 1ª volta |
+| `{ref: Strofa $once}` | **senza ritornelli**: ogni parte ripetuta una volta sola; dove ci sono volte, l'ultima (o quella scelta con `$volta N`) |
+| `{ref: Ritornello x2 $short}` | **solo il box**, senza ristampare le battute (se la tonalità è cambiata, il box la indica) |
 
-Le parole dopo l'etichetta (`x2`, `volta 2`, `once`, `short`) vanno in qualsiasi ordine e si combinano con `= nome` e `| nota`. La sezione si cerca prima per etichetta (senza badare alle maiuscole), poi per tipo. Il richiamo conserva ritornelli, volte e cambi di metro della sezione e il suo colore (anche con un altro nome); i segni di navigazione e le righe `{text}` restano solo nell'originale. Se nel frattempo la tonalità è cambiata, il richiamo viene **trasposto automaticamente** nella nuova tonalità.
+Le parole dopo l'etichetta (`x2`, `$volta 2`, `$once`, `$short`) vanno in qualsiasi ordine e si combinano con `= nome` e `| nota`; il `$` le distingue dalle parole del nome di una sezione: `{ref: Prima volta 2}` richiama la sezione "Prima volta 2". Se tutto il testo è il nome di una sezione, è quella, anche se il nome contiene `x2`, `=` o `|`. La sezione si cerca prima per etichetta (senza badare alle maiuscole), poi per tipo. Il richiamo conserva ritornelli, volte e cambi di metro della sezione e il suo colore (anche con un altro nome); i segni di navigazione e le righe `{text}` restano solo nell'originale. Se nel frattempo la tonalità è cambiata, il richiamo viene **trasposto automaticamente** nella nuova tonalità.
 
 ```{ .chs .render }
 {key: G}
@@ -105,7 +106,7 @@ Le parole dopo l'etichetta (`x2`, `volta 2`, `once`, `short`) vanno in qualsiasi
 {volta: 2} [F] | [G7] [C] ||
 {end_of_chorus}
 
-{ref: Ritornello volta 2 = Ultimo ritornello}
+{ref: Ritornello $volta 2 = Ultimo ritornello}
 ```
 
 ## Colori delle sezioni
@@ -190,6 +191,8 @@ Si combinano tra loro e con la durata, in quest'ordine: anticipo, nome (eventual
 | `:\| x3` | ritornello ripetuto 3 volte (`x3` sopra la fine) |
 | `{volta: 1}` … `{volta: 2}` | case di volta (anche `{volta: 1, 2}`) |
 | `{volta_end}` / `{volta_end: hook}` | chiusura della volta, aperta o con gancio |
+
+`:|` chiude il ritornello quando è staccato dal testo (dopo uno spazio, un accordo o a inizio riga): in `| [C]Dico:| …` i due punti fanno parte del testo.
 
 ```{ .chs .render }
 |: [Gm7] [C7] | [Am7] [D7] |
@@ -355,7 +358,7 @@ L'app non si ferma mai su un errore: mostra lo spartito con quello che riesce a 
 
 - battuta più lunga del metro; durata non valida o non multipla di mezzo movimento;
 - accordo non riconosciuto; direttiva sconosciuta o con un valore non valido (tonalità, metro, accordatura, `bar_width`, `notation`, `row_spacing`…);
-- sezione non chiusa, `end_of_` senza `start_of_`, musica fuori da una sezione, battuta incompleta senza stanghette;
+- sezione non chiusa, `end_of_` senza `start_of_`, musica fuori da una sezione, battuta incompleta senza stanghette, riga di solo testo senza accordi né stanghette;
 - `{ref}` a una sezione che non esiste o che viene dopo;
 - nelle note scritte e nei MusicXML: i casi elencati nelle loro sezioni.
 

@@ -12,6 +12,17 @@ The released versions of Modern Sheet, newest first. The apps are on the
 [Download](/en/download/) page; every version with built apps has its own
 [release on GitHub]({{repo}}/releases).
 
+## 0.46.1 — 25 November 2026 {#v0.46.1}
+
+[Release on GitHub]({{repo}}/releases/tag/v0.46.1) · apps for macOS, Windows, Linux and Android
+
+- Reference options are written with **`$`**: `{ref: Chorus $volta 2}`, `{ref: Verse $once}`,
+  `{ref: Chorus x2 $short}`. Without `$` they are words of the section's name, so "First time 2" can be
+  referenced by name; a reference written the old way gives a warning with the right line.
+- A reference whose text is a section's name finds it even if the name holds `x2`, `=` or `|`.
+- `:|` glued to a word (`I say:|`) is lyrics plus a bar line, no longer the end of a repeat.
+- A line of text only, with no chords and no bar lines, now gives a warning instead of disappearing.
+
 ## 0.46.0 — 25 November 2026 {#v0.46.0}
 
 [Release on GitHub]({{repo}}/releases/tag/v0.46.0) · apps for macOS, Windows, Linux and Android

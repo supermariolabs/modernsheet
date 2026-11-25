@@ -14,7 +14,8 @@ A song is a UTF-8 text file with the `.chs` extension. It holds **directives** i
 
 ## General rules
 
-- Lines starting with `#` are **comments**; blank lines do not count.
+- Lines starting with `#` are **comments** (even when meant as lyrics: "#1 in the charts" goes after the chord, `| [C]#1 in the charts |`); blank lines do not count.
+- Lyrics live in bars, after a chord or a bar line: a line of text only, with no chords and no bar lines, has no bar to belong to and gives a warning. For a line of text in the sheet there is `{text: …}`.
 - A directive is `{name}` or `{name: value}`: on a line of its own or **inside** a line of music. Directive names ignore case, chord names do not.
 - Music goes **inside a section** (`{start_of_…}` … `{end_of_…}`); outside one, the app opens an untitled section and says so.
 - A file never "breaks": what cannot be understood becomes a **warning** with its line number, shown under the editor, and the rest is drawn anyway (see [Diagnostics](#diagnostics)).
@@ -82,11 +83,11 @@ The directives at the top of the file describe the song. Those that drive the la
 | `{ref: Chorus x2}` | repeats it twice (in the box: `x2`) |
 | `{ref: chorus \| all together}` | with a note next to the box ("reprise – all together") |
 | `{ref: Verse 1 = Last verse}` | shown under **another name** (combines: `{ref: Chorus x2 = Ending \| everybody}`) |
-| `{ref: Chorus volta 2}` | **one pass straight to the 2nd ending**: the common bars and the 2nd ending, no repeat, no 1st ending |
-| `{ref: Verse once}` | **without repeats**: each repeated part played once; where there are endings, the last one (or the one chosen with `volta N`) |
-| `{ref: Chorus x2 short}` | **just the box**, without printing the bars again (if the key has changed, the box says so) |
+| `{ref: Chorus $volta 2}` | **one pass straight to the 2nd ending**: the common bars and the 2nd ending, no repeat, no 1st ending |
+| `{ref: Verse $once}` | **without repeats**: each repeated part played once; where there are endings, the last one (or the one chosen with `$volta N`) |
+| `{ref: Chorus x2 $short}` | **just the box**, without printing the bars again (if the key has changed, the box says so) |
 
-The words after the label (`x2`, `volta 2`, `once`, `short`) go in any order and combine with `= name` and `| note`. The section is looked up by label first (ignoring case), then by kind. The reference keeps the section's repeats, endings, time changes and colour (also under another name); navigation signs and `{text}` lines stay with the original only. If the key has changed in the meantime, the reference is **transposed automatically** into the new key.
+The words after the label (`x2`, `$volta 2`, `$once`, `$short`) go in any order and combine with `= name` and `| note`; the `$` tells them apart from the words of a section's name: `{ref: First time 2}` references the section "First time 2". If the whole text is a section's name, it is that section, even if the name holds `x2`, `=` or `|`. The section is looked up by label first (ignoring case), then by kind. The reference keeps the section's repeats, endings, time changes and colour (also under another name); navigation signs and `{text}` lines stay with the original only. If the key has changed in the meantime, the reference is **transposed automatically** into the new key.
 
 ```{ .chs .render }
 {key: G}
@@ -105,7 +106,7 @@ The words after the label (`x2`, `volta 2`, `once`, `short`) go in any order and
 {volta: 2} [F] | [G7] [C] ||
 {end_of_chorus}
 
-{ref: Chorus volta 2 = Last chorus}
+{ref: Chorus $volta 2 = Last chorus}
 ```
 
 ## Section colours
@@ -190,6 +191,8 @@ They combine with each other and with the duration, in this order: push, name (o
 | `:\| x3` | played 3 times (`x3` above the end) |
 | `{volta: 1}` … `{volta: 2}` | endings (also `{volta: 1, 2}`) |
 | `{volta_end}` / `{volta_end: hook}` | end of the ending, open or with a hook |
+
+`:|` closes the repeat when it is apart from the lyrics (after a space, a chord or at the start of a line): in `| [C]I say:| …` the colon is part of the lyrics.
 
 ```{ .chs .render }
 |: [Gm7] [C7] | [Am7] [D7] |
@@ -355,7 +358,7 @@ The app never stops on an error: it shows the sheet with what it can read and, u
 
 - a bar longer than its time signature; an invalid duration, or one that is not a multiple of half a beat;
 - an unrecognised chord; an unknown directive, or one with an invalid value (key, time, tuning, `bar_width`, `notation`, `row_spacing`…);
-- a section not closed, `end_of_` without `start_of_`, music outside a section, an incomplete bar without bar lines;
+- a section not closed, `end_of_` without `start_of_`, music outside a section, an incomplete bar without bar lines, a line of text only, with no chords and no bar lines;
 - a `{ref}` to a section that does not exist or comes later;
 - in written notes and MusicXML: the cases listed in their sections.
 

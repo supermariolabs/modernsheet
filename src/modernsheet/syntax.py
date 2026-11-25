@@ -27,7 +27,8 @@ _NOTES_RE = re.compile(                # a row of bars inside {start_of_notes} â
 _PIECE_RE = re.compile(
     r"(?P<directive>\{[^}\n]*\}?)"
     r"|(?P<chord>\[[^\]\n]*\]?)"
-    r"|(?P<bar>\|:|:\|(?:\s*x\d+)?|\|\||\|)"
+    # a repeat end glued to a word ("Dico:|") is lyrics and a bar line, as in the parser (formats/v1.py)
+    r"|(?P<bar>\|:|(?<![^\s\]|}]):\|(?:\s*x\d+)?|\|\||\|)"
     r"|(?P<text>[^{\[|:\n]+|:)"
 )
 _NAME_RE = re.compile(r"[A-Za-z_]*")

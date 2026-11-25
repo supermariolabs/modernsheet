@@ -1,7 +1,7 @@
 # Brano originale: metri e tonalità
 #   3/4, 6/8 e 2/4, cambi di metro in linea, modulazioni (doppia stanghetta e bequadri di cortesia),
 #   tonalità con diesis e bemolle, richiamo trasposto automaticamente nella nuova tonalità,
-#   richiamo corto ({ref: … short}: solo il box, con la tonalità perché nessuna battuta la mostra)
+#   richiamo corto ({ref: … $short}: solo il box, con la tonalità perché nessuna battuta la mostra)
 {format: v1}
 {title: Tempi e tonalità}
 {subtitle: valzer, sei ottavi e modulazioni}
@@ -33,4 +33,4 @@
 {key: Eb}
 {time: 3/4}
 {ref: Valzer | trasposto in Eb}
-{ref: Valzer x2 short | ancora due volte}
+{ref: Valzer x2 $short | ancora due volte}

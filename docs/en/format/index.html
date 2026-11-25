@@ -62,7 +62,8 @@
 </div>
 <h2 id="general-rules">General rules<a class="headerlink" href="#general-rules">#</a></h2>
 <ul>
-<li>Lines starting with <code>#</code> are <strong>comments</strong>; blank lines do not count.</li>
+<li>Lines starting with <code>#</code> are <strong>comments</strong> (even when meant as lyrics: "#1 in the charts" goes after the chord, <code>| [C]#1 in the charts |</code>); blank lines do not count.</li>
+<li>Lyrics live in bars, after a chord or a bar line: a line of text only, with no chords and no bar lines, has no bar to belong to and gives a warning. For a line of text in the sheet there is <code>{text: …}</code>.</li>
 <li>A directive is <code>{name}</code> or <code>{name: value}</code>: on a line of its own or <strong>inside</strong> a line of music. Directive names ignore case, chord names do not.</li>
 <li>Music goes <strong>inside a section</strong> (<code>{start_of_…}</code> … <code>{end_of_…}</code>); outside one, the app opens an untitled section and says so.</li>
 <li>A file never "breaks": what cannot be understood becomes a <strong>warning</strong> with its line number, shown under the editor, and the rest is drawn anyway (see <a href="#diagnostics">Diagnostics</a>).</li>
@@ -314,20 +315,20 @@
 <td>shown under <strong>another name</strong> (combines: <code>{ref: Chorus x2 = Ending | everybody}</code>)</td>
 </tr>
 <tr>
-<td><code>{ref: Chorus volta 2}</code></td>
+<td><code>{ref: Chorus $volta 2}</code></td>
 <td><strong>one pass straight to the 2nd ending</strong>: the common bars and the 2nd ending, no repeat, no 1st ending</td>
 </tr>
 <tr>
-<td><code>{ref: Verse once}</code></td>
-<td><strong>without repeats</strong>: each repeated part played once; where there are endings, the last one (or the one chosen with <code>volta N</code>)</td>
+<td><code>{ref: Verse $once}</code></td>
+<td><strong>without repeats</strong>: each repeated part played once; where there are endings, the last one (or the one chosen with <code>$volta N</code>)</td>
 </tr>
 <tr>
-<td><code>{ref: Chorus x2 short}</code></td>
+<td><code>{ref: Chorus x2 $short}</code></td>
 <td><strong>just the box</strong>, without printing the bars again (if the key has changed, the box says so)</td>
 </tr>
 </tbody>
 </table>
-<p>The words after the label (<code>x2</code>, <code>volta 2</code>, <code>once</code>, <code>short</code>) go in any order and combine with <code>= name</code> and <code>| note</code>. The section is looked up by label first (ignoring case), then by kind. The reference keeps the section's repeats, endings, time changes and colour (also under another name); navigation signs and <code>{text}</code> lines stay with the original only. If the key has changed in the meantime, the reference is <strong>transposed automatically</strong> into the new key.</p>
+<p>The words after the label (<code>x2</code>, <code>$volta 2</code>, <code>$once</code>, <code>$short</code>) go in any order and combine with <code>= name</code> and <code>| note</code>; the <code>$</code> tells them apart from the words of a section's name: <code>{ref: First time 2}</code> references the section "First time 2". If the whole text is a section's name, it is that section, even if the name holds <code>x2</code>, <code>=</code> or <code>|</code>. The section is looked up by label first (ignoring case), then by kind. The reference keeps the section's repeats, endings, time changes and colour (also under another name); navigation signs and <code>{text}</code> lines stay with the original only. If the key has changed in the meantime, the reference is <strong>transposed automatically</strong> into the new key.</p>
 <div class="example"><pre><code class="language-chs">{key: G}
 {start_of_chorus: Chorus}
 | [G] | [Em] | [C] | [D] |
@@ -397,7 +398,7 @@
 {volta: 2} [F] | [G7] [C] ||
 {end_of_chorus}
 
-{ref: Chorus volta 2 = Last chorus}
+{ref: Chorus $volta 2 = Last chorus}
 </code></pre><figure class="render" aria-label="The sheet Modern Sheet draws for this example"><svg xmlns="http://www.w3.org/2000/svg" viewBox="34.0 35.0 372.0 269.0" width="402" height="291" role="img">
 <rect x="34.0" y="35.0" width="372.0" height="269.0" fill="#ffffff"/>
 <rect x="42.00" y="43.00" width="52.88" height="21.00" rx="4.00" fill="#0066cc"/>
@@ -786,6 +787,7 @@
 </tr>
 </tbody>
 </table>
+<p><code>:|</code> closes the repeat when it is apart from the lyrics (after a space, a chord or at the start of a line): in <code>| [C]I say:| …</code> the colon is part of the lyrics.</p>
 <div class="example"><pre><code class="language-chs">|: [Gm7] [C7] | [Am7] [D7] |
 {volta: 1} [Gm7] [C7] | [F7] [D7] :|
 {volta: 2} [Gm7] [C7] | [F7] ||
@@ -1550,7 +1552,7 @@
 <ul>
 <li>a bar longer than its time signature; an invalid duration, or one that is not a multiple of half a beat;</li>
 <li>an unrecognised chord; an unknown directive, or one with an invalid value (key, time, tuning, <code>bar_width</code>, <code>notation</code>, <code>row_spacing</code>…);</li>
-<li>a section not closed, <code>end_of_</code> without <code>start_of_</code>, music outside a section, an incomplete bar without bar lines;</li>
+<li>a section not closed, <code>end_of_</code> without <code>start_of_</code>, music outside a section, an incomplete bar without bar lines, a line of text only, with no chords and no bar lines;</li>
 <li>a <code>{ref}</code> to a section that does not exist or comes later;</li>
 <li>in written notes and MusicXML: the cases listed in their sections.</li>
 </ul>

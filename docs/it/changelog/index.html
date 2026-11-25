@@ -35,6 +35,16 @@
 <p>Le versioni di Modern Sheet pubblicate, dalla più recente. Le app da scaricare sono nella pagina
 <a href="/it/download/">Download</a>; ogni versione con le app compilate ha la sua pagina di
 <a href="https://github.com/supermariolabs/modernsheet/releases">release su GitHub</a>.</p>
+<h2 id="v0.46.1">0.46.1 — 25 novembre 2026<a class="headerlink" href="#v0.46.1">#</a></h2>
+<p><a href="https://github.com/supermariolabs/modernsheet/releases/tag/v0.46.1">Release su GitHub</a> · app per macOS, Windows, Linux e Android</p>
+<ul>
+<li>Le opzioni dei richiami si scrivono con il <strong><code>$</code></strong>: <code>{ref: Ritornello $volta 2}</code>, <code>{ref: Strofa $once}</code>,
+  <code>{ref: Ritornello x2 $short}</code>. Senza <code>$</code> sono parole del nome della sezione, così "Prima volta 2" si può
+  richiamare per nome; un richiamo scritto nel modo vecchio dà un avviso con la riga corretta.</li>
+<li>Un richiamo il cui testo è il nome di una sezione la trova anche se il nome contiene <code>x2</code>, <code>=</code> o <code>|</code>.</li>
+<li><code>:|</code> attaccato a una parola (<code>Dico:|</code>) è testo più una stanghetta, non più una fine di ritornello.</li>
+<li>Una riga di solo testo, senza accordi né stanghette, ora dà un avviso invece di sparire.</li>
+</ul>
 <h2 id="v0.46.0">0.46.0 — 25 novembre 2026<a class="headerlink" href="#v0.46.0">#</a></h2>
 <p><a href="https://github.com/supermariolabs/modernsheet/releases/tag/v0.46.0">Release su GitHub</a> · app per macOS, Windows, Linux e Android</p>
 <ul>

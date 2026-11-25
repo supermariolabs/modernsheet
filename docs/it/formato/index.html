@@ -62,7 +62,8 @@
 </div>
 <h2 id="regole-generali">Regole generali<a class="headerlink" href="#regole-generali">#</a></h2>
 <ul>
-<li>Le righe che iniziano con <code>#</code> sono <strong>commenti</strong>; le righe vuote non contano.</li>
+<li>Le righe che iniziano con <code>#</code> sono <strong>commenti</strong> (anche se volevano essere testo: "#1 in classifica" va scritto dopo l'accordo, <code>| [C]#1 in classifica |</code>); le righe vuote non contano.</li>
+<li>Il testo cantato sta nelle battute, dopo un accordo o una stanghetta: una riga di solo testo, senza accordi né stanghette, non ha una battuta a cui appartenere e dà un avviso. Per una riga di testo nello spartito c'è <code>{text: …}</code>.</li>
 <li>Una direttiva è <code>{nome}</code> oppure <code>{nome: valore}</code>: può stare su una riga propria o <strong>dentro</strong> una riga di musica. I nomi delle direttive non distinguono maiuscole e minuscole, quelli degli accordi sì.</li>
 <li>La musica sta <strong>dentro una sezione</strong> (<code>{start_of_…}</code> … <code>{end_of_…}</code>); fuori, l'app ne apre una senza titolo e lo segnala.</li>
 <li>Il file non si "rompe" mai: ciò che non si capisce diventa un <strong>avviso</strong> (warning) con il numero di riga, mostrato sotto l'editor, e il resto si disegna comunque (vedi <a href="#diagnostica">Diagnostica</a>).</li>
@@ -314,20 +315,20 @@
 <td>mostrata con un <strong>altro nome</strong> (si combina: <code>{ref: Ritornello x2 = Finale | tutti}</code>)</td>
 </tr>
 <tr>
-<td><code>{ref: Ritornello volta 2}</code></td>
+<td><code>{ref: Ritornello $volta 2}</code></td>
 <td><strong>un giro solo, dritto alla 2ª volta</strong>: battute comuni e 2ª volta, senza ritornello né 1ª volta</td>
 </tr>
 <tr>
-<td><code>{ref: Strofa once}</code></td>
-<td><strong>senza ritornelli</strong>: ogni parte ripetuta una volta sola; dove ci sono volte, l'ultima (o quella scelta con <code>volta N</code>)</td>
+<td><code>{ref: Strofa $once}</code></td>
+<td><strong>senza ritornelli</strong>: ogni parte ripetuta una volta sola; dove ci sono volte, l'ultima (o quella scelta con <code>$volta N</code>)</td>
 </tr>
 <tr>
-<td><code>{ref: Ritornello x2 short}</code></td>
+<td><code>{ref: Ritornello x2 $short}</code></td>
 <td><strong>solo il box</strong>, senza ristampare le battute (se la tonalità è cambiata, il box la indica)</td>
 </tr>
 </tbody>
 </table>
-<p>Le parole dopo l'etichetta (<code>x2</code>, <code>volta 2</code>, <code>once</code>, <code>short</code>) vanno in qualsiasi ordine e si combinano con <code>= nome</code> e <code>| nota</code>. La sezione si cerca prima per etichetta (senza badare alle maiuscole), poi per tipo. Il richiamo conserva ritornelli, volte e cambi di metro della sezione e il suo colore (anche con un altro nome); i segni di navigazione e le righe <code>{text}</code> restano solo nell'originale. Se nel frattempo la tonalità è cambiata, il richiamo viene <strong>trasposto automaticamente</strong> nella nuova tonalità.</p>
+<p>Le parole dopo l'etichetta (<code>x2</code>, <code>$volta 2</code>, <code>$once</code>, <code>$short</code>) vanno in qualsiasi ordine e si combinano con <code>= nome</code> e <code>| nota</code>; il <code>$</code> le distingue dalle parole del nome di una sezione: <code>{ref: Prima volta 2}</code> richiama la sezione "Prima volta 2". Se tutto il testo è il nome di una sezione, è quella, anche se il nome contiene <code>x2</code>, <code>=</code> o <code>|</code>. La sezione si cerca prima per etichetta (senza badare alle maiuscole), poi per tipo. Il richiamo conserva ritornelli, volte e cambi di metro della sezione e il suo colore (anche con un altro nome); i segni di navigazione e le righe <code>{text}</code> restano solo nell'originale. Se nel frattempo la tonalità è cambiata, il richiamo viene <strong>trasposto automaticamente</strong> nella nuova tonalità.</p>
 <div class="example"><pre><code class="language-chs">{key: G}
 {start_of_chorus: Ritornello}
 | [G] | [Em] | [C] | [D] |
@@ -397,7 +398,7 @@
 {volta: 2} [F] | [G7] [C] ||
 {end_of_chorus}
 
-{ref: Ritornello volta 2 = Ultimo ritornello}
+{ref: Ritornello $volta 2 = Ultimo ritornello}
 </code></pre><figure class="render" aria-label="Lo spartito disegnato da Modern Sheet per questo esempio"><svg xmlns="http://www.w3.org/2000/svg" viewBox="34.0 35.0 372.0 269.0" width="402" height="291" role="img">
 <rect x="34.0" y="35.0" width="372.0" height="269.0" fill="#ffffff"/>
 <rect x="42.00" y="43.00" width="65.61" height="21.00" rx="4.00" fill="#0066cc"/>
@@ -787,6 +788,7 @@
 </tr>
 </tbody>
 </table>
+<p><code>:|</code> chiude il ritornello quando è staccato dal testo (dopo uno spazio, un accordo o a inizio riga): in <code>| [C]Dico:| …</code> i due punti fanno parte del testo.</p>
 <div class="example"><pre><code class="language-chs">|: [Gm7] [C7] | [Am7] [D7] |
 {volta: 1} [Gm7] [C7] | [F7] [D7] :|
 {volta: 2} [Gm7] [C7] | [F7] ||
@@ -1551,7 +1553,7 @@
 <ul>
 <li>battuta più lunga del metro; durata non valida o non multipla di mezzo movimento;</li>
 <li>accordo non riconosciuto; direttiva sconosciuta o con un valore non valido (tonalità, metro, accordatura, <code>bar_width</code>, <code>notation</code>, <code>row_spacing</code>…);</li>
-<li>sezione non chiusa, <code>end_of_</code> senza <code>start_of_</code>, musica fuori da una sezione, battuta incompleta senza stanghette;</li>
+<li>sezione non chiusa, <code>end_of_</code> senza <code>start_of_</code>, musica fuori da una sezione, battuta incompleta senza stanghette, riga di solo testo senza accordi né stanghette;</li>
 <li><code>{ref}</code> a una sezione che non esiste o che viene dopo;</li>
 <li>nelle note scritte e nei MusicXML: i casi elencati nelle loro sezioni.</li>
 </ul>
