@@ -31,7 +31,7 @@
 
 {key: Ab}
 {time: 3/4}
-{ref: Strofa 1 | ultima strofa, un semitono sopra}
+{ref: Strofa 1 = Strofa finale | un semitono sopra}
 
 {start_of_outro: Finale}
 |: [Ab]A-men | [Db] :| x3

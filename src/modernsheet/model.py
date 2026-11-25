@@ -89,6 +89,7 @@ class Section:
     text_after: list[str] = field(default_factory=list)    # {text: …} lines after the last row
     note: str = ""
     is_ref: bool = False
+    ref_label: str = ""              # a {ref}: the label of the section it repeats (it may show another one)
     times: int = 1
 
 

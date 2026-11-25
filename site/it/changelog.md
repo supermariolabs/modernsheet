@@ -12,6 +12,17 @@ Le versioni di Modern Sheet pubblicate, dalla più recente. Le app da scaricare 
 [Download](/it/download/); ogni versione con le app compilate ha la sua pagina di
 [release su GitHub]({{repo}}/releases).
 
+## 0.45.0 — 25 novembre 2026 {#v0.45.0}
+
+[Release su GitHub]({{repo}}/releases/tag/v0.45.0) · app per macOS, Windows, Linux e Android
+
+- **Richiami con un altro nome**: `{ref: Strofa 1 = Strofa finale}` mostra la sezione richiamata con il nome
+  scelto, con lo stesso colore dell'originale.
+- **Richiami dritti a una volta**: `{ref: Ritornello volta 2}` suona il ritornello una volta sola, andando
+  direttamente alla 2ª volta (senza ritornello né 1ª volta). Si combinano: `{ref: Ritornello volta 2 = Ultimo ritornello}`.
+- Sito: la pagina del [formato .chs](/it/formato/) è stata completata (colori delle sezioni, tablatura,
+  impaginazione, diagnostica) e ha uno spartito disegnato accanto a ogni esempio.
+
 ## 0.44.1 — 25 novembre 2026 {#v0.44.1}
 
 [Release su GitHub]({{repo}}/releases/tag/v0.44.1) · app per macOS, Windows, Linux e Android

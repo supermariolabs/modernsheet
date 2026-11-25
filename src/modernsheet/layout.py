@@ -1466,7 +1466,8 @@ class Layout:
     def label_color(self, sec: Section) -> tuple:
         custom = self.custom_section_colors()
         if custom:
-            for key in (sec.label.lower(), sec.kind, SECTION_KIND_GROUP.get(sec.kind, "frame")):
+            # label, then (for a renamed {ref}) the label of the section it repeats, kind, group
+            for key in (sec.label.lower(), sec.ref_label.lower(), sec.kind, SECTION_KIND_GROUP.get(sec.kind, "frame")):
                 if key in custom:
                     return custom[key]
         if self.label_colors == "by_type":

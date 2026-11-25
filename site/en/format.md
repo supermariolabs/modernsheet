@@ -81,8 +81,30 @@ The directives at the top of the file describe the song. Those that drive the la
 | `{ref: Verse}` | repeats here a section **written further up** |
 | `{ref: Chorus x2}` | repeats it twice (in the box: `x2`) |
 | `{ref: chorus \| all together}` | with a note next to the box ("reprise – all together") |
+| `{ref: Verse 1 = Last verse}` | shown under **another name** (combines: `{ref: Chorus x2 = Ending \| everybody}`) |
+| `{ref: Chorus volta 2}` | **one pass straight to the 2nd ending**: the common bars and the 2nd ending, no repeat, no 1st ending |
 
-The section is looked up by label first (ignoring case), then by kind. The reference keeps the section's repeats, endings, time changes and colour; navigation signs and `{text}` lines stay with the original only. If the key has changed in the meantime, the reference is **transposed automatically** into the new key.
+The section is looked up by label first (ignoring case), then by kind. The reference keeps the section's repeats, endings, time changes and colour (also under another name); navigation signs and `{text}` lines stay with the original only. If the key has changed in the meantime, the reference is **transposed automatically** into the new key.
+
+```{ .chs .render }
+{key: G}
+{start_of_chorus: Chorus}
+| [G] | [Em] | [C] | [D] |
+{end_of_chorus}
+
+{key: A}
+{ref: Chorus = Last chorus | a tone up}
+```
+
+```{ .chs .render }
+{start_of_chorus: Chorus}
+|: [C] | [Am] |
+{volta: 1} [F] | [G] :|
+{volta: 2} [F] | [G7] [C] ||
+{end_of_chorus}
+
+{ref: Chorus volta 2 = Last chorus}
+```
 
 ## Section colours
 

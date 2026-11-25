@@ -309,3 +309,39 @@ def test_key_and_time_changes_in_a_song_without_header(tmp_path):
         '<duration>3</duration></note></measure></part></score-partwise>', encoding="utf-8")
     s = parse("{start_of_intro}\n| [C] |\n{musicxml: w.musicxml}\n{end_of_intro}\n", base_dir=tmp_path)
     assert s.warnings == [] and s.meta["time"] == "4/4" and ((s.bars[1].num, s.bars[1].den), s.bars[1].time_change) == ((3, 4), True)
+
+
+def test_reference_shown_under_another_label():
+    """{ref: Label = New label}: the copy shows the new label, keeps the original's colour (also a
+    section_colors entry keyed by the original label), is transposed and repeated as usual."""
+    s = parse("{key: G}\n{section_colors: Ritornello=#ff9900}\n{start_of_chorus: Ritornello}\n| [G] | [C] |\n"
+              "{end_of_chorus}\n{key: A}\n{ref: Ritornello x2 = Ritornello finale | tutti insieme}\n{ref: chorus}\n"
+              "{ref: Ritornello =}\n")
+    assert s.warnings == []
+    orig, renamed, by_kind, empty = s.sections
+    assert (renamed.label, renamed.ref_label, renamed.times, renamed.note) == ("Ritornello finale", "Ritornello", 2,
+                                                                                 "tutti insieme")
+    assert [e.chord for b in renamed.bars for e in b.events] == ["A", "D", "A", "D"]
+    assert by_kind.label == "Ritornello" and empty.label == "Ritornello"          # no new label: the original's
+    from modernsheet.layout import Layout
+    lay = Layout(s)
+    assert {lay.label_color(sec) for sec in s.sections} == {(1.0, 0.6, 0.0)}
+    assert "Strofa finale" in str(layout(load(EX / "amazing_grace.chs")).pages)   # the example shows it
+
+
+def test_reference_straight_to_one_ending():
+    """{ref: Label volta N}: one pass through the section straight to its ending N, without the repeat,
+    the other endings or the brackets; repeats outside the endings stay; no such ending: a warning."""
+    src = ("{start_of_chorus: Rit}\n|: [C] | [D] |\n{volta: 1} [E] :|\n{volta: 2} [F] | [G] ||\n| [A] |\n{end_of_chorus}\n"
+           "{start_of_verse: V}\n|: [C] :|\n{end_of_verse}\n")
+    s = parse(src + "{ref: Rit volta 2 = Finale | dritti}\n{ref: Rit x2 volta 1}\n{ref: V volta 2}\n")
+    rit, verse, fin, twice, whole = s.sections
+    assert [[e.chord for e in b.events] for b in fin.bars] == [["C"], ["D"], ["F"], ["G"], ["A"]]
+    assert (fin.label, fin.note) == ("Finale", "dritti")
+    assert not any(b.repeat_start or b.repeat_end or b.volta or b.volta_end for b in fin.bars)
+    assert [[e.chord for e in b.events] for b in twice.bars] == [["C"], ["D"], ["E"], ["A"]] * 2   # bars after the endings too
+    assert s.warnings == ["line 12: ref: section 'V' has no ending 2: copied whole"]
+    assert whole.bars[0].repeat_start and whole.bars[0].repeat_end == 2
+    assert [b.volta for b in rit.bars if b.volta] == ["1.", "2."]          # the original is untouched
+    ex = load(EX / "ripetizioni_e_volte.chs")
+    assert ex.warnings == [] and any(sec.label == "Ultimo ritornello" for sec in ex.sections)

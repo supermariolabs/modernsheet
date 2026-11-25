@@ -81,8 +81,30 @@ Le direttive in cima al file descrivono il brano. Quelle che regolano l'impagina
 | `{ref: Strofa}` | ripete qui una sezione **già scritta più sopra** |
 | `{ref: Ritornello x2}` | la ripete due volte (nel box: `x2`) |
 | `{ref: chorus \| tutti insieme}` | con una nota accanto al box ("reprise – tutti insieme") |
+| `{ref: Strofa 1 = Strofa finale}` | mostrata con un **altro nome** (si combina: `{ref: Ritornello x2 = Finale \| tutti}`) |
+| `{ref: Ritornello volta 2}` | **un giro solo, dritto alla 2ª volta**: battute comuni e 2ª volta, senza ritornello né 1ª volta |
 
-La sezione si cerca prima per etichetta (senza badare alle maiuscole), poi per tipo. Il richiamo conserva ritornelli, volte e cambi di metro della sezione e il suo colore; i segni di navigazione e le righe `{text}` restano solo nell'originale. Se nel frattempo la tonalità è cambiata, il richiamo viene **trasposto automaticamente** nella nuova tonalità.
+La sezione si cerca prima per etichetta (senza badare alle maiuscole), poi per tipo. Il richiamo conserva ritornelli, volte e cambi di metro della sezione e il suo colore (anche con un altro nome); i segni di navigazione e le righe `{text}` restano solo nell'originale. Se nel frattempo la tonalità è cambiata, il richiamo viene **trasposto automaticamente** nella nuova tonalità.
+
+```{ .chs .render }
+{key: G}
+{start_of_chorus: Ritornello}
+| [G] | [Em] | [C] | [D] |
+{end_of_chorus}
+
+{key: A}
+{ref: Ritornello = Ritornello finale | un tono sopra}
+```
+
+```{ .chs .render }
+{start_of_chorus: Ritornello}
+|: [C] | [Am] |
+{volta: 1} [F] | [G] :|
+{volta: 2} [F] | [G7] [C] ||
+{end_of_chorus}
+
+{ref: Ritornello volta 2 = Ultimo ritornello}
+```
 
 ## Colori delle sezioni
 

@@ -12,6 +12,17 @@ The released versions of Modern Sheet, newest first. The apps are on the
 [Download](/en/download/) page; every version with built apps has its own
 [release on GitHub]({{repo}}/releases).
 
+## 0.45.0 — 25 November 2026 {#v0.45.0}
+
+[Release on GitHub]({{repo}}/releases/tag/v0.45.0) · apps for macOS, Windows, Linux and Android
+
+- **References under another name**: `{ref: Verse 1 = Last verse}` shows the referenced section with the
+  chosen name, in the original's colour.
+- **References straight to an ending**: `{ref: Chorus volta 2}` plays the chorus once, going straight to the
+  2nd ending (no repeat, no 1st ending). They combine: `{ref: Chorus volta 2 = Last chorus}`.
+- Website: the [.chs format](/en/format/) page is now complete (section colours, tablature, layout,
+  diagnostics) and every example has its drawn sheet next to it.
+
 ## 0.44.1 — 25 November 2026 {#v0.44.1}
 
 [Release on GitHub]({{repo}}/releases/tag/v0.44.1) · apps for macOS, Windows, Linux and Android

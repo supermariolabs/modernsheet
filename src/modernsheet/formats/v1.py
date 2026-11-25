@@ -350,38 +350,54 @@ class Parser:
         self.song.sections.append(self.section)
 
     def reference(self, value: str) -> None:
-        """{ref: Label} / {ref: Label x2 | note}: repeat an earlier section here, as copies of its bars.
+        """{ref: Label} / {ref: Label x2 volta 2 = New label | note}: repeat an earlier section here, as
+        copies of its bars, optionally shown under another label (`= …`; the colour stays the original's).
+        `volta N`: the section played once straight to its ending N (see ending_pass).
 
         The copy is transposed from the original's key to the key in force here, so a chorus
         recalled after a key change is printed in the new key. Signs, marks and {text} lines stay
         with the original (repeating "D.S. al Coda" in the copy would be wrong), and the copy's first
         bar does not repeat the original's time/key change or line break."""
         target, _, note = value.partition("|")
-        target, note = target.strip(), note.strip()
-        times = 1
+        target, _, shown = target.partition("=")
+        target, note, shown = target.strip(), note.strip(), shown.strip()
+        times, volta = 1, None
+        m = re.search(r"\s+volta\s*(\d+)\.?\s*$", target, re.I)
+        if m:
+            volta, target = int(m.group(1)), target[: m.start()].strip()
         m = re.search(r"\s+x(\d+)$", target)
         if m:
             times, target = int(m.group(1)), target[: m.start()].strip()
+        m = re.search(r"\s+volta\s*(\d+)\.?\s*$", target, re.I)     # also written before xN
+        if m and volta is None:
+            volta, target = int(m.group(1)), target[: m.start()].strip()
         originals = [s for s in self.song.sections if not s.is_ref]
         src = next((s for s in originals if s.label.lower() == target.lower()), None) or \
             next((s for s in originals if s.kind == target.lower()), None)
         if src is None:
             self.warn(f"ref: section '{target}' not found (only earlier sections can be referenced)")
             return
+        bars = src.bars
+        if volta is not None:
+            bars = self.ending_pass(src.bars, volta)
+            if bars is None:
+                self.warn(f"ref: section '{src.label}' has no ending {volta}: copied whole")
+                bars = src.bars
         semis = semitones_between(src.key, self.key)
-        sec = Section(kind=src.kind, label=src.label, key=self.key, note=note, is_ref=True,
+        sec = Section(kind=src.kind, label=shown or src.label, key=self.key, note=note, is_ref=True,
+                      ref_label=src.label,
                       times=times, bars_per_line=src.bars_per_line or self.bpl, bar_width=src.bar_width,
                       notation=src.notation)
         self.song.sections.append(sec)
         outer, self.section = self.section, sec
         for _ in range(times):
-            for b in src.bars:
-                nb = copy.deepcopy(b)
+            for b in bars:
+                nb = copy.deepcopy(b) if volta is None else b      # ending_pass already made copies
                 nb.key = transpose_key(b.key, semis)
                 nb.marks_start, nb.marks_end, nb.text_before = [], [], []   # signs and notes stay with the original
                 nb.prev_key = transpose_key(b.prev_key, semis) if b.prev_key else None
                 nb.double_after = b.double_after
-                if b is src.bars[0]:
+                if b is bars[0]:
                     nb.time_change = nb.key_change = nb.break_before = False
                 for e in nb.events:
                     e.chord = transpose_chord(e.chord, semis, nb.key)
@@ -389,6 +405,37 @@ class Parser:
                     transpose_notes(nb.notation.notes, semis, nb.key)
                 self.push_bar(nb)
         self.section = outer
+
+    @staticmethod
+    def ending_pass(bars: list[Bar], n: int) -> list[Bar] | None:
+        """Copies of the bars of one pass through a section that goes straight to its ending n: the
+        bars of the other endings are left out, and the repeat that held the endings is gone (no
+        repeat start before them, no repeat end, no ending brackets), so the copy reads straight
+        through. Repeats elsewhere in the section stay. None if the section has no ending n."""
+        current: set[int] | None = None        # endings of the bracket the bar is in
+        member: list[set[int] | None] = []
+        for b in bars:
+            if b.volta:
+                current = {int(x) for x in re.findall(r"\d+", b.volta)}
+            member.append(current)
+            if b.volta_end or (current is not None and b.repeat_end):
+                current = None
+        if not any(m and n in m for m in member):
+            return None
+        first = next(i for i, m in enumerate(member) if m is not None)
+        start = max((i for i in range(first + 1) if bars[i].repeat_start), default=None)
+        out = []
+        for i, (b, m) in enumerate(zip(bars, member)):
+            if m is not None and n not in m:
+                continue
+            nb = copy.deepcopy(b)
+            if m is not None:
+                nb.volta = nb.volta_end = None
+                nb.repeat_end = 0
+            if i == start:
+                nb.repeat_start = False
+            out.append(nb)
+        return out
 
     def musicxml(self, value: str) -> None:
         """{musicxml: file.musicxml} or {musicxml: file.musicxml | 3-6}: notated bars from MusicXML."""
