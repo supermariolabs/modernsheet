@@ -287,3 +287,25 @@ def test_key_change_is_spelled_under_the_staff(theme):
     assert keys[1][2] < db[2] - 10                                       # under the staff
     plain = src.replace("{key: Db} ", "").replace("{key: F#m}\n", "")
     assert len(labels(plain)) == 1                                       # no change: only the header
+
+
+def test_key_and_time_changes_in_a_song_without_header(tmp_path):
+    """Once a bar exists, {key} and {time} are changes even if the song has no header (before 0.44.1
+    the first one became the song's key or time, and the change was not drawn)."""
+    s = parse("{start_of_verse: V}\n| [G7] || {key: Db} [Db] | [Gb] |\n| [Gm7] | {time: 2/4} [C7] | {time: 4/4} [F7] |\n"
+              "{end_of_verse}\n")
+    assert s.warnings == [] and (s.meta["key"], s.meta["time"]) == ("C", "4/4")
+    assert [(b.key, b.key_change, b.prev_key) for b in s.bars[:2]] == [("C", False, None), ("Db", True, "C")]
+    assert s.bars[0].double_after                                   # double bar before the new key
+    assert [((b.num, b.den), b.time_change) for b in s.bars[4:]] == [((2, 4), True), ((4, 4), True)]
+    # the header still works as before, also inside the first section before any bar
+    s = parse("{start_of_verse: V}\n{key: F}\n{time: 3/4}\n| [F] |\n{end_of_verse}\n")
+    assert (s.meta["key"], s.meta["time"]) == ("F", "3/4") and not s.bars[0].key_change and not s.bars[0].time_change
+    # a MusicXML in another time after the first bars: a time change, too
+    (tmp_path / "w.musicxml").write_text(
+        '<score-partwise><part-list><score-part id="P1"><part-name>M</part-name></score-part></part-list>'
+        '<part id="P1"><measure number="1"><attributes><divisions>1</divisions><key><fifths>0</fifths></key>'
+        '<time><beats>3</beats><beat-type>4</beat-type></time></attributes><note><rest measure="yes"/>'
+        '<duration>3</duration></note></measure></part></score-partwise>', encoding="utf-8")
+    s = parse("{start_of_intro}\n| [C] |\n{musicxml: w.musicxml}\n{end_of_intro}\n", base_dir=tmp_path)
+    assert s.warnings == [] and s.meta["time"] == "4/4" and ((s.bars[1].num, s.bars[1].den), s.bars[1].time_change) == ((3, 4), True)

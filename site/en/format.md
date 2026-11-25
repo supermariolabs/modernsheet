@@ -40,8 +40,8 @@ A song is a UTF-8 text file with the `.chs` extension. It holds **directives** i
 | `format` | `{format: v1}` | Format version, as the first directive. Missing means v1. |
 | `title`, `subtitle` | `{title: Amazing Grace}` | Title and subtitle. |
 | `artist`, `composer` | `{artist: Traditional}` | Shown under the title. |
-| `key` | `{key: F#m}` | The first is the song's key; later ones are **key changes**. |
-| `time` | `{time: 3/4}` | The first is the song's time; later ones are **time changes**. |
+| `key` | `{key: F#m}` | Before the music it is the song's key (none: C); after the first bars it is a **key change**. |
+| `time` | `{time: 3/4}` | Before the music it is the song's time (none: 4/4); after the first bars it is a **time change**. |
 | `tempo` | `{tempo: 96}` | BPM, shown as ♩ = 96. |
 | `capo` | `{capo: 2}` | Capo. |
 | `tags` | `{tags: jazz, ballad}` | Labels for the library (search with `#jazz`). |

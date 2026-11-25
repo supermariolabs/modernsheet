@@ -15,11 +15,11 @@ Markdown (Python-Markdown: tables, fenced code, attributes, md_in_html) goes int
 
 Rendered examples: a fenced block marked `{ .chs .render }` (optionally `bar_width=fit`) is a .chs
 snippet that is also drawn by the engine itself (parse → layout → SVG) and shown next to the code, so the
-picture can never disagree with the text. A snippet without sections is wrapped in an unlabeled section,
-and one without {title} gets a hidden {key: C} {time: 4/4} header, as the fragment of a song it is; one
-with {title} keeps its header. Snippets must read without warnings (the build stops otherwise). The SVG
-is inlined and uses the app's own fonts, copied to docs/assets/fonts/ and declared in
-docs/assets/style.css. Static files (images, CSS) live in docs/assets/ and are not touched. docs/ also
+picture can never disagree with the text. A snippet without sections is wrapped in an unlabeled section;
+one with {title} keeps its header. Snippets must read without warnings (the build stops otherwise). The
+SVG is inlined and uses the app's own fonts, copied to docs/assets/fonts/ and declared in
+docs/assets/style.css.
+Static files (images, CSS) live in docs/assets/ and are not touched. docs/ also
 gets CNAME, .nojekyll (plain HTML, no Jekyll), a language-detecting /index.html, 404.html and
 sitemap.xml.
 """
@@ -106,10 +106,6 @@ def snippet_svg(code: str, where: str, bar_width: str = "uniform") -> str:
     block's `bar_width=fit` attribute, for snippets whose bars of notes would leave half-empty rows
     on the narrow page with the uniform grid."""
     src = code if "{start_of_" in code else f"{{start_of_verse: {SNIPPET_LABEL}}}\n{code.rstrip()}\n{{end_of_verse}}\n"
-    if "{title" not in code:
-        # a fragment of a song: give it the header a real song has, or its first {key} / {time} would be
-        # read as the song's key / time instead of a change (that happens only in a song without header)
-        src = "{key: C}\n{time: 4/4}\n" + src
     song = parse(src)
     if song.warnings:
         sys.exit(f"{where}: rendered snippet with warnings: {song.warnings}")
@@ -139,7 +135,10 @@ def snippet_svg(code: str, where: str, bar_width: str = "uniform") -> str:
     svg = page_svg(dl, 0, metrics)
     svg = re.sub(r'<svg [^>]*>', f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{x0:.1f} {y0:.1f} {w:.1f} {h:.1f}" '
                                  f'width="{w * SNIPPET_SCALE:.0f}" height="{h * SNIPPET_SCALE:.0f}" role="img">', svg, count=1)
-    svg = re.sub(r'<rect width="[^"]*" height="[^"]*" fill="#ffffff"/>\n', "", svg, count=1)
+    # the paper is white inside the SVG itself: the sheet stays readable even where the page's CSS is
+    # missing or stale (a cached old style.css showed black notes on the dark theme's background)
+    svg = re.sub(r'<rect width="[^"]*" height="[^"]*" fill="#ffffff"/>',
+                 f'<rect x="{x0:.1f}" y="{y0:.1f}" width="{w:.1f}" height="{h:.1f}" fill="#ffffff"/>', svg, count=1)
     for face in metrics.faces.values():                    # the app's fonts, under their web names
         svg = svg.replace(f"font-family:'{face.family}'", f"font-family:'{CSS_FAMILY}{face.family}'")
     return svg

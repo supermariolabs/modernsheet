@@ -209,15 +209,17 @@ class Parser:
 
     # -- directives ------------------------------------------------------------
     def directive(self, body: str) -> None:
-        """Apply one `{name: value}`. The first {key} and {time} are the song's (header); later ones
-        are changes, attached to the next bar (pending). Many directives mean "this section" inside
+        """Apply one `{name: value}`. A {key} or {time} before the first bar is the song's (header);
+        once a bar exists it is always a change, attached to the next bar (pending), even in a song
+        without a header (the bars before it are then in C, 4/4, which becomes the song's). Many directives mean "this section" inside
         a section and "the whole song" in the header ({bar_width}, {notation}, {bars_per_line})."""
         name, value = split_directive(body)
         if name == "key":
             new = self.set_key(value)
-            if "key" not in self.song.meta:
+            if "key" not in self.song.meta and not self.song.bars:
                 self.song.meta["key"] = new
             else:
+                self.song.meta.setdefault("key", self.key)   # no header: the song starts in the key so far
                 # setdefault: two {key} lines before the next bar are one change, from the first key
                 self.pending.setdefault("key", self.key)
             self.key = new
@@ -226,10 +228,12 @@ class Parser:
             if not m:
                 self.warn(f"invalid time signature '{value}'")
                 return
-            self.num, self.den = int(m.group(1)), int(m.group(2))
-            if "time" not in self.song.meta:
+            if "time" not in self.song.meta and not self.song.bars:
+                self.num, self.den = int(m.group(1)), int(m.group(2))
                 self.song.meta["time"] = f"{self.num}/{self.den}"
             else:
+                self.song.meta.setdefault("time", f"{self.num}/{self.den}")   # no header: the time so far
+                self.num, self.den = int(m.group(1)), int(m.group(2))
                 self.pending["time"] = True
         elif name == "bars_per_line":
             n = int(value) if value.isdigit() else None
@@ -404,10 +408,12 @@ class Parser:
         original_key = transpose_key(self.key, -self.transpose)
         for i, ms in enumerate(measures):
             if (ms["beats"], ms["beat_type"]) != (self.num, self.den):
-                self.num, self.den = ms["beats"], ms["beat_type"]
-                if "time" not in self.song.meta:
+                if "time" not in self.song.meta and not self.song.bars:
+                    self.num, self.den = ms["beats"], ms["beat_type"]
                     self.song.meta["time"] = f"{self.num}/{self.den}"
                 else:
+                    self.song.meta.setdefault("time", f"{self.num}/{self.den}")
+                    self.num, self.den = ms["beats"], ms["beat_type"]
                     self.pending["time"] = True
             if i == 0 and ms["fifths"] != key_signature(original_key):
                 self.warn(f"musicxml '{file.strip()}': key signature ({ms['fifths']:+d}) differs from {{key: {original_key}}}")

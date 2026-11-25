@@ -246,3 +246,14 @@ def test_import_song_into_the_library(tmp_path):
                                   "{musicxml: gone.musicxml}\n")
     phone = L.import_song(lib, "Phone", "{musicxml: a.musicxml}\n")                      # no folder: kept, missing
     assert phone.path.name == "Phone.chs" and phone.missing == ["a.musicxml"] and not phone.copied
+
+
+def test_song_card_key_and_time_only_from_the_header(tmp_path):
+    from modernsheet import library
+    (tmp_path / "a.chs").write_text("{title: A}\n{start_of_verse}\n| [C] | {key: Db} [Db] |\n{key: E}\n{time: 3/4}\n"
+                                    "| [E] |\n{end_of_verse}\n", encoding="utf-8")
+    (tmp_path / "b.chs").write_text("{title: B}\n{key: G}\n{time: 3/4}\n{start_of_verse}\n| [G] |\n{key: A}\n"
+                                    "{end_of_verse}\n", encoding="utf-8")
+    a, b = library.read_info(tmp_path / "a.chs"), library.read_info(tmp_path / "b.chs")
+    assert (a.key, a.time) == ("", "")              # only changes, after the music: no key on the card
+    assert (b.key, b.time) == ("G", "3/4")

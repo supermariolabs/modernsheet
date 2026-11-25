@@ -25,7 +25,7 @@ from .theory import KEY_RE, PITCH
 
 EXT = ".chs"
 LINE_RE = re.compile(r"^line (\d+):")
-INDEX_VERSION = 3                   # bump when the index layout or what is read from the songs changes
+INDEX_VERSION = 4                   # bump when the index layout or what is read from the songs changes
 SORT_KEYS = ("title", "artist", "key", "tempo", "modified", "created")
 
 
@@ -96,9 +96,12 @@ def _key(s: str) -> str:
 
 def read_info(path: Path) -> SongFile:
     """Header of a song from its directives (no full parse): first title, artist (or composer), key,
-    time and tempo; all the tags; the format. Without a title, the file name."""
+    time and tempo; all the tags; the format. Without a title, the file name. Key and time count only
+    before the first line of music, as for the parser: later ones are changes (a song without them
+    in the header is in C, 4/4)."""
     info = SongFile(path, "")
     composer = ""
+    music = False                         # a line of bars (or a MusicXML reference) has been seen
     try:
         with path.open(encoding="utf-8", errors="replace") as fh:
             lines = fh.read().splitlines()
@@ -113,8 +116,12 @@ def read_info(path: Path) -> SongFile:
             continue
         m = DIRECTIVE_LINE_RE.match(line)
         if not m:
+            music = music or bool(line) and not line.startswith("#")
             continue
         name, value = split_directive(m.group(1))
+        music = music or name == "musicxml"
+        if name in ("key", "time") and music:
+            continue
         if name == "tags":
             add_tags(info.tags, value)
         elif name == "composer" and not composer:

@@ -40,8 +40,8 @@ Un brano è un file di testo UTF-8 con estensione `.chs`. Contiene **direttive**
 | `format` | `{format: v1}` | Versione del formato, come prima direttiva. Se manca vale v1. |
 | `title`, `subtitle` | `{title: Amazing Grace}` | Titolo e sottotitolo. |
 | `artist`, `composer` | `{artist: Traditional}` | Mostrati sotto il titolo. |
-| `key` | `{key: F#m}` | La prima è la tonalità del brano; le successive sono **cambi di tonalità**. |
-| `time` | `{time: 3/4}` | Il primo è il metro del brano; i successivi sono **cambi di metro**. |
+| `key` | `{key: F#m}` | Prima della musica è la tonalità del brano (senza: Do); dopo le prime battute è un **cambio di tonalità**. |
+| `time` | `{time: 3/4}` | Prima della musica è il metro del brano (senza: 4/4); dopo le prime battute è un **cambio di metro**. |
 | `tempo` | `{tempo: 96}` | BPM, mostrato come ♩ = 96. |
 | `capo` | `{capo: 2}` | Capotasto. |
 | `tags` | `{tags: jazz, ballad}` | Etichette per la libreria (ricerca con `#jazz`). |

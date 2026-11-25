@@ -12,6 +12,17 @@ Le versioni di Modern Sheet pubblicate, dalla più recente. Le app da scaricare 
 [Download](/it/download/); ogni versione con le app compilate ha la sua pagina di
 [release su GitHub]({{repo}}/releases).
 
+## 0.44.1 — 25 novembre 2026 {#v0.44.1}
+
+[Release su GitHub]({{repo}}/releases/tag/v0.44.1) · app per macOS, Windows, Linux e Android
+
+- Corretto: in un brano senza tonalità o metro nell'intestazione, un `{key}` o un `{time}` scritto dopo le
+  prime battute diventava la tonalità (o il metro) dell'intero brano e il cambio non si vedeva. Ora è sempre
+  un **cambio**, con doppia stanghetta, nuova armatura e nuovo metro; le schede della libreria leggono
+  tonalità e metro solo dall'intestazione.
+- Sito: accanto agli esempi del [formato .chs](/it/formato/) c'è lo **spartito disegnato** da Modern Sheet;
+  nei blocchi di codice un'icona per **copiare** il testo.
+
 ## 0.44.0 — 24 novembre 2026 {#v0.44.0}
 
 [Release su GitHub]({{repo}}/releases/tag/v0.44.0) · app per macOS, Windows, Linux e Android

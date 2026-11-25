@@ -12,6 +12,16 @@ The released versions of Modern Sheet, newest first. The apps are on the
 [Download](/en/download/) page; every version with built apps has its own
 [release on GitHub]({{repo}}/releases).
 
+## 0.44.1 — 25 November 2026 {#v0.44.1}
+
+[Release on GitHub]({{repo}}/releases/tag/v0.44.1) · apps for macOS, Windows, Linux and Android
+
+- Fixed: in a song without key or time in its header, a `{key}` or `{time}` written after the first bars
+  became the key (or time) of the whole song and the change was not shown. It is now always a **change**,
+  with a double bar line, new key signature and new time; library cards read key and time from the header only.
+- Website: next to the examples of the [.chs format](/en/format/) is the **sheet drawn** by Modern Sheet;
+  code blocks have an icon to **copy** the text.
+
 ## 0.44.0 — 24 November 2026 {#v0.44.0}
 
 [Release on GitHub]({{repo}}/releases/tag/v0.44.0) · apps for macOS, Windows, Linux and Android
