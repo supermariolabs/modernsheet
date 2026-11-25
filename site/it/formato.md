@@ -14,7 +14,7 @@ Un brano è un file di testo UTF-8 con estensione `.chs`. Contiene **direttive**
 
 ## Un esempio
 
-```
+```{ .chs .render }
 {format: v1}
 {title: Il mio brano}
 {artist: Io}
@@ -106,7 +106,7 @@ Si combinano tra loro e con la durata: `[<(G7):2~ fermata]`.
 | `{volta_end}` / `{volta_end: hook}` | chiusura della volta, aperta o con gancio |
 | `{br}` | a capo forzato |
 
-```
+```{ .chs .render }
 |: [Gm7] [C7] | [Am7] [D7] |
 {volta: 1} [Gm7] [C7] | [F7] [D7] :|
 {volta: 2} [Gm7] [C7] | [F7] ||
@@ -118,7 +118,7 @@ La 2ª volta va a capo, allineata a destra sotto la 1ª.
 
 `{key: …}` e `{time: …}` possono stare su una riga propria o subito dopo una stanghetta:
 
-```
+```{ .chs .render bar_width=fit }
 | [G7]ultimo giro || {key: Db} [Db]modulazione | [Gb] |
 | [Gm7] | {time: 2/4} [C7] | {time: 4/4} [F7] |
 ```
@@ -136,7 +136,7 @@ Al cambio di tonalità compaiono la doppia stanghetta, la nuova armatura (con i 
 | `{dc: al Fine}` | fine della battuta | D.C. al Fine |
 | `{ds: al Coda}` | fine della battuta | D.S. al Coda |
 
-```
+```{ .chs .render }
 {segno}
 | [Am7] | [D7] {to_coda} | [G] | [G7] |
 | [C] | [D7] {ds: al Coda} ||
@@ -164,7 +164,7 @@ Nell'app i MusicXML citati si vedono in una scheda accanto al brano, in sola let
 
 In alternativa al MusicXML, poche battute di note si possono scrivere **direttamente nel brano**, dentro una sezione:
 
-```
+```{ .chs .render bar_width=fit }
 {start_of_intro: Intro}
 {start_of_notes}
 | [Gm7] G8 Bb D F [C7] A G E C | [Am7] C E G B [D7] F# E D16 C Bb A |

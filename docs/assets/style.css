@@ -83,6 +83,23 @@ code { font: .9em/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; 
 pre { background: var(--code-bg); color: var(--code-ink); padding: 16px 18px; border-radius: 12px; overflow-x: auto;
       font-size: 14.5px; line-height: 1.55; }
 pre code { background: none; border: 0; padding: 0; color: inherit; }
+/* rendered examples (tools/build_site.py): the code and, next to it, the sheet the engine draws for it.
+   The inline SVG uses the app's own fonts; a browser downloads only those a page really uses */
+@font-face { font-family: "ms-Petaluma"; src: url("/assets/fonts/Petaluma.ttf") format("truetype"); font-display: swap; }
+@font-face { font-family: "ms-Petaluma Script"; src: url("/assets/fonts/PetalumaScript.ttf") format("truetype"); font-display: swap; }
+@font-face { font-family: "ms-DejaVu Sans"; src: url("/assets/fonts/DejaVuSans.ttf") format("truetype"); font-display: swap; }
+@font-face { font-family: "ms-DejaVu Sans"; font-weight: bold; src: url("/assets/fonts/DejaVuSans-Bold.ttf") format("truetype"); font-display: swap; }
+@font-face { font-family: "ms-FreeSerif"; src: url("/assets/fonts/FreeSerif.ttf") format("truetype"); font-display: swap; }
+.example { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; align-items: start; margin: 1em 0; }
+.example .code-box, .example > pre { margin: 0; }
+.example .render { margin: 0; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 6px;
+                   box-shadow: var(--shadow); }
+.example .render svg { display: block; max-width: 100%; height: auto; }   /* one scale for all; shrinks if needed */
+@media (max-width: 760px) {   /* phone: the sheet under the code, as wide as the column */
+  .example { grid-template-columns: minmax(0, 1fr); }
+  .example .render svg { width: 100%; }
+}
+
 /* copy icon on code snippets (copy.js): bottom-right, inside the dark box. A wrapper holds the <pre> and
    the icon, so the icon stays in the corner when a long line scrolls; the <pre> keeps a little room for it */
 .code-box { position: relative; min-width: 0; margin: 1em 0; }

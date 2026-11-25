@@ -14,7 +14,7 @@ A song is a UTF-8 text file with the `.chs` extension. It holds **directives** i
 
 ## An example
 
-```
+```{ .chs .render }
 {format: v1}
 {title: My song}
 {artist: Me}
@@ -106,7 +106,7 @@ They combine with each other and with the duration: `[<(G7):2~ fermata]`.
 | `{volta_end}` / `{volta_end: hook}` | close the ending, open or with a hook |
 | `{br}` | forced line break |
 
-```
+```{ .chs .render }
 |: [Gm7] [C7] | [Am7] [D7] |
 {volta: 1} [Gm7] [C7] | [F7] [D7] :|
 {volta: 2} [Gm7] [C7] | [F7] ||
@@ -118,7 +118,7 @@ The 2nd ending starts a new line, right-aligned under the 1st.
 
 `{key: …}` and `{time: …}` go on a line of their own or right after a bar line:
 
-```
+```{ .chs .render bar_width=fit }
 | [G7]last time round || {key: Db} [Db]modulation | [Gb] |
 | [Gm7] | {time: 2/4} [C7] | {time: 4/4} [F7] |
 ```
@@ -136,7 +136,7 @@ A key change brings a double bar line, the new key signature (with courtesy natu
 | `{dc: al Fine}` | end of the bar | D.C. al Fine |
 | `{ds: al Coda}` | end of the bar | D.S. al Coda |
 
-```
+```{ .chs .render }
 {segno}
 | [Am7] | [D7] {to_coda} | [G] | [G7] |
 | [C] | [D7] {ds: al Coda} ||
@@ -164,7 +164,7 @@ In the app, cited MusicXML files are shown in a tab next to the song, read only;
 
 Instead of MusicXML, a few bars of notes can be written **right in the song**, inside a section:
 
-```
+```{ .chs .render bar_width=fit }
 {start_of_intro: Intro}
 {start_of_notes}
 | [Gm7] G8 Bb D F [C7] A G E C | [Am7] C E G B [D7] F# E D16 C Bb A |

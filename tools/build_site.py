@@ -12,8 +12,16 @@ Sources: site/<lang>/<page>.md (lang = it, en) with a small header:
     ---
 
 Markdown (Python-Markdown: tables, fenced code, attributes, md_in_html) goes into site/template.html.
-Static files (images, CSS) live in docs/assets/ and are not touched. docs/ also gets CNAME,
-.nojekyll (plain HTML, no Jekyll), a language-detecting /index.html, 404.html and sitemap.xml.
+
+Rendered examples: a fenced block marked `{ .chs .render }` (optionally `bar_width=fit`) is a .chs
+snippet that is also drawn by the engine itself (parse → layout → SVG) and shown next to the code, so the
+picture can never disagree with the text. A snippet without sections is wrapped in an unlabeled section,
+and one without {title} gets a hidden {key: C} {time: 4/4} header, as the fragment of a song it is; one
+with {title} keeps its header. Snippets must read without warnings (the build stops otherwise). The SVG
+is inlined and uses the app's own fonts, copied to docs/assets/fonts/ and declared in
+docs/assets/style.css. Static files (images, CSS) live in docs/assets/ and are not touched. docs/ also
+gets CNAME, .nojekyll (plain HTML, no Jekyll), a language-detecting /index.html, 404.html and
+sitemap.xml.
 """
 from __future__ import annotations
 
@@ -24,6 +32,14 @@ from pathlib import Path
 
 import markdown
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+from modernsheet import parse  # noqa: E402
+from modernsheet.fonts import FONT_FILES, registry  # noqa: E402
+from modernsheet.display import Surface  # noqa: E402
+from modernsheet.layout import Layout  # noqa: E402
+from modernsheet.screen import screen_ops  # noqa: E402
+from modernsheet.svg import page_svg  # noqa: E402
+
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "site"
 OUT = ROOT / "docs"
@@ -32,9 +48,11 @@ REPO = "https://github.com/supermariolabs/modernsheet"
 LANGS = {"it": "Italiano", "en": "English"}
 UI = {
     "it": {"repo": "Codice su GitHub", "lang": "English", "menu": "Menu", "license": "Software libero, licenza GPL-3.0",
-           "privacy": "Privacy", "skip": "Vai al contenuto", "beta": "Software in versione beta: può contenere errori", "notfound": "Pagina non trovata", "home": "Torna alla home"},
+           "privacy": "Privacy", "skip": "Vai al contenuto", "beta": "Software in versione beta: può contenere errori", "notfound": "Pagina non trovata", "home": "Torna alla home",
+           "render": "Lo spartito disegnato da Modern Sheet per questo esempio"},
     "en": {"repo": "Code on GitHub", "lang": "Italiano", "menu": "Menu", "license": "Free software, GPL-3.0 license",
-           "privacy": "Privacy", "skip": "Skip to content", "beta": "Beta software: it may contain bugs", "notfound": "Page not found", "home": "Back to home"},
+           "privacy": "Privacy", "skip": "Skip to content", "beta": "Beta software: it may contain bugs", "notfound": "Page not found", "home": "Back to home",
+           "render": "The sheet Modern Sheet draws for this example"},
 }
 
 
@@ -50,6 +68,104 @@ def read_page(path: Path) -> tuple[dict, str]:
     return meta, text[m.end():]
 
 
+# ---- rendered .chs examples
+SNIPPET_LABEL = "\u2063"                 # label of the section wrapped around a bare snippet: not drawn
+RENDER_RE = re.compile(r'<pre class="render"><code class="language-chs"(?: bar_width="(\w+)")?>(.*?)</code></pre>', re.S)
+FONT_DIR = Path(__file__).resolve().parents[1] / "src" / "assets" / "fonts"
+WEB_FONTS = {"Petaluma", "PScript", "Sans", "SansB", "Sym"}   # faces of the realbook theme
+CSS_FAMILY = "ms-"                     # prefix: never confused with a font installed on the reader's computer
+SNIPPET_PAGE_W = 440                   # points: narrower than A4, so the sheet stays legible next to the code
+SNIPPET_SCALE = 1.08                   # pixels per point: one scale for every example (the column is ~400 px)
+
+
+class SnippetLayout(Layout):
+    """The engine's layout, minus what belongs to a page and not to a snippet: no footer, no page
+    header unless the snippet has a {title}, no box for the section wrapped around a bare snippet.
+    The page is narrower than A4 (SNIPPET_PAGE_W): shown at half the column width, a whole A4 row
+    would be too small to read; rows are shorter, everything else is the engine's own layout."""
+
+    def __init__(self, song, **opts):
+        super().__init__(song, **opts)
+        self.page_w = SNIPPET_PAGE_W
+        self.c = Surface((self.page_w, self.page_h), self.metrics)
+
+    def header(self):
+        if "title" in self.song.meta:
+            super().header()
+
+    def footer(self):
+        pass
+
+    def section_header(self, sec):
+        if sec.label != SNIPPET_LABEL:
+            super().section_header(sec)
+
+
+def snippet_svg(code: str, where: str, bar_width: str = "uniform") -> str:
+    """The snippet drawn by the engine, as an inline SVG cropped to what is drawn. `bar_width`: the
+    block's `bar_width=fit` attribute, for snippets whose bars of notes would leave half-empty rows
+    on the narrow page with the uniform grid."""
+    src = code if "{start_of_" in code else f"{{start_of_verse: {SNIPPET_LABEL}}}\n{code.rstrip()}\n{{end_of_verse}}\n"
+    if "{title" not in code:
+        # a fragment of a song: give it the header a real song has, or its first {key} / {time} would be
+        # read as the song's key / time instead of a change (that happens only in a song without header)
+        src = "{key: C}\n{time: 4/4}\n" + src
+    song = parse(src)
+    if song.warnings:
+        sys.exit(f"{where}: rendered snippet with warnings: {song.warnings}")
+    metrics = registry("realbook")
+    dl = SnippetLayout(song, theme="realbook", bar_width=bar_width).run()
+    if len(dl.pages) != 1:
+        sys.exit(f"{where}: a rendered snippet must fit on one page")
+    x0 = y0 = float("inf")
+    x1 = y1 = float("-inf")
+    for op in screen_ops(dl, 0, 1.0, metrics):           # bounding box of everything drawn
+        k = op[0]
+        if k == "line":
+            xs, ys = (op[1], op[3]), (op[2], op[4])
+        elif k == "rect":
+            xs, ys = (op[1], op[1] + op[3]), (op[2], op[2] + op[4])
+        elif k == "circle":
+            xs, ys = (op[1] - op[3], op[1] + op[3]), (op[2] - op[3], op[2] + op[3])
+        elif k == "path":
+            pts = [v for seg in op[1] for v in seg[1:]]
+            xs, ys = pts[0::2] or [x0], pts[1::2] or [y0]
+        else:                                               # text: its 1-em line box
+            w = metrics.stringWidth(op[3], op[4], op[5]) if op[3] else 0
+            xs, ys = (op[1], op[1] + w), (op[2], op[2] + op[5])
+        x0, x1, y0, y1 = min(x0, *xs), max(x1, *xs), min(y0, *ys), max(y1, *ys)
+    pad = 8
+    x0, y0, w, h = x0 - pad, y0 - pad, x1 - x0 + 2 * pad, y1 - y0 + 2 * pad
+    svg = page_svg(dl, 0, metrics)
+    svg = re.sub(r'<svg [^>]*>', f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{x0:.1f} {y0:.1f} {w:.1f} {h:.1f}" '
+                                 f'width="{w * SNIPPET_SCALE:.0f}" height="{h * SNIPPET_SCALE:.0f}" role="img">', svg, count=1)
+    svg = re.sub(r'<rect width="[^"]*" height="[^"]*" fill="#ffffff"/>\n', "", svg, count=1)
+    for face in metrics.faces.values():                    # the app's fonts, under their web names
+        svg = svg.replace(f"font-family:'{face.family}'", f"font-family:'{CSS_FAMILY}{face.family}'")
+    return svg
+
+
+def render_snippets(content: str, where: str, caption: str) -> str:
+    def one(m: re.Match) -> str:
+        code = html.unescape(m.group(2))
+        svg = snippet_svg(code, where, m.group(1) or "uniform")
+        return (f'<div class="example"><pre><code class="language-chs">{m.group(2)}</code></pre>'
+                f'<figure class="render" aria-label="{html.escape(caption)}">{svg}</figure></div>')
+    return RENDER_RE.sub(one, content)
+
+
+def copy_fonts() -> None:
+    """The fonts the rendered examples use, next to the site's assets (SIL OFL / free licenses)."""
+    dest = OUT / "assets" / "fonts"
+    dest.mkdir(parents=True, exist_ok=True)
+    for key in WEB_FONTS:
+        src = FONT_DIR / FONT_FILES[key]
+        if not (dest / src.name).exists() or (dest / src.name).read_bytes() != src.read_bytes():
+            (dest / src.name).write_bytes(src.read_bytes())
+    for lic in FONT_DIR.glob("LICENSE-*"):
+        (dest / lic.name).write_bytes(lic.read_bytes())
+
+
 def url(lang: str, slug: str) -> str:
     return f"/{lang}/{slug}/" if slug else f"/{lang}/"
 
@@ -60,6 +176,7 @@ def render(template: str, lang: str, meta: dict, body: str, nav: list[tuple[str,
     content = md.convert(body.replace("{{repo}}", REPO))
     # "\|" keeps a pipe from splitting a table cell; inside <code> Markdown leaves the backslash: drop it
     content = re.sub(r"<code>(.*?)</code>", lambda m: "<code>" + m.group(1).replace("\\|", "|") + "</code>", content)
+    content = render_snippets(content, f"{lang}/{meta.get('slug', '')}", UI[lang]["render"])
     slug = meta.get("slug", "")
     other = "en" if lang == "it" else "it"
     menu = "".join(
@@ -79,6 +196,7 @@ def render(template: str, lang: str, meta: dict, body: str, nav: list[tuple[str,
 
 def main() -> None:
     template = (SRC / "template.html").read_text(encoding="utf-8")
+    copy_fonts()
     urls = []
     for lang in LANGS:
         pages = [(p, *read_page(p)) for p in sorted((SRC / lang).glob("*.md"))]
