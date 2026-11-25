@@ -1,5 +1,6 @@
-// Code snippets: a "Copy" button in the top-right corner of every <pre> block of the documentation.
-// The button sits on a wrapper, not inside the <pre>, so it stays put when a long line scrolls sideways.
+// Code snippets: a small copy icon in the bottom-right corner, inside every <pre> block of the documentation.
+// The icon sits on a wrapper, not inside the <pre>, so it stays put when a long line scrolls sideways.
+// Icon only: the label ("Copia" / "Copied"…) is its tooltip and its name for screen readers.
 // Copies the snippet's text exactly (no trailing newline); without the Clipboard API (old browsers,
 // pages not on https) it falls back to a hidden textarea and execCommand("copy").
 (function () {
@@ -32,8 +33,9 @@
   }
 
   function show(btn, label, icon) {
-    btn.innerHTML = icon + "<span>" + label + "</span>";
+    btn.innerHTML = icon;
     btn.setAttribute("aria-label", label);
+    btn.title = label;
   }
 
   document.querySelectorAll("main pre").forEach(function (pre) {
