@@ -1432,7 +1432,7 @@ class Layout:
             self.bar_width = self.section_mode(sec)
             self.notation_mode = self.section_notation(sec)
             first_h = (self.texts_height(rows[0][0].text_before) + self.row_height(rows[0])) if rows else \
-                self.texts_height(sec.text_after) or self.st.row_height
+                self.texts_height(sec.text_after) or (0 if sec.short else self.st.row_height)   # a short {ref}: its box only
             self.ensure(self.st.section_height + first_h)
             self.section_header(sec)
             for row in rows:
@@ -1445,6 +1445,8 @@ class Layout:
                 first_row = False
                 self.y -= h
             self.draw_texts(sec.text_after)
+            if sec.short:                    # a short {ref} is just its box: keep it apart from the next one
+                self.y -= 8
         self.footer()
         self.c.save()
         dl = self.c.dl
@@ -1489,7 +1491,8 @@ class Layout:
             lw += 2 * pad_x
         else:
             self.text(L, base, label, th.label, th.label_size, self.label_color(sec), bold=True)
-        note = " - ".join(p for p in (("reprise" if sec.is_ref else ""), sec.note) if p)
+        key = pretty_chord(f"Key {sec.ref_key}") if sec.ref_key else ""   # a short {ref}: its key, no bar shows it
+        note = " - ".join(p for p in (("reprise" if sec.is_ref else ""), key, sec.note) if p)
         if note:
             self.text(L + lw + 8, base, note, th.note, 9.5, th.grey)
         self.y -= self.st.section_height

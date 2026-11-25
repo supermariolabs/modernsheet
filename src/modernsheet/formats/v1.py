@@ -358,6 +358,9 @@ class Parser:
         """{ref: Label} / {ref: Label x2 volta 2 = New label | note}: repeat an earlier section here, as
         copies of its bars, optionally shown under another label (`= …`; the colour stays the original's).
         `volta N`: the section played once straight to its ending N (see ending_pass).
+        `once`: the section without any repeat, each repeated part played once (see once_pass).
+        `short`: only the section's box (label, xN, note) and no bars, to save room on the page; if the
+        key has changed since the original, the box says the new key, since no bar shows it.
 
         The copy is transposed from the original's key to the key in force here, so a chorus
         recalled after a key change is printed in the new key. Signs, marks and {text} lines stay
@@ -366,16 +369,20 @@ class Parser:
         target, _, note = value.partition("|")
         target, _, shown = target.partition("=")
         target, note, shown = target.strip(), note.strip(), shown.strip()
-        times, volta = 1, None
-        m = re.search(r"\s+volta\s*(\d+)\.?\s*$", target, re.I)
-        if m:
-            volta, target = int(m.group(1)), target[: m.start()].strip()
-        m = re.search(r"\s+x(\d+)$", target)
-        if m:
-            times, target = int(m.group(1)), target[: m.start()].strip()
-        m = re.search(r"\s+volta\s*(\d+)\.?\s*$", target, re.I)     # also written before xN
-        if m and volta is None:
-            volta, target = int(m.group(1)), target[: m.start()].strip()
+        times, volta, once, short = 1, None, False, False
+        while True:                    # modifiers after the label, in any order: xN, volta N, once, short
+            m = re.search(r"\s+(?:x(\d+)|volta\s*(\d+)\.?|(once)|(short))\s*$", target, re.I)
+            if not m:
+                break
+            if m.group(1):
+                times = int(m.group(1))
+            elif m.group(2):
+                volta = int(m.group(2))
+            elif m.group(3):
+                once = True
+            else:
+                short = True
+            target = target[: m.start()].strip()
         originals = [s for s in self.song.sections if not s.is_ref]
         src = next((s for s in originals if s.label.lower() == target.lower()), None) or \
             next((s for s in originals if s.kind == target.lower()), None)
@@ -383,7 +390,11 @@ class Parser:
             self.warn(f"ref: section '{target}' not found (only earlier sections can be referenced)")
             return
         bars = src.bars
-        if volta is not None:
+        if once:
+            bars, found = self.once_pass(src.bars, volta)
+            if volta is not None and not found:
+                self.warn(f"ref: section '{src.label}' has no ending {volta}: the last ending of each repeat")
+        elif volta is not None:
             bars = self.ending_pass(src.bars, volta)
             if bars is None:
                 self.warn(f"ref: section '{src.label}' has no ending {volta}: copied whole")
@@ -394,10 +405,15 @@ class Parser:
                       times=times, bars_per_line=src.bars_per_line or self.bpl, bar_width=src.bar_width,
                       notation=src.notation)
         self.song.sections.append(sec)
+        if short:
+            # no bars: a pending key/time change stays for the next bar written (that is where it is seen)
+            sec.short = True
+            sec.ref_key = self.key if semis % 12 else ""
+            return
         outer, self.section = self.section, sec
         for _ in range(times):
             for b in bars:
-                nb = copy.deepcopy(b) if volta is None else b      # ending_pass already made copies
+                nb = b if (once or volta is not None) and bars is not src.bars else copy.deepcopy(b)
                 nb.key = transpose_key(b.key, semis)
                 nb.marks_start, nb.marks_end, nb.text_before = [], [], []   # signs and notes stay with the original
                 nb.prev_key = transpose_key(b.prev_key, semis) if b.prev_key else None
@@ -441,6 +457,46 @@ class Parser:
                 nb.repeat_start = False
             out.append(nb)
         return out
+
+    @staticmethod
+    def once_pass(bars: list[Bar], n: int | None = None) -> tuple[list[Bar], bool]:
+        """Copies of the bars of a section played once, without any repeat: repeat signs and ending
+        brackets are dropped, and of each group of endings only one is kept: ending n if the group has
+        it, else its last one (the ending that leaves the repeat). Returns the bars and whether ending
+        n was found."""
+        groups: list[int | None] = []          # per bar: index of its ending bracket, or None
+        labels: list[set[int]] = []
+        current: int | None = None
+        for b in bars:
+            if b.volta:
+                labels.append({int(x) for x in re.findall(r"\d+", b.volta)})
+                current = len(labels) - 1
+            groups.append(current)
+            if b.volta_end or (current is not None and b.repeat_end):
+                current = None
+        # consecutive brackets (no bar outside an ending between them) belong to the same repeat
+        block_of: list[int] = []
+        block = -1
+        for i in range(len(labels)):
+            first = groups.index(i)
+            if i == 0 or groups[first - 1] is None:
+                block += 1
+            block_of.append(block)
+        keep: set[int] = set()
+        found = False
+        for blk in set(block_of):
+            members = [i for i in range(len(labels)) if block_of[i] == blk]
+            chosen = next((i for i in members if n is not None and n in labels[i]), None)
+            found = found or chosen is not None
+            keep.add(chosen if chosen is not None else max(members, key=lambda i: max(labels[i])))
+        out = []
+        for b, g in zip(bars, groups):
+            if g is not None and g not in keep:
+                continue
+            nb = copy.deepcopy(b)
+            nb.repeat_start, nb.repeat_end, nb.volta, nb.volta_end = False, 0, None, None
+            out.append(nb)
+        return out, found
 
     def musicxml(self, value: str) -> None:
         """{musicxml: file.musicxml} or {musicxml: file.musicxml | 3-6}: notated bars from MusicXML."""

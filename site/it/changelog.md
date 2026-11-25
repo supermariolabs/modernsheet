@@ -12,6 +12,17 @@ Le versioni di Modern Sheet pubblicate, dalla più recente. Le app da scaricare 
 [Download](/it/download/); ogni versione con le app compilate ha la sua pagina di
 [release su GitHub]({{repo}}/releases).
 
+## 0.46.0 — 25 novembre 2026 {#v0.46.0}
+
+[Release su GitHub]({{repo}}/releases/tag/v0.46.0) · app per macOS, Windows, Linux e Android
+
+- **Richiami senza ritornelli**: `{ref: Strofa once}` suona la sezione una volta sola, togliendo `|: :|` e
+  le volte (resta l'ultima, o quella scelta con `volta N`).
+- **Richiami corti**: `{ref: Ritornello x2 short}` stampa solo il box della sezione, senza ripetere le
+  battute già scritte più sopra; se la tonalità è cambiata, il box la indica.
+- Le parole dopo il nome della sezione (`x2`, `volta 2`, `once`, `short`) vanno in qualsiasi ordine e si
+  combinano con `= nome` e `| nota`. Vedi [Il formato .chs](/it/formato/#richiami).
+
 ## 0.45.1 — 25 novembre 2026 {#v0.45.1}
 
 [Release su GitHub]({{repo}}/releases/tag/v0.45.1) · app per macOS, Windows, Linux e Android

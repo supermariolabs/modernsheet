@@ -83,8 +83,10 @@ The directives at the top of the file describe the song. Those that drive the la
 | `{ref: chorus \| all together}` | with a note next to the box ("reprise – all together") |
 | `{ref: Verse 1 = Last verse}` | shown under **another name** (combines: `{ref: Chorus x2 = Ending \| everybody}`) |
 | `{ref: Chorus volta 2}` | **one pass straight to the 2nd ending**: the common bars and the 2nd ending, no repeat, no 1st ending |
+| `{ref: Verse once}` | **without repeats**: each repeated part played once; where there are endings, the last one (or the one chosen with `volta N`) |
+| `{ref: Chorus x2 short}` | **just the box**, without printing the bars again (if the key has changed, the box says so) |
 
-The section is looked up by label first (ignoring case), then by kind. The reference keeps the section's repeats, endings, time changes and colour (also under another name); navigation signs and `{text}` lines stay with the original only. If the key has changed in the meantime, the reference is **transposed automatically** into the new key.
+The words after the label (`x2`, `volta 2`, `once`, `short`) go in any order and combine with `= name` and `| note`. The section is looked up by label first (ignoring case), then by kind. The reference keeps the section's repeats, endings, time changes and colour (also under another name); navigation signs and `{text}` lines stay with the original only. If the key has changed in the meantime, the reference is **transposed automatically** into the new key.
 
 ```{ .chs .render }
 {key: G}

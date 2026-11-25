@@ -317,9 +317,17 @@
 <td><code>{ref: Chorus volta 2}</code></td>
 <td><strong>one pass straight to the 2nd ending</strong>: the common bars and the 2nd ending, no repeat, no 1st ending</td>
 </tr>
+<tr>
+<td><code>{ref: Verse once}</code></td>
+<td><strong>without repeats</strong>: each repeated part played once; where there are endings, the last one (or the one chosen with <code>volta N</code>)</td>
+</tr>
+<tr>
+<td><code>{ref: Chorus x2 short}</code></td>
+<td><strong>just the box</strong>, without printing the bars again (if the key has changed, the box says so)</td>
+</tr>
 </tbody>
 </table>
-<p>The section is looked up by label first (ignoring case), then by kind. The reference keeps the section's repeats, endings, time changes and colour (also under another name); navigation signs and <code>{text}</code> lines stay with the original only. If the key has changed in the meantime, the reference is <strong>transposed automatically</strong> into the new key.</p>
+<p>The words after the label (<code>x2</code>, <code>volta 2</code>, <code>once</code>, <code>short</code>) go in any order and combine with <code>= name</code> and <code>| note</code>. The section is looked up by label first (ignoring case), then by kind. The reference keeps the section's repeats, endings, time changes and colour (also under another name); navigation signs and <code>{text}</code> lines stay with the original only. If the key has changed in the meantime, the reference is <strong>transposed automatically</strong> into the new key.</p>
 <div class="example"><pre><code class="language-chs">{key: G}
 {start_of_chorus: Chorus}
 | [G] | [Em] | [C] | [D] |

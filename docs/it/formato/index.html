@@ -317,9 +317,17 @@
 <td><code>{ref: Ritornello volta 2}</code></td>
 <td><strong>un giro solo, dritto alla 2ª volta</strong>: battute comuni e 2ª volta, senza ritornello né 1ª volta</td>
 </tr>
+<tr>
+<td><code>{ref: Strofa once}</code></td>
+<td><strong>senza ritornelli</strong>: ogni parte ripetuta una volta sola; dove ci sono volte, l'ultima (o quella scelta con <code>volta N</code>)</td>
+</tr>
+<tr>
+<td><code>{ref: Ritornello x2 short}</code></td>
+<td><strong>solo il box</strong>, senza ristampare le battute (se la tonalità è cambiata, il box la indica)</td>
+</tr>
 </tbody>
 </table>
-<p>La sezione si cerca prima per etichetta (senza badare alle maiuscole), poi per tipo. Il richiamo conserva ritornelli, volte e cambi di metro della sezione e il suo colore (anche con un altro nome); i segni di navigazione e le righe <code>{text}</code> restano solo nell'originale. Se nel frattempo la tonalità è cambiata, il richiamo viene <strong>trasposto automaticamente</strong> nella nuova tonalità.</p>
+<p>Le parole dopo l'etichetta (<code>x2</code>, <code>volta 2</code>, <code>once</code>, <code>short</code>) vanno in qualsiasi ordine e si combinano con <code>= nome</code> e <code>| nota</code>. La sezione si cerca prima per etichetta (senza badare alle maiuscole), poi per tipo. Il richiamo conserva ritornelli, volte e cambi di metro della sezione e il suo colore (anche con un altro nome); i segni di navigazione e le righe <code>{text}</code> restano solo nell'originale. Se nel frattempo la tonalità è cambiata, il richiamo viene <strong>trasposto automaticamente</strong> nella nuova tonalità.</p>
 <div class="example"><pre><code class="language-chs">{key: G}
 {start_of_chorus: Ritornello}
 | [G] | [Em] | [C] | [D] |

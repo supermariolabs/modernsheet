@@ -12,6 +12,17 @@ The released versions of Modern Sheet, newest first. The apps are on the
 [Download](/en/download/) page; every version with built apps has its own
 [release on GitHub]({{repo}}/releases).
 
+## 0.46.0 — 25 November 2026 {#v0.46.0}
+
+[Release on GitHub]({{repo}}/releases/tag/v0.46.0) · apps for macOS, Windows, Linux and Android
+
+- **References without repeats**: `{ref: Verse once}` plays the section once, dropping `|: :|` and the
+  endings (the last one stays, or the one chosen with `volta N`).
+- **Short references**: `{ref: Chorus x2 short}` prints just the section's box, without printing again the
+  bars written further up; if the key has changed, the box says so.
+- The words after the section's name (`x2`, `volta 2`, `once`, `short`) go in any order and combine with
+  `= name` and `| note`. See [The .chs format](/en/format/#references).
+
 ## 0.45.1 — 25 November 2026 {#v0.45.1}
 
 [Release on GitHub]({{repo}}/releases/tag/v0.45.1) · apps for macOS, Windows, Linux and Android

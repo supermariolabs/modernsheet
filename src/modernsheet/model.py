@@ -90,6 +90,8 @@ class Section:
     note: str = ""
     is_ref: bool = False
     ref_label: str = ""              # a {ref}: the label of the section it repeats (it may show another one)
+    short: bool = False              # a {ref … short}: just the box (no bars: they are printed further up)
+    ref_key: str = ""                # a short {ref} in another key than the original: that key
     times: int = 1
 
 

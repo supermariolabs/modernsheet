@@ -83,8 +83,10 @@ Le direttive in cima al file descrivono il brano. Quelle che regolano l'impagina
 | `{ref: chorus \| tutti insieme}` | con una nota accanto al box ("reprise – tutti insieme") |
 | `{ref: Strofa 1 = Strofa finale}` | mostrata con un **altro nome** (si combina: `{ref: Ritornello x2 = Finale \| tutti}`) |
 | `{ref: Ritornello volta 2}` | **un giro solo, dritto alla 2ª volta**: battute comuni e 2ª volta, senza ritornello né 1ª volta |
+| `{ref: Strofa once}` | **senza ritornelli**: ogni parte ripetuta una volta sola; dove ci sono volte, l'ultima (o quella scelta con `volta N`) |
+| `{ref: Ritornello x2 short}` | **solo il box**, senza ristampare le battute (se la tonalità è cambiata, il box la indica) |
 
-La sezione si cerca prima per etichetta (senza badare alle maiuscole), poi per tipo. Il richiamo conserva ritornelli, volte e cambi di metro della sezione e il suo colore (anche con un altro nome); i segni di navigazione e le righe `{text}` restano solo nell'originale. Se nel frattempo la tonalità è cambiata, il richiamo viene **trasposto automaticamente** nella nuova tonalità.
+Le parole dopo l'etichetta (`x2`, `volta 2`, `once`, `short`) vanno in qualsiasi ordine e si combinano con `= nome` e `| nota`. La sezione si cerca prima per etichetta (senza badare alle maiuscole), poi per tipo. Il richiamo conserva ritornelli, volte e cambi di metro della sezione e il suo colore (anche con un altro nome); i segni di navigazione e le righe `{text}` restano solo nell'originale. Se nel frattempo la tonalità è cambiata, il richiamo viene **trasposto automaticamente** nella nuova tonalità.
 
 ```{ .chs .render }
 {key: G}

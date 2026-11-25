@@ -358,3 +358,40 @@ def test_reference_of_a_section_with_its_own_key():
     assert chorus.key == "A"
     assert [e.chord for b in ref.bars for e in b.events] == ["B", "F#/A#", "G#m"]
     assert ref.bars[0].key == "B" and [e.chord for b in verse.bars for e in b.events] == ["B", "F#"]
+
+
+def test_reference_once_without_repeats():
+    """{ref: Label once}: the section without repeats, each repeated part once; at a group of endings
+    the last one (the way out), or ending N with `volta N`; combines with xN and = label."""
+    src = ("{start_of_intro: I}\n|: [G] | [C] :| x3\n{end_of_intro}\n"
+           "{start_of_chorus: Rit}\n|: [C] | [D] |\n{volta: 1} [E] :|\n{volta: 2} [F] ||\n| [A] |\n|: [B] :|\n"
+           "{end_of_chorus}\n")
+    s = parse(src + "{ref: I once}\n{ref: Rit once = Fine | piano}\n{ref: Rit once volta 1}\n{ref: Rit x2 once}\n"
+                    "{ref: Rit volta 3 once}\n")
+    chords = lambda sec: [e.chord for b in sec.bars for e in b.events]
+    intro, rit, i1, fin, v1, twice, missing = s.sections
+    assert chords(i1) == ["G", "C"] and chords(fin) == ["C", "D", "F", "A", "B"]
+    assert (fin.label, fin.note) == ("Fine", "piano")
+    assert not any(b.repeat_start or b.repeat_end or b.volta or b.volta_end for sec in (i1, fin, v1, twice) for b in sec.bars)
+    assert chords(v1) == ["C", "D", "E", "A", "B"] and chords(twice) == chords(fin) * 2
+    assert chords(missing) == chords(fin)
+    assert s.warnings == ["line 15: ref: section 'Rit' has no ending 3: the last ending of each repeat"]
+    assert intro.bars[0].repeat_start and intro.bars[-1].repeat_end == 3      # the originals are untouched
+    ex = load(EX / "ripetizioni_e_volte.chs")
+    assert ex.warnings == [] and any(sec.label == "Chiusura" for sec in ex.sections)
+
+
+def test_short_reference_is_just_the_box():
+    """{ref: Label short}: a section with no bars (only its box: label, xN, note); in another key the box
+    says it, and the key change is drawn on the next bar written."""
+    s = parse("{key: G}\n{start_of_chorus: Rit}\n|: [G] | [C] :|\n{end_of_chorus}\n"
+              "{ref: Rit x2 short | tutti}\n{key: A}\n{ref: Rit short = Fine}\n{start_of_outro: O}\n| [A] |\n{end_of_outro}\n")
+    assert s.warnings == []
+    _, same, other, outro = s.sections
+    assert (same.short, same.bars, same.times, same.note, same.ref_key) == (True, [], 2, "tutti", "")
+    assert (other.label, other.ref_key, other.bars) == ("Fine", "A", [])
+    assert outro.bars[0].key_change and outro.bars[0].prev_key == "G"
+    texts = [op[3] for op in layout(s).pages[0] if op[0] == "text"]
+    assert "Rit  x2" in texts and "reprise - tutti" in texts and "reprise - Key A" in texts
+    ex = load(EX / "tempi_e_tonalita.chs")
+    assert ex.warnings == [] and any(sec.short and sec.ref_key == "Eb" for sec in ex.sections)

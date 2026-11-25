@@ -1,6 +1,7 @@
 # Brano originale: ritornelli, case di volta e richiami
 #   |: :| e :| x3, {volta: 1} {volta: 2} {volta: 3}, {volta: 1, 2}, {volta_end} e {volta_end: hook},
 #   {ref: … x2 | nota}, {ref: … volta 2 = nome} (un giro dritto alla 2ª volta, con un altro nome),
+#   {ref: … once} (senza ritornelli: ogni parte ripetuta una volta sola),
 #   {br}, {bars_per_line} dentro una sezione
 {format: v1}
 {title: Ripetizioni e volte}
@@ -32,6 +33,7 @@
 {ref: Strofa | tutti insieme}
 {ref: Ritornello x2 | più forte}
 {ref: Ritornello volta 2 = Ultimo ritornello | dritti alla 2ª volta}
+{ref: Intro once = Chiusura | una volta sola}
 
 {start_of_outro: Finale}
 | [G] | [C] | [G] [D7] | [G] [/] |
