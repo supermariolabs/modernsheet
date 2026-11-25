@@ -12,6 +12,16 @@ The released versions of Modern Sheet, newest first. The apps are on the
 [Download](/en/download/) page; every version with built apps has its own
 [release on GitHub]({{repo}}/releases).
 
+## 0.45.1 — 25 November 2026 {#v0.45.1}
+
+[Release on GitHub]({{repo}}/releases/tag/v0.45.1) · apps for macOS, Windows, Linux and Android
+
+- Fixed: a reference to a section with its own `{key}` at the start (for example a chorus with `{key: A}`
+  right after `{start_of_chorus}`) was transposed by the wrong interval: referenced in B it came out in D♭.
+  It is now transposed from the key of its bars.
+- Download: if the build for one platform fails, the others are published anyway and the
+  [Download](/en/download/) page offers the previous version for that platform, saying so.
+
 ## 0.45.0 — 25 November 2026 {#v0.45.0}
 
 [Release on GitHub]({{repo}}/releases/tag/v0.45.0) · apps for macOS, Windows, Linux and Android

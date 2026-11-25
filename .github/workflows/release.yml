@@ -1,7 +1,8 @@
 # App builds (flet build) for macOS, Windows, Linux and Android, attached to a GitHub Release.
 # Runs when a version tag (v0.36.0…) is pushed, or by hand from the Actions tab (then only as artifacts).
-# The asset names do not change between versions, so the website can always link to
-# https://github.com/supermariolabs/modernsheet/releases/latest/download/<name>.
+# The asset names do not change between versions. A build that fails does not stop the others: the
+# release gets the files that were built, and the website's Download page (docs/assets/releases.js) links
+# each platform to the newest release that has its file, so a failed platform keeps its previous version.
 #
 # Google Drive sync needs the app's OAuth client: put the content of src/google_client.json in the
 # repository secret GOOGLE_CLIENT_JSON (Settings › Secrets and variables › Actions). Without it the
@@ -158,8 +159,9 @@ jobs:
           path: dist/ModernSheet-android.apk
 
   release:
-    # the desktop builds must all succeed; the Android one is welcome but optional
-    if: always() && startsWith(github.ref, 'refs/tags/v') && needs.build.result == 'success'
+    # every build that succeeded is published, even if others failed (or the Android job was skipped):
+    # the Download page keeps the previous version for the platforms missing here
+    if: ${{ !cancelled() && startsWith(github.ref, 'refs/tags/v') }}
     needs: [build, android]
     runs-on: ubuntu-latest
     steps:
@@ -167,17 +169,40 @@ jobs:
         with:
           path: dist
           merge-multiple: true
+      - name: Release notes (only the files that were built)
+        id: notes
+        shell: bash
+        run: |
+          shopt -s nullglob
+          files=(dist/*)
+          if [ ${#files[@]} -eq 0 ]; then echo "none=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          label() {
+            case "$1" in
+              ModernSheet-macos.zip) echo "**macOS** (Apple Silicon e Intel)" ;;
+              ModernSheet-windows.zip) echo "**Windows** (64 bit)" ;;
+              ModernSheet-linux.tar.gz) echo "**Linux** (x86_64)" ;;
+              ModernSheet-android.apk) echo "**Android** (64 bit, sperimentale · experimental)" ;;
+            esac
+          }
+          all="ModernSheet-macos.zip ModernSheet-windows.zip ModernSheet-linux.tar.gz ModernSheet-android.apk"
+          {
+            echo "App di Modern Sheet ${GITHUB_REF_NAME} · Apps."
+            echo
+            missing=""
+            for name in $all; do
+              if [ -f "dist/$name" ]; then echo "- $(label "$name"): \`$name\`"; else missing="$missing, $(label "$name")"; fi
+            done
+            if [ -n "$missing" ]; then
+              echo
+              echo "Non compilate in questa versione (nella pagina Download resta la precedente) · Not built in this version (the Download page keeps the previous one): ${missing#, }"
+            fi
+            echo
+            echo "Le app non sono firmate: istruzioni per aprirle su https://modernsheet.app/it/download/ (English: https://modernsheet.app/en/download/)."
+          } > notes.md
       - uses: softprops/action-gh-release@v2
+        if: steps.notes.outputs.none != 'true'
         with:
           name: Modern Sheet ${{ github.ref_name }}
           files: dist/*
           generate_release_notes: false
-          body: |
-            App di Modern Sheet ${{ github.ref_name }} · Apps.
-
-            - **macOS** (Apple Silicon e Intel): `ModernSheet-macos.zip`
-            - **Windows** (64 bit): `ModernSheet-windows.zip`
-            - **Linux** (x86_64): `ModernSheet-linux.tar.gz`
-            - **Android** (64 bit, sperimentale · experimental): `ModernSheet-android.apk`
-
-            Le app non sono firmate: istruzioni per aprirle su https://modernsheet.app/it/download/ (English: https://modernsheet.app/en/download/).
+          body_path: notes.md

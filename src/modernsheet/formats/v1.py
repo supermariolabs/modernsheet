@@ -145,6 +145,11 @@ class Parser:
         if self.text_pending:
             bar.text_before, self.text_pending = self.text_pending, []
             bar.break_before = True                  # text lines sit between rows
+        if not self.section.bars:
+            # the section's key is the key of its first bar: a {key} written inside the section, before
+            # its music, counts. {ref} transposes from it (it was the key when the section opened, so a
+            # chorus with {key: A} inside it was transposed from the key before, by the wrong interval)
+            self.section.key = bar.key
         self.section.bars.append(bar)
 
     def new_bar(self) -> Bar:

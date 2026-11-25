@@ -12,6 +12,16 @@ Le versioni di Modern Sheet pubblicate, dalla più recente. Le app da scaricare 
 [Download](/it/download/); ogni versione con le app compilate ha la sua pagina di
 [release su GitHub]({{repo}}/releases).
 
+## 0.45.1 — 25 novembre 2026 {#v0.45.1}
+
+[Release su GitHub]({{repo}}/releases/tag/v0.45.1) · app per macOS, Windows, Linux e Android
+
+- Corretto: il richiamo di una sezione con il suo `{key}` all'inizio (per esempio un ritornello con
+  `{key: A}` subito dopo `{start_of_chorus}`) veniva trasposto dell'intervallo sbagliato: richiamato in Si
+  usciva in Re♭. Ora si traspone dalla tonalità delle sue battute.
+- Download: se la build di una piattaforma non riesce, le altre vengono pubblicate comunque e per quella
+  piattaforma la pagina [Download](/it/download/) offre la versione precedente, dicendolo.
+
 ## 0.45.0 — 25 novembre 2026 {#v0.45.0}
 
 [Release su GitHub]({{repo}}/releases/tag/v0.45.0) · app per macOS, Windows, Linux e Android

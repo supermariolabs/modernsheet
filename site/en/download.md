@@ -19,7 +19,7 @@ Macs with Apple silicon or Intel.
 
 <p class="build" data-asset="ModernSheet-macos.zip" hidden></p>
 
-<a class="btn primary" href="{{repo}}/releases/latest/download/ModernSheet-macos.zip">Download for macOS</a>
+<a class="btn primary" data-asset-link="ModernSheet-macos.zip" href="{{repo}}/releases/latest/download/ModernSheet-macos.zip">Download for macOS</a>
 </div>
 <div class="card" markdown="1"><span class="ico">💻</span>
 ### Windows
@@ -27,7 +27,7 @@ Windows 10 and 11, 64-bit.
 
 <p class="build" data-asset="ModernSheet-windows.zip" hidden></p>
 
-<a class="btn primary" href="{{repo}}/releases/latest/download/ModernSheet-windows.zip">Download for Windows</a>
+<a class="btn primary" data-asset-link="ModernSheet-windows.zip" href="{{repo}}/releases/latest/download/ModernSheet-windows.zip">Download for Windows</a>
 </div>
 <div class="card" markdown="1"><span class="ico">🐧</span>
 ### Linux
@@ -35,7 +35,7 @@ x86_64, with GTK 3 (the most common desktop distributions).
 
 <p class="build" data-asset="ModernSheet-linux.tar.gz" hidden></p>
 
-<a class="btn primary" href="{{repo}}/releases/latest/download/ModernSheet-linux.tar.gz">Download for Linux</a>
+<a class="btn primary" data-asset-link="ModernSheet-linux.tar.gz" href="{{repo}}/releases/latest/download/ModernSheet-linux.tar.gz">Download for Linux</a>
 </div>
 <div class="card" markdown="1"><span class="ico">🤖</span>
 ### Android

@@ -345,3 +345,16 @@ def test_reference_straight_to_one_ending():
     assert [b.volta for b in rit.bars if b.volta] == ["1.", "2."]          # the original is untouched
     ex = load(EX / "ripetizioni_e_volte.chs")
     assert ex.warnings == [] and any(sec.label == "Ultimo ritornello" for sec in ex.sections)
+
+
+def test_reference_of_a_section_with_its_own_key():
+    """A {key} inside a section, before its music, is the section's key: a {ref} later transposes from
+    it (until 0.45.0 it transposed from the key before the section: A + 4 semitones gave Db, not B)."""
+    s = parse("{key: G}\n{start_of_verse: V}\n| [G] | [D] |\n{end_of_verse}\n"
+              "{start_of_chorus: Chorus}\n{key: A}\n| [A] | [E/G#] | [F#m] |\n{end_of_chorus}\n"
+              "{key: B}\n{ref: Chorus}\n{ref: V}\n")
+    assert s.warnings == []
+    chorus, ref, verse = s.sections[1], s.sections[2], s.sections[3]
+    assert chorus.key == "A"
+    assert [e.chord for b in ref.bars for e in b.events] == ["B", "F#/A#", "G#m"]
+    assert ref.bars[0].key == "B" and [e.chord for b in verse.bars for e in b.events] == ["B", "F#"]
