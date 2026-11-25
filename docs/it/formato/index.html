@@ -4,13 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Il formato .chs · Modern Sheet</title>
-<meta name="description" content="Riferimento completo del formato .chs di Modern Sheet: intestazione, sezioni, accordi e durate, battute, ritornelli, volte, segni, testo, note scritte nel brano, MusicXML.">
+<meta name="description" content="Riferimento completo del formato .chs di Modern Sheet: intestazione, sezioni e colori, accordi e durate, battute, ritornelli, volte, segni, testo, note scritte nel brano, tablatura per chitarra, MusicXML.">
 <link rel="canonical" href="https://modernsheet.app/it/formato/">
 <link rel="alternate" hreflang="en" href="https://modernsheet.app/en/format/">
 <link rel="icon" href="/assets/img/favicon.png">
 <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
 <meta property="og:title" content="Il formato .chs · Modern Sheet">
-<meta property="og:description" content="Riferimento completo del formato .chs di Modern Sheet: intestazione, sezioni, accordi e durate, battute, ritornelli, volte, segni, testo, note scritte nel brano, MusicXML.">
+<meta property="og:description" content="Riferimento completo del formato .chs di Modern Sheet: intestazione, sezioni e colori, accordi e durate, battute, ritornelli, volte, segni, testo, note scritte nel brano, tablatura per chitarra, MusicXML.">
 <meta property="og:image" content="https://modernsheet.app/assets/img/sheet-demo.png">
 <link rel="stylesheet" href="/assets/style.css">
 <script src="/assets/copy.js" defer></script>
@@ -32,12 +32,17 @@
 </header>
 <main id="main" class="wrap">
 <h1 id="il-formato-chs">Il formato .chs<a class="headerlink" href="#il-formato-chs">#</a></h1>
-<p>Un brano è un file di testo UTF-8 con estensione <code>.chs</code>. Contiene <strong>direttive</strong> tra parentesi graffe (<code>{title: …}</code>), <strong>accordi</strong> tra parentesi quadre (<code>[Am7]</code>), <strong>stanghette</strong> (<code>|</code>) e il <strong>testo</strong> cantato. Le righe che iniziano con <code>#</code> sono commenti.</p>
+<p>Un brano è un file di testo UTF-8 con estensione <code>.chs</code>. Contiene <strong>direttive</strong> tra parentesi graffe (<code>{title: …}</code>), <strong>accordi</strong> tra parentesi quadre (<code>[Am7]</code>), <strong>stanghette</strong> (<code>|</code>) e il <strong>testo</strong> cantato. Accanto agli esempi c'è lo spartito che Modern Sheet disegna per quel codice.</p>
 <div class="toc">
 <ul>
+<li><a href="#regole-generali">Regole generali</a></li>
 <li><a href="#un-esempio">Un esempio</a></li>
 <li><a href="#intestazione">Intestazione</a></li>
-<li><a href="#sezioni">Sezioni</a></li>
+<li><a href="#sezioni">Sezioni</a><ul>
+<li><a href="#richiami">Richiami</a></li>
+</ul>
+</li>
+<li><a href="#colori-delle-sezioni">Colori delle sezioni</a></li>
 <li><a href="#accordi-e-durate">Accordi e durate</a><ul>
 <li><a href="#battute">Battute</a></li>
 <li><a href="#segni-dentro-laccordo">Segni dentro l'accordo</a></li>
@@ -45,13 +50,23 @@
 </li>
 <li><a href="#stanghette-ritornelli-e-volte">Stanghette, ritornelli e volte</a></li>
 <li><a href="#cambi-di-tonalita-e-di-metro">Cambi di tonalità e di metro</a></li>
+<li><a href="#impaginazione">Impaginazione</a></li>
 <li><a href="#segni-di-navigazione">Segni di navigazione</a></li>
 <li><a href="#righe-di-testo">Righe di testo</a></li>
-<li><a href="#note-da-musicxml">Note da MusicXML</a></li>
 <li><a href="#note-scritte-nel-chs">Note scritte nel .chs</a></li>
+<li><a href="#tablatura-per-chitarra">Tablatura per chitarra</a></li>
+<li><a href="#note-da-musicxml">Note da MusicXML</a></li>
+<li><a href="#diagnostica">Diagnostica</a></li>
 <li><a href="#versioni-del-formato">Versioni del formato</a></li>
 </ul>
 </div>
+<h2 id="regole-generali">Regole generali<a class="headerlink" href="#regole-generali">#</a></h2>
+<ul>
+<li>Le righe che iniziano con <code>#</code> sono <strong>commenti</strong>; le righe vuote non contano.</li>
+<li>Una direttiva è <code>{nome}</code> oppure <code>{nome: valore}</code>: può stare su una riga propria o <strong>dentro</strong> una riga di musica. I nomi delle direttive non distinguono maiuscole e minuscole, quelli degli accordi sì.</li>
+<li>La musica sta <strong>dentro una sezione</strong> (<code>{start_of_…}</code> … <code>{end_of_…}</code>); fuori, l'app ne apre una senza titolo e lo segnala.</li>
+<li>Il file non si "rompe" mai: ciò che non si capisce diventa un <strong>avviso</strong> (warning) con il numero di riga, mostrato sotto l'editor, e il resto si disegna comunque (vedi <a href="#diagnostica">Diagnostica</a>).</li>
+</ul>
 <h2 id="un-esempio">Un esempio<a class="headerlink" href="#un-esempio">#</a></h2>
 <div class="example"><pre><code class="language-chs">{format: v1}
 {title: Il mio brano}
@@ -176,6 +191,7 @@
 <line x1="396.40" y1="326.10" x2="396.40" y2="348.50" stroke="#6b6b6b" stroke-width="3.20" stroke-linecap="butt"/>
 </svg></figure></div>
 <h2 id="intestazione">Intestazione<a class="headerlink" href="#intestazione">#</a></h2>
+<p>Le direttive in cima al file descrivono il brano. Quelle che regolano l'impaginazione (<code>bar_width</code>, <code>notation</code>, <code>bars_per_line</code>) valgono per tutto il brano, ma scritte <strong>dentro una sezione</strong> valgono solo per quella.</p>
 <table>
 <thead>
 <tr>
@@ -193,7 +209,7 @@
 <tr>
 <td><code>title</code>, <code>subtitle</code></td>
 <td><code>{title: Amazing Grace}</code></td>
-<td>Titolo e sottotitolo.</td>
+<td>Titolo (in alto a sinistra) e sottotitolo.</td>
 </tr>
 <tr>
 <td><code>artist</code>, <code>composer</code></td>
@@ -203,12 +219,12 @@
 <tr>
 <td><code>key</code></td>
 <td><code>{key: F#m}</code></td>
-<td>Prima della musica è la tonalità del brano (senza: Do); dopo le prime battute è un <strong>cambio di tonalità</strong>.</td>
+<td>Tonalità: <code>C D E F G A B</code>, con <code>#</code> o <code>b</code>, e <code>m</code> per il minore (<code>Bb</code>, <code>Ebm</code>). Prima della musica è la tonalità del brano (senza: Do); dopo le prime battute è un <strong>cambio di tonalità</strong>.</td>
 </tr>
 <tr>
 <td><code>time</code></td>
 <td><code>{time: 3/4}</code></td>
-<td>Prima della musica è il metro del brano (senza: 4/4); dopo le prime battute è un <strong>cambio di metro</strong>.</td>
+<td>Metro. Prima della musica è quello del brano (senza: 4/4); dopo le prime battute è un <strong>cambio di metro</strong>.</td>
 </tr>
 <tr>
 <td><code>tempo</code></td>
@@ -218,55 +234,45 @@
 <tr>
 <td><code>capo</code></td>
 <td><code>{capo: 2}</code></td>
-<td>Capotasto.</td>
+<td>Capotasto: mostrato in intestazione; nella <a href="#tablatura-per-chitarra">tablatura</a> i tasti si contano dal capotasto.</td>
 </tr>
 <tr>
 <td><code>tags</code></td>
 <td><code>{tags: jazz, ballad}</code></td>
-<td>Etichette per la libreria (ricerca con <code>#jazz</code>).</td>
+<td>Etichette per la libreria (ricerca con <code>#jazz</code>); più righe si sommano. Non stampate.</td>
 </tr>
 <tr>
 <td><code>bar_width</code></td>
 <td><code>{bar_width: fit}</code></td>
-<td><code>uniform</code> (battute uguali, la <em>Griglia</em> dell'app) o <code>fit</code> (<em>Riempi</em>) per questo brano; dentro una sezione vale solo per quella.</td>
-</tr>
-<tr>
-<td><code>tuning</code></td>
-<td><code>{tuning: drop D}</code></td>
-<td>Accordatura per la tablatura: <code>standard</code>, <code>drop D</code>, <code>DADGAD</code>, <code>open G</code>, <code>open D</code>, <code>open E</code>, <code>half step down</code>, <code>bass</code>, <code>ukulele</code>… o le corde a vuoto (<code>D A D G B E</code>).</td>
-</tr>
-<tr>
-<td><code>tab_position</code></td>
-<td><code>{tab_position: 5}</code></td>
-<td>Nella tablatura, la mano attorno al 5° tasto per le note che seguono (<code>auto</code> per tornare alla scelta automatica).</td>
-</tr>
-<tr>
-<td><code>notation</code></td>
-<td><code>{notation: both}</code></td>
-<td>Battute notate: <code>staff</code> (pentagramma), <code>both</code> (pentagramma con tablatura per chitarra) o <code>tab</code> (solo tablatura, con il ritmo); anche dentro una sezione.</td>
-</tr>
-<tr>
-<td><code>row_spacing</code></td>
-<td><code>{row_spacing: wide}</code></td>
-<td>Spazio fra le righe di questo brano: <code>compact</code>, <code>normal</code>, <code>wide</code>, <code>extra</code> o una percentuale (<code>120%</code>, fra 50% e 300%).</td>
+<td><code>uniform</code> (battute uguali, la <em>Griglia</em> dell'app) o <code>fit</code> (<em>Riempi</em>). Vedi <a href="#impaginazione">Impaginazione</a>.</td>
 </tr>
 <tr>
 <td><code>bars_per_line</code></td>
 <td><code>{bars_per_line: 6}</code></td>
-<td>Battute per riga (anche dentro una sezione).</td>
+<td>Battute per riga. Vedi <a href="#impaginazione">Impaginazione</a>.</td>
+</tr>
+<tr>
+<td><code>row_spacing</code></td>
+<td><code>{row_spacing: wide}</code></td>
+<td>Spazio fra le righe: <code>compact</code>, <code>normal</code>, <code>wide</code>, <code>extra</code> o una percentuale fra 50% e 300% (<code>120%</code>).</td>
 </tr>
 <tr>
 <td><code>label_colors</code>, <code>section_colors</code></td>
-<td><code>{section_colors: verse=#33cc66}</code></td>
-<td>Colori dei box delle sezioni.</td>
+<td><code>{label_colors: by_type}</code></td>
+<td>Colori dei box delle sezioni. Vedi <a href="#colori-delle-sezioni">Colori delle sezioni</a>.</td>
+</tr>
+<tr>
+<td><code>notation</code>, <code>tuning</code>, <code>tab_position</code></td>
+<td><code>{notation: both}</code></td>
+<td>Pentagramma e/o tablatura per le battute con le note. Vedi <a href="#tablatura-per-chitarra">Tablatura</a>.</td>
 </tr>
 <tr>
 <td><code>created</code>, <code>modified</code></td>
 <td></td>
-<td>Date scritte dall'app al salvataggio.</td>
+<td>Date di creazione e di ultimo salvataggio: le scrive l'app, non serve toccarle.</td>
 </tr>
 <tr>
-<td><code>comment</code></td>
+<td><code>comment</code> (o <code>c</code>)</td>
 <td><code>{comment: …}</code></td>
 <td>Commento, non stampato.</td>
 </tr>
@@ -274,24 +280,196 @@
 </table>
 <h2 id="sezioni">Sezioni<a class="headerlink" href="#sezioni">#</a></h2>
 <pre><code>{start_of_verse: Strofa 1}
-…
+| [C] | [F] |
 {end_of_verse}
 </code></pre>
-<p>Il tipo (<code>verse</code>, <code>chorus</code>, <code>bridge</code>, <code>intro</code>, <code>solo</code>, <code>outro</code>, <code>coda</code>…) è libero; l'etichetta dopo i due punti è quella mostrata. Ogni sezione comincia su una nuova riga.</p>
-<p><strong>Richiami</strong>: <code>{ref: Strofa}</code> ripete una sezione già scritta, <code>{ref: Ritornello x2 | più forte}</code> la ripete due volte con una nota. Se nel frattempo la tonalità è cambiata, il richiamo viene <strong>trasposto automaticamente</strong>.</p>
+<ul>
+<li>Il tipo dopo <code>start_of_</code> è <strong>libero</strong> (<code>verse</code>, <code>chorus</code>, <code>bridge</code>, <code>intro</code>, <code>solo</code>, <code>outro</code>, <code>coda</code>…, anche in italiano: <code>strofa</code>, <code>ritornello</code>, <code>inciso</code>…); conta per i <a href="#colori-delle-sezioni">colori per tipo</a>.</li>
+<li>L'etichetta dopo i due punti è quella mostrata nel box; senza etichetta si mostra il tipo (<code>Verse</code>).</li>
+<li>Ogni sezione comincia su una nuova riga; le sezioni non si annidano (aprirne una prima di chiudere la precedente dà un avviso).</li>
+</ul>
+<h3 id="richiami">Richiami<a class="headerlink" href="#richiami">#</a></h3>
+<table>
+<thead>
+<tr>
+<th>Scrivi</th>
+<th>Significato</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>{ref: Strofa}</code></td>
+<td>ripete qui una sezione <strong>già scritta più sopra</strong></td>
+</tr>
+<tr>
+<td><code>{ref: Ritornello x2}</code></td>
+<td>la ripete due volte (nel box: <code>x2</code>)</td>
+</tr>
+<tr>
+<td><code>{ref: chorus | tutti insieme}</code></td>
+<td>con una nota accanto al box ("reprise – tutti insieme")</td>
+</tr>
+</tbody>
+</table>
+<p>La sezione si cerca prima per etichetta (senza badare alle maiuscole), poi per tipo. Il richiamo conserva ritornelli, volte e cambi di metro della sezione e il suo colore; i segni di navigazione e le righe <code>{text}</code> restano solo nell'originale. Se nel frattempo la tonalità è cambiata, il richiamo viene <strong>trasposto automaticamente</strong> nella nuova tonalità.</p>
+<h2 id="colori-delle-sezioni">Colori delle sezioni<a class="headerlink" href="#colori-delle-sezioni">#</a></h2>
+<p>Il nome di ogni sezione sta in un <strong>box colorato</strong>, per riconoscere la forma del brano a colpo d'occhio sul leggio. Il colore si sceglie così:</p>
+<table>
+<thead>
+<tr>
+<th>Direttiva</th>
+<th>Effetto</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>{label_colors: theme}</code></td>
+<td>il blu di Modern Sheet per tutti i box (predefinito)</td>
+</tr>
+<tr>
+<td><code>{label_colors: #8B1E3F}</code></td>
+<td>un colore a scelta per tutti i box</td>
+</tr>
+<tr>
+<td><code>{label_colors: by_type}</code></td>
+<td>un colore per tipo di sezione (tabella sotto)</td>
+</tr>
+<tr>
+<td><code>{section_colors: intro=#3366ff, chorus=#ff9900}</code></td>
+<td>colori a scelta per singole sezioni; le altre seguono <code>label_colors</code></td>
+</tr>
+</tbody>
+</table>
+<p>Con <code>by_type</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Tipi di sezione</th>
+<th>Colore</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>verse</code>, <code>strofa</code></td>
+<td>blu notte</td>
+</tr>
+<tr>
+<td><code>chorus</code>, <code>ritornello</code>, <code>refrain</code></td>
+<td>bordeaux</td>
+</tr>
+<tr>
+<td><code>bridge</code>, <code>inciso</code>, <code>prechorus</code></td>
+<td>verde petrolio</td>
+</tr>
+<tr>
+<td><code>instrumental</code>, <code>solo</code>, <code>assolo</code>, <code>interlude</code>, <code>interludio</code></td>
+<td>ocra</td>
+</tr>
+<tr>
+<td><code>intro</code>, <code>outro</code>, <code>coda</code>, <code>ending</code>, <code>finale</code> e gli altri</td>
+<td>antracite</td>
+</tr>
+</tbody>
+</table>
+<p>In <code>section_colors</code> la chiave può essere l'<strong>etichetta</strong> di una sezione (<code>Ritornello</code>), il suo <strong>tipo</strong> (<code>chorus</code>) o uno dei gruppi della tabella (<code>verse</code>, <code>chorus</code>, <code>bridge</code>, <code>instrumental</code>, <code>frame</code>); vale la prima che corrisponde, in quest'ordine. I colori si scrivono come <code>#RRGGBB</code>; uno scritto male viene ignorato. Il testo del box è bianco, o quasi nero sui colori chiari, per restare leggibile. Se il brano non ha <code>label_colors</code>, l'interruttore <em>Colori per sezione</em> dell'app equivale a <code>by_type</code>.</p>
+<div class="example"><pre><code class="language-chs">{label_colors: by_type}
+{section_colors: Assolo di sax=#ff9900}
+
+{start_of_verse: Strofa}
+| [C] | [Am] | [F] | [G7] |
+{end_of_verse}
+
+{start_of_chorus: Ritornello}
+| [F] | [G] | [C] | [C] |
+{end_of_chorus}
+
+{start_of_solo: Assolo di sax}
+| [Dm7] | [G7] | [C] | [C] |
+{end_of_solo}
+</code></pre><figure class="render" aria-label="Lo spartito disegnato da Modern Sheet per questo esempio"><svg xmlns="http://www.w3.org/2000/svg" viewBox="34.0 35.0 372.0 265.0" width="402" height="286" role="img">
+<rect x="34.0" y="35.0" width="372.0" height="265.0" fill="#ffffff"/>
+<rect x="42.00" y="43.00" width="52.05" height="21.00" rx="4.00" fill="#1f3a5f"/>
+<text x="49.00" y="59.00" fill="#ffffff" stroke="#ffffff" stroke-width="0.58" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:13.00px" xml:space="preserve">Strofa</text>
+<text x="43.00" y="104.80" fill="#6b6b6b" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<text x="72.20" y="93.60" fill="#6b6b6b" style="font-family:'ms-Petaluma';font-size:11.65px" xml:space="preserve"></text>
+<text x="72.20" y="104.80" fill="#6b6b6b" style="font-family:'ms-Petaluma';font-size:11.65px" xml:space="preserve"></text>
+<line x1="42.00" y1="88.00" x2="398.00" y2="88.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="93.60" x2="398.00" y2="93.60" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="99.20" x2="398.00" y2="99.20" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="104.80" x2="398.00" y2="104.80" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="110.40" x2="398.00" y2="110.40" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<rect x="93.50" y="89.85" width="13.59" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="95.00" y="104.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">C</text>
+<line x1="166.25" y1="88.00" x2="166.25" y2="110.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="170.75" y="89.85" width="23.25" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="172.25" y="104.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">A</text>
+<text x="182.74" y="104.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.61" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:13.60px" xml:space="preserve">m</text>
+<line x1="243.50" y1="88.00" x2="243.50" y2="110.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="248.00" y="89.85" width="11.67" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="249.50" y="104.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">F</text>
+<line x1="320.75" y1="88.00" x2="320.75" y2="110.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="325.25" y="89.85" width="19.75" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="326.75" y="104.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">G</text>
+<text x="337.14" y="98.86" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.47" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:10.54px" xml:space="preserve">7</text>
+<line x1="398.00" y1="88.00" x2="398.00" y2="110.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="42.00" y="131.00" width="65.61" height="21.00" rx="4.00" fill="#8b1e3f"/>
+<text x="49.00" y="147.00" fill="#ffffff" stroke="#ffffff" stroke-width="0.58" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:13.00px" xml:space="preserve">Ritornello</text>
+<text x="43.00" y="192.80" fill="#6b6b6b" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<line x1="42.00" y1="176.00" x2="398.00" y2="176.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="181.60" x2="398.00" y2="181.60" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="187.20" x2="398.00" y2="187.20" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="192.80" x2="398.00" y2="192.80" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="198.40" x2="398.00" y2="198.40" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<rect x="93.50" y="177.85" width="11.67" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="95.00" y="192.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">F</text>
+<line x1="166.25" y1="176.00" x2="166.25" y2="198.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="170.75" y="177.85" width="13.39" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="172.25" y="192.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">G</text>
+<line x1="243.50" y1="176.00" x2="243.50" y2="198.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="248.00" y="177.85" width="13.59" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="249.50" y="192.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">C</text>
+<line x1="320.75" y1="176.00" x2="320.75" y2="198.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="325.25" y="177.85" width="13.59" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="326.75" y="192.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">C</text>
+<line x1="398.00" y1="176.00" x2="398.00" y2="198.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="42.00" y="219.00" width="83.61" height="21.00" rx="4.00" fill="#ff9900"/>
+<text x="49.00" y="235.00" fill="#1a1a1f" stroke="#1a1a1f" stroke-width="0.58" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:13.00px" xml:space="preserve">Assolo di sax</text>
+<text x="43.00" y="280.80" fill="#6b6b6b" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<line x1="42.00" y1="264.00" x2="398.00" y2="264.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="269.60" x2="398.00" y2="269.60" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="275.20" x2="398.00" y2="275.20" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="280.80" x2="398.00" y2="280.80" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="286.40" x2="398.00" y2="286.40" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<rect x="93.50" y="265.85" width="28.97" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="95.00" y="280.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">D</text>
+<text x="104.84" y="280.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.61" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:13.60px" xml:space="preserve">m</text>
+<text x="114.61" y="274.86" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.47" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:10.54px" xml:space="preserve">7</text>
+<line x1="166.25" y1="264.00" x2="166.25" y2="286.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="170.75" y="265.85" width="19.75" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="172.25" y="280.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">G</text>
+<text x="182.64" y="274.86" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.47" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:10.54px" xml:space="preserve">7</text>
+<line x1="243.50" y1="264.00" x2="243.50" y2="286.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="248.00" y="265.85" width="13.59" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="249.50" y="280.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">C</text>
+<line x1="320.75" y1="264.00" x2="320.75" y2="286.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="325.25" y="265.85" width="13.59" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="326.75" y="280.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">C</text>
+<line x1="393.00" y1="264.00" x2="393.00" y2="286.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<line x1="396.40" y1="264.00" x2="396.40" y2="286.40" stroke="#6b6b6b" stroke-width="3.20" stroke-linecap="butt"/>
+</svg></figure></div>
 <h2 id="accordi-e-durate">Accordi e durate<a class="headerlink" href="#accordi-e-durate">#</a></h2>
 <ul>
-<li><code>[Am7]</code> un accordo; <code>[C/E]</code> con il basso; la qualità è libera (<code>m7b5</code>, <code>7#9</code>, <code>sus4</code>, <code>6/9</code>…).</li>
-<li><code>[C:2]</code> dura 2 movimenti (quarti); minimo mezzo movimento (<code>[G:1.5]</code>).</li>
-<li>In una battuta, gli accordi senza durata si dividono in parti uguali il tempo che resta.</li>
-<li><code>[/]</code> è uno <strong>stop</strong>; <code>[%]</code> dice "nessun accordo nuovo".</li>
-<li>Una battuta senza accordi continua quello precedente e si vede come <strong>%</strong>.</li>
-<li>Il testo dopo un accordo è quello cantato su quell'accordo.</li>
+<li><code>[Am7]</code> un accordo: radice (<code>A</code>–<code>G</code> con <code>#</code> o <code>b</code>), qualità libera (<code>m</code>, <code>maj7</code>, <code>m7b5</code>, <code>7#9</code>, <code>sus4</code>, <code>dim7</code>, <code>6/9</code>…) e basso facoltativo dopo <code>/</code> (<code>[C/E]</code>). Nello spartito <code>b</code> e <code>#</code> diventano ♭ e ♯.</li>
+<li><code>[C:2]</code> dura 2 <strong>movimenti</strong> (quarti); la durata minima è mezzo movimento (<code>[G:1.5]</code>, <code>[D:0.5]</code>).</li>
+<li>In una battuta, gli accordi senza durata si dividono il tempo che resta in parti uguali, arrotondate al mezzo movimento; l'ultimo prende il resto. In 4/4: <code>| [C] [G] |</code> = 2 + 2; <code>| [C] [G] [D] |</code> = 1,5 + 1,5 + 1; <code>| [C:3] [G] [D] |</code> = 3 + 0,5 + 0,5.</li>
+<li><code>[/]</code> è uno <strong>stop</strong> (silenzio fino all'accordo seguente; anche con durata: <code>[/:2]</code>); <code>[%]</code> dice esplicitamente "nessun accordo nuovo".</li>
+<li>Una battuta <strong>senza accordi</strong> (<code>| |</code> o solo testo) continua l'accordo precedente e si vede come <strong>%</strong>.</li>
+<li>Il <strong>testo</strong> dopo un accordo è quello cantato su quell'accordo; il testo prima del primo accordo di una battuta va con il primo accordo.</li>
 </ul>
 <h3 id="battute">Battute<a class="headerlink" href="#battute">#</a></h3>
 <ul>
-<li><strong>Con le stanghette</strong>: <code>| [C] [G] | [Am] |</code> – le battute sono delimitate da <code>|</code>.</li>
-<li><strong>Senza stanghette</strong>: <code>[Gm7:2] [C7:2] [F]</code> – ogni accordo dura la sua durata, o una battuta intera.</li>
+<li><strong>Con le stanghette</strong>: <code>| [C] [G] | [Am] |</code>. Le battute vuote contano (<code>| [G] | |</code> sono due battute). Se le durate scritte superano la battuta c'è un avviso; se sono tutte scritte e non la riempiono, l'ultimo accordo si allunga.</li>
+<li><strong>Senza stanghette</strong>: <code>[Gm7:2] [C7:2] [Am7:2] [D7:2] [F]</code> – ogni accordo dura la sua durata, o una battuta intera se non ce l'ha; le battute si riempiono in ordine e un accordo che supera la stanghetta prosegue nella battuta dopo (<strong>%</strong>).</li>
 </ul>
 <h3 id="segni-dentro-laccordo">Segni dentro l'accordo<a class="headerlink" href="#segni-dentro-laccordo">#</a></h3>
 <table>
@@ -312,11 +490,11 @@
 </tr>
 <tr>
 <td><code>[C~]</code></td>
-<td><strong>legatura</strong> all'accordo seguente</td>
+<td><strong>legatura</strong> all'accordo seguente (anche sulla riga dopo)</td>
 </tr>
 <tr>
 <td><code>[C,,,]</code></td>
-<td><strong>barre ritmiche</strong>, una per virgola</td>
+<td><strong>barre ritmiche</strong>, una per virgola, distribuite sulla durata</td>
 </tr>
 <tr>
 <td><code>[C fermata]</code></td>
@@ -324,7 +502,7 @@
 </tr>
 <tr>
 <td><code>[C diamond]</code> o <code>[C &lt;&gt;]</code></td>
-<td><strong>rombo</strong>: accordo tenuto</td>
+<td><strong>rombo</strong>: accordo tenuto, lasciar suonare</td>
 </tr>
 <tr>
 <td><code>[A "1°"]</code></td>
@@ -332,7 +510,84 @@
 </tr>
 </tbody>
 </table>
-<p>Si combinano tra loro e con la durata: <code>[&lt;(G7):2~ fermata]</code>.</p>
+<p>Si combinano tra loro e con la durata, in quest'ordine: anticipo, nome (eventualmente tra parentesi), <code>:durata</code>, <code>~</code> e virgole, poi le parole: <code>[&lt;(G7):2~ fermata]</code>. Sono solo notazione: non spostano l'accordo nel tempo.</p>
+<div class="example"><pre><code class="language-chs">| [C,,,] | [&lt;F~] [F] | [(G7)] [A &quot;1°&quot;] | [C diamond] [/] |
+| [Dm7:3] [G7:1 fermata] | [C] | [% &quot;ripeti&quot;] | [C] |
+</code></pre><figure class="render" aria-label="Lo spartito disegnato da Modern Sheet per questo esempio"><svg xmlns="http://www.w3.org/2000/svg" viewBox="34.0 41.2 372.0 180.8" width="402" height="195" role="img">
+<rect x="34.0" y="41.2" width="372.0" height="180.8" fill="#ffffff"/>
+<text x="43.00" y="78.80" fill="#6b6b6b" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<text x="72.20" y="67.60" fill="#6b6b6b" style="font-family:'ms-Petaluma';font-size:11.65px" xml:space="preserve"></text>
+<text x="72.20" y="78.80" fill="#6b6b6b" style="font-family:'ms-Petaluma';font-size:11.65px" xml:space="preserve"></text>
+<line x1="42.00" y1="62.00" x2="398.00" y2="62.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="67.60" x2="398.00" y2="67.60" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="73.20" x2="398.00" y2="73.20" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="78.80" x2="398.00" y2="78.80" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="84.40" x2="398.00" y2="84.40" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<rect x="93.50" y="63.85" width="13.59" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="95.00" y="78.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">C</text>
+<rect x="111.81" y="67.60" width="12.93" height="11.20" rx="0.00" fill="#ffffff"/>
+<text x="112.81" y="73.20" fill="#0f0f0f" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<rect x="128.62" y="67.60" width="12.93" height="11.20" rx="0.00" fill="#ffffff"/>
+<text x="129.62" y="73.20" fill="#0f0f0f" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<rect x="145.44" y="67.60" width="12.93" height="11.20" rx="0.00" fill="#ffffff"/>
+<text x="146.44" y="73.20" fill="#0f0f0f" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<line x1="166.25" y1="62.00" x2="166.25" y2="84.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="170.75" y="63.85" width="18.18" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="172.25" y="73.88" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.47" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:10.54px" xml:space="preserve">&lt;</text>
+<text x="178.76" y="78.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">F</text>
+<rect x="204.38" y="63.85" width="11.67" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="205.88" y="78.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">F</text>
+<line x1="243.50" y1="62.00" x2="243.50" y2="84.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="248.00" y="63.89" width="29.62" height="17.77" rx="0.00" fill="#ffffff"/>
+<text x="249.50" y="78.95" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.76" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:16.92px" xml:space="preserve">(</text>
+<text x="254.71" y="78.95" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.76" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:16.92px" xml:space="preserve">G</text>
+<text x="265.05" y="72.86" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.47" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:10.49px" xml:space="preserve">7</text>
+<text x="271.39" y="78.95" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.76" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:16.92px" xml:space="preserve">)</text>
+<rect x="281.62" y="63.89" width="13.44" height="17.77" rx="0.00" fill="#ffffff"/>
+<text x="283.12" y="78.95" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.76" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:16.92px" xml:space="preserve">A</text>
+<text x="283.12" y="56.00" fill="#40404c" style="font-family:'ms-Petaluma Script';font-size:8.50px" xml:space="preserve">1</text>
+<text x="285.56" y="56.00" fill="#40404c" style="font-family:'ms-Petaluma';font-size:6.80px" xml:space="preserve"></text>
+<line x1="320.75" y1="62.00" x2="320.75" y2="84.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="325.25" y="63.85" width="25.39" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="326.75" y="78.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">C</text>
+<text x="340.34" y="76.45" fill="#0f0f0f" style="font-family:'ms-Petaluma';font-size:32.48px" xml:space="preserve"></text>
+<rect x="358.88" y="63.85" width="13.64" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="360.38" y="78.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">/</text>
+<line x1="398.00" y1="62.00" x2="398.00" y2="84.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<path d="M188.43 59.65 C192.29 55.09 200.01 55.09 203.88 59.65 C200.01 56.37 192.29 56.37 188.43 59.65 Z" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.30"/>
+<text x="43.00" y="140.80" fill="#6b6b6b" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<line x1="42.00" y1="124.00" x2="398.00" y2="124.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="129.60" x2="398.00" y2="129.60" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="135.20" x2="398.00" y2="135.20" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="140.80" x2="398.00" y2="140.80" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="146.40" x2="398.00" y2="146.40" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<rect x="93.50" y="125.85" width="28.97" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="95.00" y="140.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">D</text>
+<text x="104.84" y="140.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.61" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:13.60px" xml:space="preserve">m</text>
+<text x="114.61" y="134.86" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.47" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:10.54px" xml:space="preserve">7</text>
+<rect x="201.88" y="125.85" width="19.75" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="203.38" y="140.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">G</text>
+<text x="213.76" y="134.86" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.47" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:10.54px" xml:space="preserve">7</text>
+<text x="206.47" y="120.00" fill="#0f0f0f" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<line x1="243.50" y1="124.00" x2="243.50" y2="146.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="248.00" y="125.85" width="13.59" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="249.50" y="140.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">C</text>
+<line x1="320.75" y1="124.00" x2="320.75" y2="146.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="352.67" y="126.20" width="17.42" height="18.00" rx="0.00" fill="#ffffff"/>
+<text x="354.67" y="135.20" fill="#0f0f0f" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<text x="328.75" y="118.00" fill="#40404c" style="font-family:'ms-Petaluma Script';font-size:8.50px" xml:space="preserve">ripeti</text>
+<line x1="398.00" y1="124.00" x2="398.00" y2="146.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<text x="43.00" y="202.80" fill="#6b6b6b" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<line x1="42.00" y1="186.00" x2="166.25" y2="186.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="191.60" x2="166.25" y2="191.60" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="197.20" x2="166.25" y2="197.20" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="202.80" x2="166.25" y2="202.80" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="208.40" x2="166.25" y2="208.40" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<rect x="93.50" y="187.85" width="13.59" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="95.00" y="202.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">C</text>
+<line x1="161.25" y1="186.00" x2="161.25" y2="208.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<line x1="164.65" y1="186.00" x2="164.65" y2="208.40" stroke="#6b6b6b" stroke-width="3.20" stroke-linecap="butt"/>
+</svg></figure></div>
 <h2 id="stanghette-ritornelli-e-volte">Stanghette, ritornelli e volte<a class="headerlink" href="#stanghette-ritornelli-e-volte">#</a></h2>
 <table>
 <thead>
@@ -348,11 +603,11 @@
 </tr>
 <tr>
 <td><code>|: … :|</code></td>
-<td>ritornello (2 volte)</td>
+<td>ritornello (2 volte, senza scritte)</td>
 </tr>
 <tr>
 <td><code>:| x3</code></td>
-<td>ritornello ripetuto 3 volte</td>
+<td>ritornello ripetuto 3 volte (<code>x3</code> sopra la fine)</td>
 </tr>
 <tr>
 <td><code>{volta: 1}</code> … <code>{volta: 2}</code></td>
@@ -361,10 +616,6 @@
 <tr>
 <td><code>{volta_end}</code> / <code>{volta_end: hook}</code></td>
 <td>chiusura della volta, aperta o con gancio</td>
-</tr>
-<tr>
-<td><code>{br}</code></td>
-<td>a capo forzato</td>
 </tr>
 </tbody>
 </table>
@@ -446,9 +697,9 @@
 <line x1="246.50" y1="123.00" x2="246.50" y2="134.00" stroke="#0f0f0f" stroke-width="0.90" stroke-linecap="butt"/>
 <text x="249.50" y="133.00" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.45" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:10.00px" xml:space="preserve">2.</text>
 </svg></figure></div>
-<p>La 2ª volta va a capo, allineata a destra sotto la 1ª.</p>
+<p>Una volta si chiude da sola al <code>:|</code> (con il gancio), all'apertura della volta seguente, con <code>{volta_end}</code> o <strong>a fine riga del file</strong>. La 2ª volta va a capo, allineata a destra sotto la 1ª, e l'ultima volta riceve la doppia stanghetta.</p>
 <h2 id="cambi-di-tonalita-e-di-metro">Cambi di tonalità e di metro<a class="headerlink" href="#cambi-di-tonalita-e-di-metro">#</a></h2>
-<p><code>{key: …}</code> e <code>{time: …}</code> possono stare su una riga propria o subito dopo una stanghetta:</p>
+<p><code>{key: …}</code> e <code>{time: …}</code> possono stare su una riga propria o subito dopo una stanghetta, e valgono dalla battuta seguente:</p>
 <div class="example"><pre><code class="language-chs">| [G7]ultimo giro || {key: Db} [Db]modulazione | [Gb] |
 | [Gm7] | {time: 2/4} [C7] | {time: 4/4} [F7] |
 </code></pre><figure class="render" aria-label="Lo spartito disegnato da Modern Sheet per questo esempio"><svg xmlns="http://www.w3.org/2000/svg" viewBox="34.0 40.4 372.0 119.6" width="402" height="129" role="img">
@@ -512,7 +763,48 @@
 <line x1="341.75" y1="124.00" x2="341.75" y2="146.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
 <line x1="345.15" y1="124.00" x2="345.15" y2="146.40" stroke="#6b6b6b" stroke-width="3.20" stroke-linecap="butt"/>
 </svg></figure></div>
-<p>Al cambio di tonalità compaiono la doppia stanghetta, la nuova armatura (con i bequadri di cortesia) e, sotto il pentagramma, il nome della nuova tonalità.</p>
+<p>Al cambio di tonalità compaiono la doppia stanghetta, la nuova armatura (con i bequadri di cortesia) e, sotto il pentagramma, il nome della nuova tonalità; al cambio di metro, il nuovo metro. Dopo le prime battute sono sempre cambi, anche se il brano non ha tonalità e metro nell'intestazione.</p>
+<h2 id="impaginazione">Impaginazione<a class="headerlink" href="#impaginazione">#</a></h2>
+<p>Gli a capo del file <strong>non</strong> decidono gli a capo dello spartito: contano le battute per riga.</p>
+<table>
+<thead>
+<tr>
+<th>Scrivi</th>
+<th>Effetto</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>{bars_per_line: 6}</code> dentro una sezione</td>
+<td>6 battute per riga in quella sezione</td>
+</tr>
+<tr>
+<td><code>{bars_per_line: 6}</code> fuori dalle sezioni</td>
+<td>6 battute per riga da lì in avanti</td>
+</tr>
+<tr>
+<td><code>{bars_per_line}</code> (senza valore)</td>
+<td>torna al valore delle impostazioni (4)</td>
+</tr>
+<tr>
+<td><code>{br}</code> in una riga di battute</td>
+<td>la battuta in cui compare comincia una nuova riga</td>
+</tr>
+<tr>
+<td><code>{bar_width: uniform}</code></td>
+<td><strong>Griglia</strong>: battute tutte larghe uguali e allineate in colonna anche fra sezioni diverse; una battuta affollata occupa due posti invece di rimpicciolire le sigle</td>
+</tr>
+<tr>
+<td><code>{bar_width: fit}</code></td>
+<td><strong>Riempi</strong>: ogni battuta larga quanto le serve (in proporzione ai movimenti); si va a capo solo quando le battute non ci stanno</td>
+</tr>
+<tr>
+<td><code>{row_spacing: wide}</code></td>
+<td>più spazio fra le righe (<code>compact</code>, <code>normal</code>, <code>wide</code>, <code>extra</code>, o <code>50%</code>–<code>300%</code>)</td>
+</tr>
+</tbody>
+</table>
+<p><code>bar_width</code> e <code>bars_per_line</code> scritti nell'intestazione valgono per il brano, dentro una sezione solo per quella; nell'app le impostazioni e la barra sopra lo spartito danno il valore predefinito.</p>
 <h2 id="segni-di-navigazione">Segni di navigazione<a class="headerlink" href="#segni-di-navigazione">#</a></h2>
 <table>
 <thead>
@@ -603,18 +895,65 @@
 <line x1="241.90" y1="132.00" x2="241.90" y2="154.40" stroke="#6b6b6b" stroke-width="3.20" stroke-linecap="butt"/>
 <text x="179.20" y="124.00" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.56" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:12.50px" xml:space="preserve">D.S. al Coda</text>
 </svg></figure></div>
+<p>Scritti su una riga propria, <code>{to_coda}</code>, <code>{fine}</code>, <code>{dc}</code> e <code>{ds}</code> vanno alla fine dell'ultima battuta scritta.</p>
 <h2 id="righe-di-testo">Righe di testo<a class="headerlink" href="#righe-di-testo">#</a></h2>
-<p><code>{text: Prima volta solo chitarra}</code> su una riga propria, dentro una sezione, stampa una riga di testo nello spartito in quel punto: prima della musica, fra due righe o in fondo alla sezione.</p>
-<h2 id="note-da-musicxml">Note da MusicXML<a class="headerlink" href="#note-da-musicxml">#</a></h2>
-<p>Le parti scritte (intro, riff, temi) si preparano in un editor di partiture (MuseScore, Dorico, Sibelius…), si esportano in <strong>MusicXML</strong> e si richiamano:</p>
-<pre><code>{start_of_intro: Intro}
-{musicxml: intro.musicxml}
-{end_of_intro}
-</code></pre>
-<p><code>{musicxml: tema.musicxml | 3-6}</code> usa solo le battute dalla 3 alla 6. Il percorso è relativo alla cartella del brano. Note, accordi e testo del file vengono disegnati sul pentagramma, trasposti insieme al resto.</p>
-<p>Nell'app i MusicXML citati si vedono in una scheda accanto al brano, in sola lettura; per modificarli conviene convertirli in note scritte nel <code>.chs</code> (sotto) con il pulsante <strong>Converti in note nel brano</strong>.</p>
+<p><code>{text: Prima volta solo chitarra}</code> su una riga propria, dentro una sezione, stampa una riga di testo nello spartito in quel punto: prima della musica, fra due righe (la riga seguente va a capo) o in fondo alla sezione.</p>
+<div class="example"><pre><code class="language-chs">{start_of_verse: Strofa}
+{text: Prima volta solo chitarra}
+| [Em] | [C] | [G] | [D] |
+{text: Seconda volta tutti}
+| [Em] | [C] | [D] | [D] |
+{end_of_verse}
+</code></pre><figure class="render" aria-label="Lo spartito disegnato da Modern Sheet per questo esempio"><svg xmlns="http://www.w3.org/2000/svg" viewBox="34.0 35.0 372.0 191.0" width="402" height="206" role="img">
+<rect x="34.0" y="35.0" width="372.0" height="191.0" fill="#ffffff"/>
+<rect x="42.00" y="43.00" width="52.05" height="21.00" rx="4.00" fill="#0066cc"/>
+<text x="49.00" y="59.00" fill="#ffffff" stroke="#ffffff" stroke-width="0.58" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:13.00px" xml:space="preserve">Strofa</text>
+<text x="42.00" y="79.00" fill="#333333" style="font-family:'ms-Petaluma Script';font-size:10.50px" xml:space="preserve">Prima volta solo chitarra</text>
+<text x="43.00" y="124.80" fill="#6b6b6b" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<text x="72.20" y="113.60" fill="#6b6b6b" style="font-family:'ms-Petaluma';font-size:11.65px" xml:space="preserve"></text>
+<text x="72.20" y="124.80" fill="#6b6b6b" style="font-family:'ms-Petaluma';font-size:11.65px" xml:space="preserve"></text>
+<line x1="42.00" y1="108.00" x2="398.00" y2="108.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="113.60" x2="398.00" y2="113.60" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="119.20" x2="398.00" y2="119.20" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="124.80" x2="398.00" y2="124.80" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="130.40" x2="398.00" y2="130.40" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<rect x="93.50" y="109.85" width="22.71" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="95.00" y="124.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">E</text>
+<text x="104.94" y="124.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.61" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:13.60px" xml:space="preserve">m</text>
+<line x1="166.25" y1="108.00" x2="166.25" y2="130.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="170.75" y="109.85" width="13.59" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="172.25" y="124.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">C</text>
+<line x1="243.50" y1="108.00" x2="243.50" y2="130.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="248.00" y="109.85" width="13.39" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="249.50" y="124.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">G</text>
+<line x1="320.75" y1="108.00" x2="320.75" y2="130.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="325.25" y="109.85" width="12.84" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="326.75" y="124.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">D</text>
+<line x1="398.00" y1="108.00" x2="398.00" y2="130.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<text x="42.00" y="161.00" fill="#333333" style="font-family:'ms-Petaluma Script';font-size:10.50px" xml:space="preserve">Seconda volta tutti</text>
+<text x="43.00" y="206.80" fill="#6b6b6b" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<line x1="42.00" y1="190.00" x2="398.00" y2="190.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="195.60" x2="398.00" y2="195.60" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="201.20" x2="398.00" y2="201.20" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="206.80" x2="398.00" y2="206.80" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="212.40" x2="398.00" y2="212.40" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<rect x="93.50" y="191.85" width="22.71" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="95.00" y="206.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">E</text>
+<text x="104.94" y="206.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.61" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:13.60px" xml:space="preserve">m</text>
+<line x1="166.25" y1="190.00" x2="166.25" y2="212.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="170.75" y="191.85" width="13.59" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="172.25" y="206.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">C</text>
+<line x1="243.50" y1="190.00" x2="243.50" y2="212.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="248.00" y="191.85" width="12.84" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="249.50" y="206.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">D</text>
+<line x1="320.75" y1="190.00" x2="320.75" y2="212.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="325.25" y="191.85" width="12.84" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="326.75" y="206.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">D</text>
+<line x1="393.00" y1="190.00" x2="393.00" y2="212.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<line x1="396.40" y1="190.00" x2="396.40" y2="212.40" stroke="#6b6b6b" stroke-width="3.20" stroke-linecap="butt"/>
+</svg></figure></div>
 <h2 id="note-scritte-nel-chs">Note scritte nel .chs<a class="headerlink" href="#note-scritte-nel-chs">#</a></h2>
-<p>In alternativa al MusicXML, poche battute di note si possono scrivere <strong>direttamente nel brano</strong>, dentro una sezione:</p>
+<p>Le parti con le note (intro, riff, temi) si scrivono <strong>direttamente nel brano</strong>, in un blocco dentro una sezione:</p>
 <div class="example"><pre><code class="language-chs">{start_of_intro: Intro}
 {start_of_notes}
 | [Gm7] G8 Bb D F [C7] A G E C | [Am7] C E G B [D7] F# E D16 C Bb A |
@@ -749,44 +1088,305 @@
 </thead>
 <tbody>
 <tr>
-<td><code>G</code> <code>Bb</code> <code>F#</code></td>
-<td>le note, come negli accordi; <strong>l'alterazione si scrive sempre</strong>, anche se è in armatura (in Fa il si bemolle è <code>Bb</code>); <code>Bn</code> = bequadro voluto</td>
+<td><code>G</code> <code>Bb</code> <code>F#</code> <code>C##</code> <code>Ebb</code></td>
+<td>le note, come negli accordi (anche minuscole); <strong>l'alterazione si scrive sempre</strong>, anche se è in armatura (in Fa il si bemolle è <code>Bb</code>); <code>Bn</code> = bequadro voluto</td>
 </tr>
 <tr>
-<td><code>8</code> <code>4</code> <code>2</code> <code>1</code> <code>16</code>, <code>4.</code></td>
-<td>la figura: croma, semiminima, minima, semibreve, semicroma; il punto. <strong>Vale finché non cambia</strong>: <code>G8 Bb D F</code> sono quattro crome</td>
+<td><code>1</code> <code>2</code> <code>4</code> <code>8</code> <code>16</code> <code>32</code></td>
+<td>la figura: semibreve, minima, semiminima, croma, semicroma, biscroma; <code>.</code> o <code>..</code> per il punto. <strong>Vale finché non cambia</strong>: <code>G8 Bb D F</code> sono quattro crome (all'inizio del blocco: <code>4</code>)</td>
 </tr>
 <tr>
 <td>ottava</td>
-<td>ogni nota va alla più vicina alla precedente; <code>'</code> la alza, <code>,</code> la abbassa; <code>C@5</code> fissa l'ottava (do centrale = <code>C4</code>; durata dopo una barra: <code>C@5/2</code>)</td>
+<td>ogni nota va alla più vicina alla precedente (entro una quarta); <code>'</code> la alza di un'ottava, <code>,</code> la abbassa (<code>''</code> due). La prima nota del blocco va vicino al si centrale del rigo</td>
 </tr>
 <tr>
-<td><code>R4</code> <code>R*</code></td>
-<td>pausa; pausa di battuta intera</td>
+<td><code>C@5</code></td>
+<td>ottava fissa: do centrale = <code>C4</code>; le note dopo tornano relative da lì. Dopo <code>@N</code> la durata va dopo una barra: <code>C@5/2</code></td>
+</tr>
+<tr>
+<td><code>R4</code> <code>R8.</code> <code>R*</code></td>
+<td>pausa; <code>R*</code> = pausa di battuta intera, in qualunque metro</td>
 </tr>
 <tr>
 <td><code>F2- F4</code></td>
-<td>legatura di valore</td>
+<td>legatura di valore (anche alla battuta dopo e oltre l'a capo)</td>
 </tr>
 <tr>
 <td><code>3(F8 E D)</code></td>
-<td>terzina (in generale <code>5:4( … )</code>)</td>
+<td>terzina; in generale <code>N:M( … )</code> = N note nel tempo di M (<code>5:4(C16 D E F G)</code>)</td>
 </tr>
 <tr>
 <td><code>&lt;C E G&gt;2</code></td>
-<td>più note sullo stesso gambo</td>
+<td>più note sullo stesso gambo, la durata dopo <code>&gt;</code></td>
 </tr>
 <tr>
 <td><code>A4~3</code></td>
-<td>per la tablatura: la nota sulla 3ª corda (1 = la più acuta)</td>
+<td>solo per la tablatura: la nota sulla 3ª corda (1 = la più acuta); in <code>&lt; &gt;</code> dopo ogni nota</td>
 </tr>
 <tr>
 <td><code>[Gm7]</code></td>
-<td>l'accordo, subito prima della nota su cui cade</td>
+<td>l'accordo, subito prima della nota su cui cade (senza durata). Per cambiare accordo su una nota tenuta: <code>G2- [C7] G2</code></td>
 </tr>
 </tbody>
 </table>
-<p>Il testo cantato va su una riga <code>w:</code> sotto la riga di note, una sillaba per nota (<code>lu- ne- dì</code>; <code>_</code> salta una nota, <code>|</code> passa alla battuta dopo). Le travature si fanno da sole. Il risultato è lo stesso del MusicXML: si traspone, si impagina e si stampa allo stesso modo; l'esempio <code>note_nel_chs</code> è il blues con melodia scritto così.</p>
+<p>Ordine dentro una nota: nome, alterazione, ottava, durata, punto, legatura, corda (<code>F#'8.-~2</code>). Le note si separano con spazi.</p>
+<ul>
+<li>Le righe del blocco cominciano con una stanghetta e accettano tutto quello delle battute normali: <code>||</code>, <code>|: … :|</code>, <code>:| x3</code>, <code>{volta: 1}</code>, i segni di navigazione; <code>{key}</code> e <code>{time}</code> su riga propria cambiano tonalità e metro. Una battuta con soli accordi è una battuta normale.</li>
+<li><strong>Testo cantato</strong>: una riga <code>w:</code> sotto la riga di note, una sillaba per nota (<code>w: Blues, blues del lu- ne- dì</code>). Una sillaba che finisce con <code>-</code> continua nella seguente; le pause e le note legate si saltano da sole; <code>_</code> salta una nota (la sillaba prima si prolunga); <code>|</code> passa alla battuta dopo.</li>
+<li>Le travature si fanno da sole (per movimento; in 4/4 quattro crome sulla stessa metà di battuta stanno sotto una sola travatura). Le alterazioni nello spartito sono ricalcolate rispetto all'armatura: <code>Bb</code> in Fa non disegna nessun bemolle.</li>
+<li>Avvisi utili quando si copia da uno spartito: battuta più lunga o più corta del metro, nota senza alterazione che l'armatura altererebbe (in Fa: <code>B</code> invece di <code>Bb</code>), legatura fra note diverse, gruppo irregolare non chiuso, sillabe in più.</li>
+</ul>
+<p>Nell'app un riferimento <code>{musicxml: …}</code> si può convertire in note scritte così con un pulsante (vedi <a href="#note-da-musicxml">Note da MusicXML</a>).</p>
+<h2 id="tablatura-per-chitarra">Tablatura per chitarra<a class="headerlink" href="#tablatura-per-chitarra">#</a></h2>
+<p>Le battute con le note (scritte nel <code>.chs</code> o da MusicXML) si possono mostrare in tre modi, con la direttiva <code>notation</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Scrivi</th>
+<th>Resa</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>{notation: staff}</code></td>
+<td>solo pentagramma (predefinito)</td>
+</tr>
+<tr>
+<td><code>{notation: both}</code></td>
+<td>pentagramma e, sotto, la <strong>tablatura</strong>: il numero del tasto sulla corda, nella stessa colonna della nota</td>
+</tr>
+<tr>
+<td><code>{notation: tab}</code></td>
+<td>solo tablatura, al posto del pentagramma, con il <strong>ritmo</strong> disegnato sotto i numeri (gambi, travature, punti, pause)</td>
+</tr>
+</tbody>
+</table>
+<p>Nell'intestazione vale per il brano, dentro una sezione solo per quella; nell'app c'è anche un selettore sopra lo spartito (<em>Pentagramma / Entrambi / Tablatura</em>), che vince su tutto. Il ritmo non si scrive a parte: viene dalle note.</p>
+<div class="example"><pre><code class="language-chs">{key: G}
+{notation: both}
+{start_of_intro: Riff}
+{start_of_notes}
+| [G] G@3/8 B D G [D] F# D A4 | [Em] E@3/8 G B E [C] E G C4 |
+{end_of_notes}
+{end_of_intro}
+</code></pre><figure class="render" aria-label="Lo spartito disegnato da Modern Sheet per questo esempio"><svg xmlns="http://www.w3.org/2000/svg" viewBox="34.0 35.0 323.4 178.7" width="349" height="193" role="img">
+<rect x="34.0" y="35.0" width="323.4" height="178.7" fill="#ffffff"/>
+<rect x="42.00" y="43.00" width="35.59" height="21.00" rx="4.00" fill="#0066cc"/>
+<text x="49.00" y="59.00" fill="#ffffff" stroke="#ffffff" stroke-width="0.58" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:13.00px" xml:space="preserve">Riff</text>
+<text x="43.00" y="130.80" fill="#6b6b6b" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<text x="68.00" y="114.00" fill="#6b6b6b" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<text x="82.60" y="119.60" fill="#6b6b6b" style="font-family:'ms-Petaluma';font-size:11.65px" xml:space="preserve"></text>
+<text x="82.60" y="130.80" fill="#6b6b6b" style="font-family:'ms-Petaluma';font-size:11.65px" xml:space="preserve"></text>
+<line x1="42.00" y1="114.00" x2="349.40" y2="114.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="119.60" x2="349.40" y2="119.60" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="125.20" x2="349.40" y2="125.20" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="130.80" x2="349.40" y2="130.80" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="136.40" x2="349.40" y2="136.40" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="105.88" y1="142.00" x2="118.40" y2="142.00" stroke="#6b6b6b" stroke-width="0.95" stroke-linecap="butt"/>
+<line x1="105.88" y1="147.60" x2="118.40" y2="147.60" stroke="#6b6b6b" stroke-width="0.95" stroke-linecap="butt"/>
+<text x="108.40" y="150.40" fill="#0f0f0f" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<line x1="115.43" y1="150.40" x2="115.43" y2="120.52" stroke="#0f0f0f" stroke-width="0.85" stroke-linecap="butt"/>
+<line x1="120.10" y1="142.00" x2="132.62" y2="142.00" stroke="#6b6b6b" stroke-width="0.85" stroke-linecap="butt"/>
+<text x="122.62" y="144.80" fill="#0f0f0f" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<line x1="129.65" y1="144.80" x2="129.65" y2="118.81" stroke="#0f0f0f" stroke-width="0.85" stroke-linecap="butt"/>
+<text x="136.83" y="139.20" fill="#0f0f0f" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<line x1="143.87" y1="139.20" x2="143.87" y2="117.11" stroke="#0f0f0f" stroke-width="0.85" stroke-linecap="butt"/>
+<text x="151.05" y="130.80" fill="#0f0f0f" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<line x1="158.08" y1="130.80" x2="158.08" y2="115.40" stroke="#0f0f0f" stroke-width="0.85" stroke-linecap="butt"/>
+<text x="165.27" y="133.60" fill="#0f0f0f" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<line x1="172.30" y1="133.60" x2="172.30" y2="114.00" stroke="#0f0f0f" stroke-width="0.85" stroke-linecap="butt"/>
+<text x="179.49" y="139.20" fill="#0f0f0f" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<line x1="186.52" y1="139.20" x2="186.52" y2="115.71" stroke="#0f0f0f" stroke-width="0.85" stroke-linecap="butt"/>
+<line x1="191.18" y1="142.00" x2="203.70" y2="142.00" stroke="#6b6b6b" stroke-width="0.85" stroke-linecap="butt"/>
+<line x1="191.18" y1="147.60" x2="203.70" y2="147.60" stroke="#6b6b6b" stroke-width="0.85" stroke-linecap="butt"/>
+<text x="193.70" y="147.60" fill="#0f0f0f" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<line x1="200.73" y1="147.60" x2="200.73" y2="128.00" stroke="#0f0f0f" stroke-width="0.85" stroke-linecap="butt"/>
+<path d="M115.03 120.57 L158.48 115.35 L158.48 118.15 L115.03 123.37 Z" fill="#0f0f0f"/>
+<path d="M171.90 113.95 L186.92 115.75 L186.92 118.55 L171.90 116.75 Z" fill="#0f0f0f"/>
+<line x1="224.40" y1="114.00" x2="224.40" y2="136.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<line x1="230.88" y1="142.00" x2="243.40" y2="142.00" stroke="#6b6b6b" stroke-width="0.95" stroke-linecap="butt"/>
+<line x1="230.88" y1="147.60" x2="243.40" y2="147.60" stroke="#6b6b6b" stroke-width="0.95" stroke-linecap="butt"/>
+<line x1="230.88" y1="153.20" x2="243.40" y2="153.20" stroke="#6b6b6b" stroke-width="0.95" stroke-linecap="butt"/>
+<text x="233.40" y="156.00" fill="#0f0f0f" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<line x1="240.43" y1="156.00" x2="240.43" y2="126.12" stroke="#0f0f0f" stroke-width="0.85" stroke-linecap="butt"/>
+<line x1="245.10" y1="142.00" x2="257.62" y2="142.00" stroke="#6b6b6b" stroke-width="0.85" stroke-linecap="butt"/>
+<line x1="245.10" y1="147.60" x2="257.62" y2="147.60" stroke="#6b6b6b" stroke-width="0.85" stroke-linecap="butt"/>
+<text x="247.62" y="150.40" fill="#0f0f0f" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<line x1="254.65" y1="150.40" x2="254.65" y2="124.41" stroke="#0f0f0f" stroke-width="0.85" stroke-linecap="butt"/>
+<line x1="259.31" y1="142.00" x2="271.84" y2="142.00" stroke="#6b6b6b" stroke-width="0.85" stroke-linecap="butt"/>
+<text x="261.83" y="144.80" fill="#0f0f0f" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<line x1="268.87" y1="144.80" x2="268.87" y2="122.71" stroke="#0f0f0f" stroke-width="0.85" stroke-linecap="butt"/>
+<text x="276.05" y="136.40" fill="#0f0f0f" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<line x1="283.08" y1="136.40" x2="283.08" y2="121.00" stroke="#0f0f0f" stroke-width="0.85" stroke-linecap="butt"/>
+<text x="290.27" y="136.40" fill="#0f0f0f" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<line x1="297.30" y1="136.40" x2="297.30" y2="116.80" stroke="#0f0f0f" stroke-width="0.85" stroke-linecap="butt"/>
+<text x="304.49" y="130.80" fill="#0f0f0f" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<line x1="311.52" y1="130.80" x2="311.52" y2="115.09" stroke="#0f0f0f" stroke-width="0.85" stroke-linecap="butt"/>
+<text x="318.70" y="122.40" fill="#0f0f0f" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<line x1="319.15" y1="122.40" x2="319.15" y2="142.00" stroke="#0f0f0f" stroke-width="0.85" stroke-linecap="butt"/>
+<path d="M240.03 126.17 L283.48 120.95 L283.48 123.75 L240.03 128.97 Z" fill="#0f0f0f"/>
+<path d="M296.90 116.85 L311.92 115.05 L311.92 117.85 L296.90 119.65 Z" fill="#0f0f0f"/>
+<line x1="344.40" y1="114.00" x2="344.40" y2="136.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<line x1="347.80" y1="114.00" x2="347.80" y2="136.40" stroke="#6b6b6b" stroke-width="3.20" stroke-linecap="butt"/>
+<text x="107.40" y="104.00" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">G</text>
+<text x="164.27" y="104.00" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">D</text>
+<text x="232.40" y="104.00" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">E</text>
+<text x="242.34" y="104.00" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.61" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:13.60px" xml:space="preserve">m</text>
+<text x="289.27" y="104.00" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">C</text>
+<line x1="42.00" y1="171.60" x2="224.40" y2="171.60" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="177.60" x2="224.40" y2="177.60" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="183.60" x2="224.40" y2="183.60" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="189.60" x2="224.40" y2="189.60" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="195.60" x2="224.40" y2="195.60" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="201.60" x2="224.40" y2="201.60" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<text x="46.93" y="180.01" fill="#6b6b6b" stroke="#6b6b6b" stroke-width="0.39" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:8.70px" xml:space="preserve">T</text>
+<text x="47.32" y="189.73" fill="#6b6b6b" stroke="#6b6b6b" stroke-width="0.39" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:8.70px" xml:space="preserve">A</text>
+<text x="47.48" y="199.45" fill="#6b6b6b" stroke="#6b6b6b" stroke-width="0.39" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:8.70px" xml:space="preserve">B</text>
+<line x1="224.40" y1="171.60" x2="224.40" y2="201.60" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<line x1="224.40" y1="171.60" x2="349.40" y2="171.60" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="224.40" y1="177.60" x2="349.40" y2="177.60" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="224.40" y1="183.60" x2="349.40" y2="183.60" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="224.40" y1="189.60" x2="349.40" y2="189.60" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="224.40" y1="195.60" x2="349.40" y2="195.60" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="224.40" y1="201.60" x2="349.40" y2="201.60" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="349.40" y1="171.60" x2="349.40" y2="201.60" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="108.90" y="198.56" width="6.48" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="109.90" y="204.18" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">3</text>
+<rect x="122.98" y="192.56" width="6.76" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="123.98" y="198.18" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">2</text>
+<rect x="137.41" y="186.56" width="6.33" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="138.41" y="192.18" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">0</text>
+<rect x="151.63" y="180.56" width="6.33" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="152.63" y="186.18" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">0</text>
+<rect x="165.68" y="186.56" width="6.67" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="166.68" y="192.18" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">4</text>
+<rect x="180.06" y="186.56" width="6.33" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="181.06" y="192.18" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">0</text>
+<rect x="194.28" y="192.56" width="6.33" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="195.28" y="198.18" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">0</text>
+<rect x="233.97" y="198.56" width="6.33" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="234.97" y="204.18" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">0</text>
+<rect x="248.12" y="198.56" width="6.48" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="249.12" y="204.18" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">3</text>
+<rect x="262.20" y="192.56" width="6.76" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="263.20" y="198.18" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">2</text>
+<rect x="276.41" y="186.56" width="6.76" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="277.41" y="192.18" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">2</text>
+<rect x="290.63" y="186.56" width="6.76" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="291.63" y="192.18" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">2</text>
+<rect x="305.06" y="180.56" width="6.33" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="306.06" y="186.18" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">0</text>
+<rect x="320.36" y="174.56" width="4.17" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="321.36" y="180.18" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">1</text>
+</svg></figure></div>
+<div class="example"><pre><code class="language-chs">{key: G}
+{start_of_outro: Finale}
+{notation: tab}
+{start_of_notes}
+| [C] C@4/8 E G E [D] D F# A F# | [G] &lt;G@3 B D G&gt;1 ||
+{end_of_notes}
+{end_of_outro}
+</code></pre><figure class="render" aria-label="Lo spartito disegnato da Modern Sheet per questo esempio"><svg xmlns="http://www.w3.org/2000/svg" viewBox="34.0 35.0 288.1 132.0" width="311" height="143" role="img">
+<rect x="34.0" y="35.0" width="288.1" height="132.0" fill="#ffffff"/>
+<rect x="42.00" y="43.00" width="45.06" height="21.00" rx="4.00" fill="#0066cc"/>
+<text x="49.00" y="59.00" fill="#ffffff" stroke="#ffffff" stroke-width="0.58" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:13.00px" xml:space="preserve">Finale</text>
+<text x="46.93" y="122.41" fill="#6b6b6b" stroke="#6b6b6b" stroke-width="0.39" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:8.70px" xml:space="preserve">T</text>
+<text x="47.32" y="132.13" fill="#6b6b6b" stroke="#6b6b6b" stroke-width="0.39" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:8.70px" xml:space="preserve">A</text>
+<text x="47.48" y="141.85" fill="#6b6b6b" stroke="#6b6b6b" stroke-width="0.39" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:8.70px" xml:space="preserve">B</text>
+<text x="74.20" y="123.40" fill="#6b6b6b" style="font-family:'ms-Petaluma';font-size:11.65px" xml:space="preserve"></text>
+<text x="74.20" y="134.60" fill="#6b6b6b" style="font-family:'ms-Petaluma';font-size:11.65px" xml:space="preserve"></text>
+<line x1="42.00" y1="114.00" x2="99.40" y2="114.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="120.00" x2="99.40" y2="120.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="126.00" x2="99.40" y2="126.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="132.00" x2="99.40" y2="132.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="138.00" x2="99.40" y2="138.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="144.00" x2="99.40" y2="144.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="99.40" y1="114.00" x2="239.40" y2="114.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="99.40" y1="120.00" x2="239.40" y2="120.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="99.40" y1="126.00" x2="239.40" y2="126.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="99.40" y1="132.00" x2="239.40" y2="132.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="99.40" y1="138.00" x2="239.40" y2="138.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="99.40" y1="144.00" x2="239.40" y2="144.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="239.40" y1="114.00" x2="314.05" y2="114.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="239.40" y1="120.00" x2="314.05" y2="120.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="239.40" y1="126.00" x2="314.05" y2="126.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="239.40" y1="132.00" x2="314.05" y2="132.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="239.40" y1="138.00" x2="314.05" y2="138.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="239.40" y1="144.00" x2="314.05" y2="144.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<rect x="108.90" y="134.96" width="6.48" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="109.90" y="140.58" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">3</text>
+<line x1="112.14" y1="147.00" x2="112.14" y2="159.00" stroke="#0f0f0f" stroke-width="0.85" stroke-linecap="butt"/>
+<rect x="123.58" y="128.96" width="6.76" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="124.58" y="134.58" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">2</text>
+<line x1="126.96" y1="147.00" x2="126.96" y2="159.00" stroke="#0f0f0f" stroke-width="0.85" stroke-linecap="butt"/>
+<rect x="138.60" y="122.96" width="6.33" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="139.60" y="128.58" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">0</text>
+<line x1="141.77" y1="147.00" x2="141.77" y2="159.00" stroke="#0f0f0f" stroke-width="0.85" stroke-linecap="butt"/>
+<rect x="153.21" y="128.96" width="6.76" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="154.21" y="134.58" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">2</text>
+<line x1="156.59" y1="147.00" x2="156.59" y2="159.00" stroke="#0f0f0f" stroke-width="0.85" stroke-linecap="butt"/>
+<rect x="168.23" y="128.96" width="6.33" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="169.23" y="134.58" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">0</text>
+<line x1="171.40" y1="147.00" x2="171.40" y2="159.00" stroke="#0f0f0f" stroke-width="0.85" stroke-linecap="butt"/>
+<rect x="182.88" y="128.96" width="6.67" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="183.88" y="134.58" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">4</text>
+<line x1="186.21" y1="147.00" x2="186.21" y2="159.00" stroke="#0f0f0f" stroke-width="0.85" stroke-linecap="butt"/>
+<rect x="197.65" y="122.96" width="6.76" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="198.65" y="128.58" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">2</text>
+<line x1="201.03" y1="147.00" x2="201.03" y2="159.00" stroke="#0f0f0f" stroke-width="0.85" stroke-linecap="butt"/>
+<rect x="212.51" y="128.96" width="6.67" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="213.51" y="134.58" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">4</text>
+<line x1="215.84" y1="147.00" x2="215.84" y2="159.00" stroke="#0f0f0f" stroke-width="0.85" stroke-linecap="butt"/>
+<rect x="111.74" y="157.10" width="45.24" height="1.90" rx="0.00" fill="#0f0f0f"/>
+<rect x="171.00" y="157.10" width="45.24" height="1.90" rx="0.00" fill="#0f0f0f"/>
+<line x1="239.40" y1="114.00" x2="239.40" y2="136.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<line x1="239.40" y1="136.40" x2="239.40" y2="144.00" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="248.90" y="140.96" width="6.48" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="249.90" y="146.58" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">3</text>
+<rect x="248.76" y="134.96" width="6.76" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="249.76" y="140.58" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">2</text>
+<rect x="248.97" y="128.96" width="6.33" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="249.97" y="134.58" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">0</text>
+<rect x="248.97" y="122.96" width="6.33" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="249.97" y="128.58" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">0</text>
+<line x1="309.05" y1="114.00" x2="309.05" y2="136.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<line x1="312.45" y1="114.00" x2="312.45" y2="136.40" stroke="#6b6b6b" stroke-width="3.20" stroke-linecap="butt"/>
+<line x1="314.05" y1="136.40" x2="314.05" y2="144.00" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<text x="107.40" y="104.00" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">C</text>
+<text x="166.66" y="104.00" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">D</text>
+<text x="247.40" y="104.00" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">G</text>
+</svg></figure></div>
+<ul>
+<li><strong>Corda e tasto</strong> li sceglie l'app, per tutto il passaggio insieme: resta in una posizione comoda della mano, preferisce le corde a vuoto e i tasti bassi, evita i salti; le note sullo stesso gambo vanno su corde diverse a portata di mano. Una nota legata ripete il tasto tra parentesi: <code>(3)</code>.</li>
+<li><strong>Ottava</strong>: le note sono lette come si scrivono per chitarra, che suona un'ottava sotto lo scritto: le corde a vuoto sono Mi3 La3 Re4 Sol4 Si4 Mi5 scritti (il Mi grave è <code>E@3</code>). Una nota fuori portata si sposta di ottava, con un avviso.</li>
+<li><strong>Capotasto</strong>: con <code>{capo: 2}</code> i tasti si contano dal capotasto (0 = capotasto).</li>
+<li><strong>Correzioni a mano</strong>, dove la scelta automatica non è quella voluta:</li>
+<li><code>{tab_position: 5}</code> tiene la mano attorno al 5° tasto (dal 4° al 9°) per le note che seguono, fino a fine sezione o al prossimo <code>{tab_position}</code>; <code>{tab_position: auto}</code> torna alla scelta automatica;</li>
+<li><code>~N</code> dopo una nota la mette sulla corda N (<code>A4~3</code>; 1 = la più acuta); se la nota non sta su quella corda, avviso e scelta automatica.</li>
+<li><strong>Accordature</strong> con <code>{tuning: …}</code>: <code>standard</code>, <code>drop D</code>, <code>double drop D</code>, <code>DADGAD</code>, <code>open G</code>, <code>open D</code>, <code>open E</code>, <code>half step down</code>, <code>bass</code> (4 corde), <code>bass 5</code>, <code>ukulele</code>; oppure le corde a vuoto dalla più grave, <code>{tuning: D A D G B E}</code> (anche <code>DADGBE</code>). La tablatura ha tante linee quante corde e, con un'accordatura diversa dalla standard, mostra a inizio riga i nomi delle corde al posto di "TAB".</li>
+<li>Dai <strong>MusicXML</strong> delle parti per chitarra (per esempio esportati da MuseScore) si usano corda e tasto scritti nel file.</li>
+</ul>
+<h2 id="note-da-musicxml">Note da MusicXML<a class="headerlink" href="#note-da-musicxml">#</a></h2>
+<p>In alternativa alle note scritte nel brano, una parte preparata in un editor di partiture (MuseScore, Dorico, Sibelius…) ed esportata in <strong>MusicXML</strong> si richiama così:</p>
+<pre><code>{start_of_intro: Intro}
+{musicxml: intro.musicxml}
+{end_of_intro}
+</code></pre>
+<ul>
+<li><code>{musicxml: tema.musicxml | 3-6}</code> usa solo le misure dalla 3 alla 6 (<code>| 5</code>: solo la 5). Il percorso è relativo alla cartella del brano; vanno bene <code>.musicxml</code>, <code>.xml</code> e <code>.mxl</code> (compresso).</li>
+<li>Si legge la <strong>prima parte</strong>, voce 1: note, pause, accordi, punti, legature, travature, terzine e gruppi irregolari, ritornelli, case di volta, sigle (tradotte negli accordi del <code>.chs</code>) e testo. Si ignorano le altre parti e voci, abbellimenti, dinamiche, articolazioni e chiavi diverse da quella di violino.</li>
+<li>Ogni misura diventa una battuta del brano, trasposta e impaginata come le altre. Se il metro del file è diverso diventa un cambio di metro; la tonalità resta quella del brano (un'armatura diversa dà un avviso).</li>
+<li>Nell'app i MusicXML citati si vedono in una scheda accanto al brano, in sola lettura. Il pulsante <strong>Converti in note nel brano</strong> li trasforma in un blocco <code>{start_of_notes}</code>, molto più comodo da modificare, e lascia il riferimento come commento.</li>
+</ul>
+<h2 id="diagnostica">Diagnostica<a class="headerlink" href="#diagnostica">#</a></h2>
+<p>L'app non si ferma mai su un errore: mostra lo spartito con quello che riesce a leggere e, sotto l'editor, gli <strong>avvisi</strong> con il numero di riga (toccandoli si va alla riga). I casi segnalati:</p>
+<ul>
+<li>battuta più lunga del metro; durata non valida o non multipla di mezzo movimento;</li>
+<li>accordo non riconosciuto; direttiva sconosciuta o con un valore non valido (tonalità, metro, accordatura, <code>bar_width</code>, <code>notation</code>, <code>row_spacing</code>…);</li>
+<li>sezione non chiusa, <code>end_of_</code> senza <code>start_of_</code>, musica fuori da una sezione, battuta incompleta senza stanghette;</li>
+<li><code>{ref}</code> a una sezione che non esiste o che viene dopo;</li>
+<li>nelle note scritte e nei MusicXML: i casi elencati nelle loro sezioni.</li>
+</ul>
 <h2 id="versioni-del-formato">Versioni del formato<a class="headerlink" href="#versioni-del-formato">#</a></h2>
 <p><code>{format: v1}</code> dichiara la versione. Le aggiunte arrivano nella versione corrente senza cambiare il significato dei file esistenti; se un giorno la sintassi cambiasse in modo incompatibile, l'app saprà ancora leggere i file v1 e offrirà di aggiornarli.</p>
 <hr />

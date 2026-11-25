@@ -4,13 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>The .chs format · Modern Sheet</title>
-<meta name="description" content="Complete reference of the Modern Sheet .chs format: header, sections, chords and durations, bars, repeats, endings, signs, text, notes written in the song, MusicXML.">
+<meta name="description" content="Complete reference of Modern Sheet&#x27;s .chs format: header, sections and colours, chords and durations, bars, repeats, endings, signs, lyrics, notes written in the song, guitar tablature, MusicXML.">
 <link rel="canonical" href="https://modernsheet.app/en/format/">
 <link rel="alternate" hreflang="it" href="https://modernsheet.app/it/formato/">
 <link rel="icon" href="/assets/img/favicon.png">
 <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
 <meta property="og:title" content="The .chs format · Modern Sheet">
-<meta property="og:description" content="Complete reference of the Modern Sheet .chs format: header, sections, chords and durations, bars, repeats, endings, signs, text, notes written in the song, MusicXML.">
+<meta property="og:description" content="Complete reference of Modern Sheet&#x27;s .chs format: header, sections and colours, chords and durations, bars, repeats, endings, signs, lyrics, notes written in the song, guitar tablature, MusicXML.">
 <meta property="og:image" content="https://modernsheet.app/assets/img/sheet-demo.png">
 <link rel="stylesheet" href="/assets/style.css">
 <script src="/assets/copy.js" defer></script>
@@ -32,12 +32,17 @@
 </header>
 <main id="main" class="wrap">
 <h1 id="the-chs-format">The .chs format<a class="headerlink" href="#the-chs-format">#</a></h1>
-<p>A song is a UTF-8 text file with the <code>.chs</code> extension. It holds <strong>directives</strong> in braces (<code>{title: …}</code>), <strong>chords</strong> in square brackets (<code>[Am7]</code>), <strong>bar lines</strong> (<code>|</code>) and the <strong>lyrics</strong>. Lines starting with <code>#</code> are comments.</p>
+<p>A song is a UTF-8 text file with the <code>.chs</code> extension. It holds <strong>directives</strong> in braces (<code>{title: …}</code>), <strong>chords</strong> in square brackets (<code>[Am7]</code>), <strong>bar lines</strong> (<code>|</code>) and the <strong>lyrics</strong>. Next to the examples is the sheet Modern Sheet draws for that code.</p>
 <div class="toc">
 <ul>
+<li><a href="#general-rules">General rules</a></li>
 <li><a href="#an-example">An example</a></li>
 <li><a href="#header">Header</a></li>
-<li><a href="#sections">Sections</a></li>
+<li><a href="#sections">Sections</a><ul>
+<li><a href="#references">References</a></li>
+</ul>
+</li>
+<li><a href="#section-colours">Section colours</a></li>
 <li><a href="#chords-and-durations">Chords and durations</a><ul>
 <li><a href="#bars">Bars</a></li>
 <li><a href="#marks-inside-the-chord">Marks inside the chord</a></li>
@@ -45,13 +50,23 @@
 </li>
 <li><a href="#bar-lines-repeats-and-endings">Bar lines, repeats and endings</a></li>
 <li><a href="#key-and-time-changes">Key and time changes</a></li>
+<li><a href="#layout">Layout</a></li>
 <li><a href="#navigation-signs">Navigation signs</a></li>
 <li><a href="#text-lines">Text lines</a></li>
-<li><a href="#notes-from-musicxml">Notes from MusicXML</a></li>
 <li><a href="#notes-written-in-the-chs">Notes written in the .chs</a></li>
+<li><a href="#guitar-tablature">Guitar tablature</a></li>
+<li><a href="#notes-from-musicxml">Notes from MusicXML</a></li>
+<li><a href="#diagnostics">Diagnostics</a></li>
 <li><a href="#format-versions">Format versions</a></li>
 </ul>
 </div>
+<h2 id="general-rules">General rules<a class="headerlink" href="#general-rules">#</a></h2>
+<ul>
+<li>Lines starting with <code>#</code> are <strong>comments</strong>; blank lines do not count.</li>
+<li>A directive is <code>{name}</code> or <code>{name: value}</code>: on a line of its own or <strong>inside</strong> a line of music. Directive names ignore case, chord names do not.</li>
+<li>Music goes <strong>inside a section</strong> (<code>{start_of_…}</code> … <code>{end_of_…}</code>); outside one, the app opens an untitled section and says so.</li>
+<li>A file never "breaks": what cannot be understood becomes a <strong>warning</strong> with its line number, shown under the editor, and the rest is drawn anyway (see <a href="#diagnostics">Diagnostics</a>).</li>
+</ul>
 <h2 id="an-example">An example<a class="headerlink" href="#an-example">#</a></h2>
 <div class="example"><pre><code class="language-chs">{format: v1}
 {title: My song}
@@ -176,6 +191,7 @@
 <line x1="396.40" y1="326.10" x2="396.40" y2="348.50" stroke="#6b6b6b" stroke-width="3.20" stroke-linecap="butt"/>
 </svg></figure></div>
 <h2 id="header">Header<a class="headerlink" href="#header">#</a></h2>
+<p>The directives at the top of the file describe the song. Those that drive the layout (<code>bar_width</code>, <code>notation</code>, <code>bars_per_line</code>) apply to the whole song, but written <strong>inside a section</strong> they apply to that section only.</p>
 <table>
 <thead>
 <tr>
@@ -188,12 +204,12 @@
 <tr>
 <td><code>format</code></td>
 <td><code>{format: v1}</code></td>
-<td>Format version, as the first directive. Missing means v1.</td>
+<td>Format version, as the first directive. Without it: v1.</td>
 </tr>
 <tr>
 <td><code>title</code>, <code>subtitle</code></td>
 <td><code>{title: Amazing Grace}</code></td>
-<td>Title and subtitle.</td>
+<td>Title (top left) and subtitle.</td>
 </tr>
 <tr>
 <td><code>artist</code>, <code>composer</code></td>
@@ -203,12 +219,12 @@
 <tr>
 <td><code>key</code></td>
 <td><code>{key: F#m}</code></td>
-<td>Before the music it is the song's key (none: C); after the first bars it is a <strong>key change</strong>.</td>
+<td>Key: <code>C D E F G A B</code>, with <code>#</code> or <code>b</code>, and <code>m</code> for minor (<code>Bb</code>, <code>Ebm</code>). Before the music it is the song's key (none: C); after the first bars it is a <strong>key change</strong>.</td>
 </tr>
 <tr>
 <td><code>time</code></td>
 <td><code>{time: 3/4}</code></td>
-<td>Before the music it is the song's time (none: 4/4); after the first bars it is a <strong>time change</strong>.</td>
+<td>Time signature. Before the music it is the song's (none: 4/4); after the first bars it is a <strong>time change</strong>.</td>
 </tr>
 <tr>
 <td><code>tempo</code></td>
@@ -218,80 +234,242 @@
 <tr>
 <td><code>capo</code></td>
 <td><code>{capo: 2}</code></td>
-<td>Capo.</td>
+<td>Capo: shown in the header; in the <a href="#guitar-tablature">tablature</a> frets count from the capo.</td>
 </tr>
 <tr>
 <td><code>tags</code></td>
 <td><code>{tags: jazz, ballad}</code></td>
-<td>Labels for the library (search with <code>#jazz</code>).</td>
+<td>Labels for the library (search with <code>#jazz</code>); several lines add up. Not printed.</td>
 </tr>
 <tr>
 <td><code>bar_width</code></td>
 <td><code>{bar_width: fit}</code></td>
-<td><code>uniform</code> (equal bars, the app's <em>Grid</em>) or <code>fit</code> (<em>Fill</em>) for this song; inside a section, for that section only.</td>
-</tr>
-<tr>
-<td><code>tuning</code></td>
-<td><code>{tuning: drop D}</code></td>
-<td>Tuning for the tablature: <code>standard</code>, <code>drop D</code>, <code>DADGAD</code>, <code>open G</code>, <code>open D</code>, <code>open E</code>, <code>half step down</code>, <code>bass</code>, <code>ukulele</code>… or the open strings (<code>D A D G B E</code>).</td>
-</tr>
-<tr>
-<td><code>tab_position</code></td>
-<td><code>{tab_position: 5}</code></td>
-<td>In the tablature, the hand around the 5th fret for the notes that follow (<code>auto</code> goes back to the automatic choice).</td>
-</tr>
-<tr>
-<td><code>notation</code></td>
-<td><code>{notation: both}</code></td>
-<td>Notated bars: <code>staff</code>, <code>both</code> (staff with guitar tablature) or <code>tab</code> (tablature only, with the rhythm); also inside a section.</td>
-</tr>
-<tr>
-<td><code>row_spacing</code></td>
-<td><code>{row_spacing: wide}</code></td>
-<td>Space between rows for this song: <code>compact</code>, <code>normal</code>, <code>wide</code>, <code>extra</code> or a percentage (<code>120%</code>, between 50% and 300%).</td>
+<td><code>uniform</code> (equal bars, the app's <em>Grid</em>) or <code>fit</code>. See <a href="#layout">Layout</a>.</td>
 </tr>
 <tr>
 <td><code>bars_per_line</code></td>
 <td><code>{bars_per_line: 6}</code></td>
-<td>Bars per line (also inside a section).</td>
+<td>Bars per row. See <a href="#layout">Layout</a>.</td>
+</tr>
+<tr>
+<td><code>row_spacing</code></td>
+<td><code>{row_spacing: wide}</code></td>
+<td>Space between rows: <code>compact</code>, <code>normal</code>, <code>wide</code>, <code>extra</code> or a percentage between 50% and 300% (<code>120%</code>).</td>
 </tr>
 <tr>
 <td><code>label_colors</code>, <code>section_colors</code></td>
-<td><code>{section_colors: verse=#33cc66}</code></td>
-<td>Colours of the section boxes.</td>
+<td><code>{label_colors: by_type}</code></td>
+<td>Colours of the section boxes. See <a href="#section-colours">Section colours</a>.</td>
+</tr>
+<tr>
+<td><code>notation</code>, <code>tuning</code>, <code>tab_position</code></td>
+<td><code>{notation: both}</code></td>
+<td>Staff and/or tablature for bars with notes. See <a href="#guitar-tablature">Tablature</a>.</td>
 </tr>
 <tr>
 <td><code>created</code>, <code>modified</code></td>
 <td></td>
-<td>Dates written by the app when saving.</td>
+<td>Creation and last-save dates: written by the app, no need to touch them.</td>
 </tr>
 <tr>
-<td><code>comment</code></td>
+<td><code>comment</code> (or <code>c</code>)</td>
 <td><code>{comment: …}</code></td>
-<td>A comment, not printed.</td>
+<td>Comment, not printed.</td>
 </tr>
 </tbody>
 </table>
 <h2 id="sections">Sections<a class="headerlink" href="#sections">#</a></h2>
 <pre><code>{start_of_verse: Verse 1}
-…
+| [C] | [F] |
 {end_of_verse}
 </code></pre>
-<p>The kind (<code>verse</code>, <code>chorus</code>, <code>bridge</code>, <code>intro</code>, <code>solo</code>, <code>outro</code>, <code>coda</code>…) is free; the label after the colon is what is shown. Every section starts on a new line.</p>
-<p><strong>References</strong>: <code>{ref: Verse}</code> repeats a section written earlier, <code>{ref: Chorus x2 | louder}</code> repeats it twice with a note. If the key changed in the meantime, the reference is <strong>transposed automatically</strong>.</p>
+<ul>
+<li>The kind after <code>start_of_</code> is <strong>free</strong> (<code>verse</code>, <code>chorus</code>, <code>bridge</code>, <code>intro</code>, <code>solo</code>, <code>outro</code>, <code>coda</code>…, Italian names too: <code>strofa</code>, <code>ritornello</code>, <code>inciso</code>…); it matters for the <a href="#section-colours">colours by kind</a>.</li>
+<li>The label after the colon is what the box shows; without a label, the kind (<code>Verse</code>).</li>
+<li>Every section starts on a new row; sections do not nest (opening one before closing the previous one gives a warning).</li>
+</ul>
+<h3 id="references">References<a class="headerlink" href="#references">#</a></h3>
+<table>
+<thead>
+<tr>
+<th>Write</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>{ref: Verse}</code></td>
+<td>repeats here a section <strong>written further up</strong></td>
+</tr>
+<tr>
+<td><code>{ref: Chorus x2}</code></td>
+<td>repeats it twice (in the box: <code>x2</code>)</td>
+</tr>
+<tr>
+<td><code>{ref: chorus | all together}</code></td>
+<td>with a note next to the box ("reprise – all together")</td>
+</tr>
+</tbody>
+</table>
+<p>The section is looked up by label first (ignoring case), then by kind. The reference keeps the section's repeats, endings, time changes and colour; navigation signs and <code>{text}</code> lines stay with the original only. If the key has changed in the meantime, the reference is <strong>transposed automatically</strong> into the new key.</p>
+<h2 id="section-colours">Section colours<a class="headerlink" href="#section-colours">#</a></h2>
+<p>Each section name sits in a <strong>coloured box</strong>, to see the form of the song at a glance on the music stand. The colour is chosen like this:</p>
+<table>
+<thead>
+<tr>
+<th>Directive</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>{label_colors: theme}</code></td>
+<td>Modern Sheet's blue for every box (default)</td>
+</tr>
+<tr>
+<td><code>{label_colors: #8B1E3F}</code></td>
+<td>one colour of your choice for every box</td>
+</tr>
+<tr>
+<td><code>{label_colors: by_type}</code></td>
+<td>one colour per kind of section (table below)</td>
+</tr>
+<tr>
+<td><code>{section_colors: intro=#3366ff, chorus=#ff9900}</code></td>
+<td>colours of your choice for single sections; the others follow <code>label_colors</code></td>
+</tr>
+</tbody>
+</table>
+<p>With <code>by_type</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Kinds of section</th>
+<th>Colour</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>verse</code>, <code>strofa</code></td>
+<td>midnight blue</td>
+</tr>
+<tr>
+<td><code>chorus</code>, <code>ritornello</code>, <code>refrain</code></td>
+<td>burgundy</td>
+</tr>
+<tr>
+<td><code>bridge</code>, <code>inciso</code>, <code>prechorus</code></td>
+<td>teal</td>
+</tr>
+<tr>
+<td><code>instrumental</code>, <code>solo</code>, <code>assolo</code>, <code>interlude</code>, <code>interludio</code></td>
+<td>ochre</td>
+</tr>
+<tr>
+<td><code>intro</code>, <code>outro</code>, <code>coda</code>, <code>ending</code>, <code>finale</code> and the others</td>
+<td>anthracite</td>
+</tr>
+</tbody>
+</table>
+<p>In <code>section_colors</code> a key can be a section's <strong>label</strong> (<code>Chorus</code>), its <strong>kind</strong> (<code>chorus</code>) or one of the table's groups (<code>verse</code>, <code>chorus</code>, <code>bridge</code>, <code>instrumental</code>, <code>frame</code>); the first that matches wins, in that order. Colours are written as <code>#RRGGBB</code>; a wrong one is ignored. The box text is white, or near black on light colours, to stay readable. If the song has no <code>label_colors</code>, the app's <em>Colours by section</em> switch is the same as <code>by_type</code>.</p>
+<div class="example"><pre><code class="language-chs">{label_colors: by_type}
+{section_colors: Sax solo=#ff9900}
+
+{start_of_verse: Verse}
+| [C] | [Am] | [F] | [G7] |
+{end_of_verse}
+
+{start_of_chorus: Chorus}
+| [F] | [G] | [C] | [C] |
+{end_of_chorus}
+
+{start_of_solo: Sax solo}
+| [Dm7] | [G7] | [C] | [C] |
+{end_of_solo}
+</code></pre><figure class="render" aria-label="The sheet Modern Sheet draws for this example"><svg xmlns="http://www.w3.org/2000/svg" viewBox="34.0 35.0 372.0 265.0" width="402" height="286" role="img">
+<rect x="34.0" y="35.0" width="372.0" height="265.0" fill="#ffffff"/>
+<rect x="42.00" y="43.00" width="43.65" height="21.00" rx="4.00" fill="#1f3a5f"/>
+<text x="49.00" y="59.00" fill="#ffffff" stroke="#ffffff" stroke-width="0.58" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:13.00px" xml:space="preserve">Verse</text>
+<text x="43.00" y="104.80" fill="#6b6b6b" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<text x="72.20" y="93.60" fill="#6b6b6b" style="font-family:'ms-Petaluma';font-size:11.65px" xml:space="preserve"></text>
+<text x="72.20" y="104.80" fill="#6b6b6b" style="font-family:'ms-Petaluma';font-size:11.65px" xml:space="preserve"></text>
+<line x1="42.00" y1="88.00" x2="398.00" y2="88.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="93.60" x2="398.00" y2="93.60" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="99.20" x2="398.00" y2="99.20" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="104.80" x2="398.00" y2="104.80" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="110.40" x2="398.00" y2="110.40" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<rect x="93.50" y="89.85" width="13.59" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="95.00" y="104.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">C</text>
+<line x1="166.25" y1="88.00" x2="166.25" y2="110.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="170.75" y="89.85" width="23.25" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="172.25" y="104.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">A</text>
+<text x="182.74" y="104.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.61" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:13.60px" xml:space="preserve">m</text>
+<line x1="243.50" y1="88.00" x2="243.50" y2="110.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="248.00" y="89.85" width="11.67" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="249.50" y="104.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">F</text>
+<line x1="320.75" y1="88.00" x2="320.75" y2="110.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="325.25" y="89.85" width="19.75" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="326.75" y="104.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">G</text>
+<text x="337.14" y="98.86" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.47" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:10.54px" xml:space="preserve">7</text>
+<line x1="398.00" y1="88.00" x2="398.00" y2="110.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="42.00" y="131.00" width="52.88" height="21.00" rx="4.00" fill="#8b1e3f"/>
+<text x="49.00" y="147.00" fill="#ffffff" stroke="#ffffff" stroke-width="0.58" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:13.00px" xml:space="preserve">Chorus</text>
+<text x="43.00" y="192.80" fill="#6b6b6b" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<line x1="42.00" y1="176.00" x2="398.00" y2="176.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="181.60" x2="398.00" y2="181.60" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="187.20" x2="398.00" y2="187.20" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="192.80" x2="398.00" y2="192.80" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="198.40" x2="398.00" y2="198.40" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<rect x="93.50" y="177.85" width="11.67" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="95.00" y="192.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">F</text>
+<line x1="166.25" y1="176.00" x2="166.25" y2="198.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="170.75" y="177.85" width="13.39" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="172.25" y="192.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">G</text>
+<line x1="243.50" y1="176.00" x2="243.50" y2="198.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="248.00" y="177.85" width="13.59" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="249.50" y="192.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">C</text>
+<line x1="320.75" y1="176.00" x2="320.75" y2="198.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="325.25" y="177.85" width="13.59" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="326.75" y="192.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">C</text>
+<line x1="398.00" y1="176.00" x2="398.00" y2="198.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="42.00" y="219.00" width="58.60" height="21.00" rx="4.00" fill="#ff9900"/>
+<text x="49.00" y="235.00" fill="#1a1a1f" stroke="#1a1a1f" stroke-width="0.58" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:13.00px" xml:space="preserve">Sax solo</text>
+<text x="43.00" y="280.80" fill="#6b6b6b" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<line x1="42.00" y1="264.00" x2="398.00" y2="264.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="269.60" x2="398.00" y2="269.60" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="275.20" x2="398.00" y2="275.20" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="280.80" x2="398.00" y2="280.80" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="286.40" x2="398.00" y2="286.40" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<rect x="93.50" y="265.85" width="28.97" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="95.00" y="280.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">D</text>
+<text x="104.84" y="280.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.61" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:13.60px" xml:space="preserve">m</text>
+<text x="114.61" y="274.86" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.47" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:10.54px" xml:space="preserve">7</text>
+<line x1="166.25" y1="264.00" x2="166.25" y2="286.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="170.75" y="265.85" width="19.75" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="172.25" y="280.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">G</text>
+<text x="182.64" y="274.86" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.47" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:10.54px" xml:space="preserve">7</text>
+<line x1="243.50" y1="264.00" x2="243.50" y2="286.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="248.00" y="265.85" width="13.59" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="249.50" y="280.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">C</text>
+<line x1="320.75" y1="264.00" x2="320.75" y2="286.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="325.25" y="265.85" width="13.59" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="326.75" y="280.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">C</text>
+<line x1="393.00" y1="264.00" x2="393.00" y2="286.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<line x1="396.40" y1="264.00" x2="396.40" y2="286.40" stroke="#6b6b6b" stroke-width="3.20" stroke-linecap="butt"/>
+</svg></figure></div>
 <h2 id="chords-and-durations">Chords and durations<a class="headerlink" href="#chords-and-durations">#</a></h2>
 <ul>
-<li><code>[Am7]</code> a chord; <code>[C/E]</code> with a bass note; the quality is free (<code>m7b5</code>, <code>7#9</code>, <code>sus4</code>, <code>6/9</code>…).</li>
-<li><code>[C:2]</code> lasts 2 beats (quarter notes); half a beat at least (<code>[G:1.5]</code>).</li>
-<li>In a bar, chords without a duration share the remaining time equally.</li>
-<li><code>[/]</code> is a <strong>stop</strong>; <code>[%]</code> means "no new chord".</li>
-<li>A bar without chords continues the previous one and is shown as <strong>%</strong>.</li>
-<li>The text after a chord is what is sung on it.</li>
+<li><code>[Am7]</code> a chord: root (<code>A</code>–<code>G</code> with <code>#</code> or <code>b</code>), free quality (<code>m</code>, <code>maj7</code>, <code>m7b5</code>, <code>7#9</code>, <code>sus4</code>, <code>dim7</code>, <code>6/9</code>…) and an optional bass after <code>/</code> (<code>[C/E]</code>). On the sheet <code>b</code> and <code>#</code> become ♭ and ♯.</li>
+<li><code>[C:2]</code> lasts 2 <strong>beats</strong> (quarter notes); the shortest is half a beat (<code>[G:1.5]</code>, <code>[D:0.5]</code>).</li>
+<li>In a bar, chords without a duration share the remaining time equally, rounded to half beats; the last one takes the rest. In 4/4: <code>| [C] [G] |</code> = 2 + 2; <code>| [C] [G] [D] |</code> = 1.5 + 1.5 + 1; <code>| [C:3] [G] [D] |</code> = 3 + 0.5 + 0.5.</li>
+<li><code>[/]</code> is a <strong>stop</strong> (silence until the next chord; also with a duration: <code>[/:2]</code>); <code>[%]</code> says explicitly "no new chord".</li>
+<li>A bar <strong>without chords</strong> (<code>| |</code> or lyrics only) carries the previous chord on and shows as <strong>%</strong>.</li>
+<li>The <strong>lyrics</strong> after a chord are sung on that chord; lyrics before the first chord of a bar go with that first chord.</li>
 </ul>
 <h3 id="bars">Bars<a class="headerlink" href="#bars">#</a></h3>
 <ul>
-<li><strong>With bar lines</strong>: <code>| [C] [G] | [Am] |</code> – bars are delimited by <code>|</code>.</li>
-<li><strong>Without bar lines</strong>: <code>[Gm7:2] [C7:2] [F]</code> – each chord lasts its duration, or a whole bar.</li>
+<li><strong>With bar lines</strong>: <code>| [C] [G] | [Am] |</code>. Empty bars count (<code>| [G] | |</code> is two bars). If written durations exceed the bar there is a warning; if they are all written and do not fill it, the last chord is lengthened.</li>
+<li><strong>Without bar lines</strong>: <code>[Gm7:2] [C7:2] [Am7:2] [D7:2] [F]</code> – each chord lasts its duration, or a whole bar without one; bars fill in order, and a chord crossing the bar line carries on into the next bar (<strong>%</strong>).</li>
 </ul>
 <h3 id="marks-inside-the-chord">Marks inside the chord<a class="headerlink" href="#marks-inside-the-chord">#</a></h3>
 <table>
@@ -308,15 +486,15 @@
 </tr>
 <tr>
 <td><code>[&lt;C]</code> / <code>[&lt;&lt;C]</code></td>
-<td><strong>push</strong>: an eighth / a sixteenth early</td>
+<td><strong>push</strong>, an eighth / a sixteenth early</td>
 </tr>
 <tr>
 <td><code>[C~]</code></td>
-<td><strong>tie</strong> to the next chord</td>
+<td><strong>tie</strong> to the next chord (also onto the next row)</td>
 </tr>
 <tr>
 <td><code>[C,,,]</code></td>
-<td><strong>rhythm slashes</strong>, one per comma</td>
+<td><strong>rhythm slashes</strong>, one per comma, spread over the duration</td>
 </tr>
 <tr>
 <td><code>[C fermata]</code></td>
@@ -324,15 +502,91 @@
 </tr>
 <tr>
 <td><code>[C diamond]</code> or <code>[C &lt;&gt;]</code></td>
-<td><strong>diamond</strong>: held chord</td>
+<td><strong>diamond</strong>: held chord, let ring</td>
 </tr>
 <tr>
 <td><code>[A "1st"]</code></td>
-<td><strong>annotation</strong> over the chord; <code>[% "again"]</code> on a repeated bar</td>
+<td><strong>annotation</strong> above the chord; <code>[% "repeat"]</code> on a repeated bar</td>
 </tr>
 </tbody>
 </table>
-<p>They combine with each other and with the duration: <code>[&lt;(G7):2~ fermata]</code>.</p>
+<p>They combine with each other and with the duration, in this order: push, name (optionally in parentheses), <code>:duration</code>, <code>~</code> and commas, then the words: <code>[&lt;(G7):2~ fermata]</code>. They are notation only: they do not move the chord in time.</p>
+<div class="example"><pre><code class="language-chs">| [C,,,] | [&lt;F~] [F] | [(G7)] [A &quot;1st&quot;] | [C diamond] [/] |
+| [Dm7:3] [G7:1 fermata] | [C] | [% &quot;repeat&quot;] | [C] |
+</code></pre><figure class="render" aria-label="The sheet Modern Sheet draws for this example"><svg xmlns="http://www.w3.org/2000/svg" viewBox="34.0 41.2 372.0 180.8" width="402" height="195" role="img">
+<rect x="34.0" y="41.2" width="372.0" height="180.8" fill="#ffffff"/>
+<text x="43.00" y="78.80" fill="#6b6b6b" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<text x="72.20" y="67.60" fill="#6b6b6b" style="font-family:'ms-Petaluma';font-size:11.65px" xml:space="preserve"></text>
+<text x="72.20" y="78.80" fill="#6b6b6b" style="font-family:'ms-Petaluma';font-size:11.65px" xml:space="preserve"></text>
+<line x1="42.00" y1="62.00" x2="398.00" y2="62.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="67.60" x2="398.00" y2="67.60" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="73.20" x2="398.00" y2="73.20" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="78.80" x2="398.00" y2="78.80" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="84.40" x2="398.00" y2="84.40" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<rect x="93.50" y="63.85" width="13.59" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="95.00" y="78.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">C</text>
+<rect x="111.81" y="67.60" width="12.93" height="11.20" rx="0.00" fill="#ffffff"/>
+<text x="112.81" y="73.20" fill="#0f0f0f" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<rect x="128.62" y="67.60" width="12.93" height="11.20" rx="0.00" fill="#ffffff"/>
+<text x="129.62" y="73.20" fill="#0f0f0f" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<rect x="145.44" y="67.60" width="12.93" height="11.20" rx="0.00" fill="#ffffff"/>
+<text x="146.44" y="73.20" fill="#0f0f0f" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<line x1="166.25" y1="62.00" x2="166.25" y2="84.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="170.75" y="63.85" width="18.18" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="172.25" y="73.88" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.47" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:10.54px" xml:space="preserve">&lt;</text>
+<text x="178.76" y="78.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">F</text>
+<rect x="204.38" y="63.85" width="11.67" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="205.88" y="78.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">F</text>
+<line x1="243.50" y1="62.00" x2="243.50" y2="84.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="248.00" y="63.89" width="29.62" height="17.77" rx="0.00" fill="#ffffff"/>
+<text x="249.50" y="78.95" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.76" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:16.92px" xml:space="preserve">(</text>
+<text x="254.71" y="78.95" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.76" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:16.92px" xml:space="preserve">G</text>
+<text x="265.05" y="72.86" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.47" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:10.49px" xml:space="preserve">7</text>
+<text x="271.39" y="78.95" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.76" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:16.92px" xml:space="preserve">)</text>
+<rect x="281.62" y="63.89" width="13.44" height="17.77" rx="0.00" fill="#ffffff"/>
+<text x="283.12" y="78.95" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.76" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:16.92px" xml:space="preserve">A</text>
+<text x="283.12" y="56.00" fill="#40404c" style="font-family:'ms-Petaluma Script';font-size:8.50px" xml:space="preserve">1st</text>
+<line x1="320.75" y1="62.00" x2="320.75" y2="84.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="325.25" y="63.85" width="25.39" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="326.75" y="78.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">C</text>
+<text x="340.34" y="76.45" fill="#0f0f0f" style="font-family:'ms-Petaluma';font-size:32.48px" xml:space="preserve"></text>
+<rect x="358.88" y="63.85" width="13.64" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="360.38" y="78.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">/</text>
+<line x1="398.00" y1="62.00" x2="398.00" y2="84.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<path d="M188.43 59.65 C192.29 55.09 200.01 55.09 203.88 59.65 C200.01 56.37 192.29 56.37 188.43 59.65 Z" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.30"/>
+<text x="43.00" y="140.80" fill="#6b6b6b" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<line x1="42.00" y1="124.00" x2="398.00" y2="124.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="129.60" x2="398.00" y2="129.60" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="135.20" x2="398.00" y2="135.20" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="140.80" x2="398.00" y2="140.80" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="146.40" x2="398.00" y2="146.40" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<rect x="93.50" y="125.85" width="28.97" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="95.00" y="140.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">D</text>
+<text x="104.84" y="140.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.61" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:13.60px" xml:space="preserve">m</text>
+<text x="114.61" y="134.86" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.47" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:10.54px" xml:space="preserve">7</text>
+<rect x="201.88" y="125.85" width="19.75" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="203.38" y="140.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">G</text>
+<text x="213.76" y="134.86" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.47" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:10.54px" xml:space="preserve">7</text>
+<text x="206.47" y="120.00" fill="#0f0f0f" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<line x1="243.50" y1="124.00" x2="243.50" y2="146.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="248.00" y="125.85" width="13.59" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="249.50" y="140.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">C</text>
+<line x1="320.75" y1="124.00" x2="320.75" y2="146.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="352.67" y="126.20" width="17.42" height="18.00" rx="0.00" fill="#ffffff"/>
+<text x="354.67" y="135.20" fill="#0f0f0f" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<text x="328.75" y="118.00" fill="#40404c" style="font-family:'ms-Petaluma Script';font-size:8.50px" xml:space="preserve">repeat</text>
+<line x1="398.00" y1="124.00" x2="398.00" y2="146.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<text x="43.00" y="202.80" fill="#6b6b6b" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<line x1="42.00" y1="186.00" x2="166.25" y2="186.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="191.60" x2="166.25" y2="191.60" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="197.20" x2="166.25" y2="197.20" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="202.80" x2="166.25" y2="202.80" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="208.40" x2="166.25" y2="208.40" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<rect x="93.50" y="187.85" width="13.59" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="95.00" y="202.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">C</text>
+<line x1="161.25" y1="186.00" x2="161.25" y2="208.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<line x1="164.65" y1="186.00" x2="164.65" y2="208.40" stroke="#6b6b6b" stroke-width="3.20" stroke-linecap="butt"/>
+</svg></figure></div>
 <h2 id="bar-lines-repeats-and-endings">Bar lines, repeats and endings<a class="headerlink" href="#bar-lines-repeats-and-endings">#</a></h2>
 <table>
 <thead>
@@ -348,11 +602,11 @@
 </tr>
 <tr>
 <td><code>|: … :|</code></td>
-<td>repeat (twice)</td>
+<td>repeat (twice, nothing written)</td>
 </tr>
 <tr>
 <td><code>:| x3</code></td>
-<td>repeat played 3 times</td>
+<td>played 3 times (<code>x3</code> above the end)</td>
 </tr>
 <tr>
 <td><code>{volta: 1}</code> … <code>{volta: 2}</code></td>
@@ -360,11 +614,7 @@
 </tr>
 <tr>
 <td><code>{volta_end}</code> / <code>{volta_end: hook}</code></td>
-<td>close the ending, open or with a hook</td>
-</tr>
-<tr>
-<td><code>{br}</code></td>
-<td>forced line break</td>
+<td>end of the ending, open or with a hook</td>
 </tr>
 </tbody>
 </table>
@@ -446,9 +696,9 @@
 <line x1="246.50" y1="123.00" x2="246.50" y2="134.00" stroke="#0f0f0f" stroke-width="0.90" stroke-linecap="butt"/>
 <text x="249.50" y="133.00" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.45" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:10.00px" xml:space="preserve">2.</text>
 </svg></figure></div>
-<p>The 2nd ending starts a new line, right-aligned under the 1st.</p>
+<p>An ending closes by itself at the <code>:|</code> (with the hook), when the next ending opens, with <code>{volta_end}</code> or <strong>at the end of the file's line</strong>. The 2nd ending starts a new row, right-aligned under the 1st, and the last ending gets the double bar line.</p>
 <h2 id="key-and-time-changes">Key and time changes<a class="headerlink" href="#key-and-time-changes">#</a></h2>
-<p><code>{key: …}</code> and <code>{time: …}</code> go on a line of their own or right after a bar line:</p>
+<p><code>{key: …}</code> and <code>{time: …}</code> go on a line of their own or right after a bar line, and apply from the next bar:</p>
 <div class="example"><pre><code class="language-chs">| [G7]last time round || {key: Db} [Db]modulation | [Gb] |
 | [Gm7] | {time: 2/4} [C7] | {time: 4/4} [F7] |
 </code></pre><figure class="render" aria-label="The sheet Modern Sheet draws for this example"><svg xmlns="http://www.w3.org/2000/svg" viewBox="34.0 40.4 372.0 119.6" width="402" height="129" role="img">
@@ -512,13 +762,54 @@
 <line x1="341.75" y1="124.00" x2="341.75" y2="146.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
 <line x1="345.15" y1="124.00" x2="345.15" y2="146.40" stroke="#6b6b6b" stroke-width="3.20" stroke-linecap="butt"/>
 </svg></figure></div>
-<p>A key change brings a double bar line, the new key signature (with courtesy naturals) and, under the staff, the name of the new key.</p>
+<p>A key change brings a double bar line, the new key signature (with courtesy naturals) and, under the staff, the name of the new key; a time change, the new time signature. After the first bars they are always changes, even if the song has no key or time in its header.</p>
+<h2 id="layout">Layout<a class="headerlink" href="#layout">#</a></h2>
+<p>Line breaks in the file <strong>do not</strong> decide the rows of the sheet: bars per row do.</p>
+<table>
+<thead>
+<tr>
+<th>Write</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>{bars_per_line: 6}</code> inside a section</td>
+<td>6 bars per row in that section</td>
+</tr>
+<tr>
+<td><code>{bars_per_line: 6}</code> outside sections</td>
+<td>6 bars per row from there on</td>
+</tr>
+<tr>
+<td><code>{bars_per_line}</code> (no value)</td>
+<td>back to the settings' value (4)</td>
+</tr>
+<tr>
+<td><code>{br}</code> in a row of bars</td>
+<td>the bar it is in starts a new row</td>
+</tr>
+<tr>
+<td><code>{bar_width: uniform}</code></td>
+<td><strong>Grid</strong>: all bars equally wide and aligned in columns, even across sections; a crowded bar takes two places instead of shrinking the chords</td>
+</tr>
+<tr>
+<td><code>{bar_width: fit}</code></td>
+<td><strong>Fit</strong>: each bar as wide as it needs (in proportion to its beats); a row wraps only when the bars do not fit</td>
+</tr>
+<tr>
+<td><code>{row_spacing: wide}</code></td>
+<td>more space between rows (<code>compact</code>, <code>normal</code>, <code>wide</code>, <code>extra</code>, or <code>50%</code>–<code>300%</code>)</td>
+</tr>
+</tbody>
+</table>
+<p><code>bar_width</code> and <code>bars_per_line</code> in the header apply to the song, inside a section to that section only; in the app, the settings and the bar above the sheet give the default.</p>
 <h2 id="navigation-signs">Navigation signs<a class="headerlink" href="#navigation-signs">#</a></h2>
 <table>
 <thead>
 <tr>
 <th>Directive</th>
-<th>Where</th>
+<th>Where it goes</th>
 <th>Shown as</th>
 </tr>
 </thead>
@@ -603,18 +894,65 @@
 <line x1="241.90" y1="132.00" x2="241.90" y2="154.40" stroke="#6b6b6b" stroke-width="3.20" stroke-linecap="butt"/>
 <text x="179.20" y="124.00" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.56" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:12.50px" xml:space="preserve">D.S. al Coda</text>
 </svg></figure></div>
+<p>On a line of their own, <code>{to_coda}</code>, <code>{fine}</code>, <code>{dc}</code> and <code>{ds}</code> go at the end of the last bar written.</p>
 <h2 id="text-lines">Text lines<a class="headerlink" href="#text-lines">#</a></h2>
-<p><code>{text: First time guitar only}</code> on a line of its own, inside a section, prints a line of text in the sheet at that point: before the music, between two lines or at the end of the section.</p>
-<h2 id="notes-from-musicxml">Notes from MusicXML<a class="headerlink" href="#notes-from-musicxml">#</a></h2>
-<p>Written parts (intros, riffs, heads) are prepared in a notation editor (MuseScore, Dorico, Sibelius…), exported as <strong>MusicXML</strong> and referenced:</p>
-<pre><code>{start_of_intro: Intro}
-{musicxml: intro.musicxml}
-{end_of_intro}
-</code></pre>
-<p><code>{musicxml: head.musicxml | 3-6}</code> uses bars 3 to 6 only. The path is relative to the song's folder. Notes, chords and lyrics from the file are drawn on the staff, transposed along with the rest.</p>
-<p>In the app, cited MusicXML files are shown in a tab next to the song, read only; to change them, convert them into notes written in the <code>.chs</code> (below) with the <strong>Convert to notes in the song</strong> button.</p>
+<p><code>{text: First time guitar only}</code> on a line of its own, inside a section, prints a line of text in the sheet at that point: before the music, between two rows (the next row starts on a new line) or at the end of the section.</p>
+<div class="example"><pre><code class="language-chs">{start_of_verse: Verse}
+{text: First time guitar only}
+| [Em] | [C] | [G] | [D] |
+{text: Second time everybody}
+| [Em] | [C] | [D] | [D] |
+{end_of_verse}
+</code></pre><figure class="render" aria-label="The sheet Modern Sheet draws for this example"><svg xmlns="http://www.w3.org/2000/svg" viewBox="34.0 35.0 372.0 191.0" width="402" height="206" role="img">
+<rect x="34.0" y="35.0" width="372.0" height="191.0" fill="#ffffff"/>
+<rect x="42.00" y="43.00" width="43.65" height="21.00" rx="4.00" fill="#0066cc"/>
+<text x="49.00" y="59.00" fill="#ffffff" stroke="#ffffff" stroke-width="0.58" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:13.00px" xml:space="preserve">Verse</text>
+<text x="42.00" y="79.00" fill="#333333" style="font-family:'ms-Petaluma Script';font-size:10.50px" xml:space="preserve">First time guitar only</text>
+<text x="43.00" y="124.80" fill="#6b6b6b" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<text x="72.20" y="113.60" fill="#6b6b6b" style="font-family:'ms-Petaluma';font-size:11.65px" xml:space="preserve"></text>
+<text x="72.20" y="124.80" fill="#6b6b6b" style="font-family:'ms-Petaluma';font-size:11.65px" xml:space="preserve"></text>
+<line x1="42.00" y1="108.00" x2="398.00" y2="108.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="113.60" x2="398.00" y2="113.60" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="119.20" x2="398.00" y2="119.20" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="124.80" x2="398.00" y2="124.80" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="130.40" x2="398.00" y2="130.40" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<rect x="93.50" y="109.85" width="22.71" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="95.00" y="124.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">E</text>
+<text x="104.94" y="124.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.61" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:13.60px" xml:space="preserve">m</text>
+<line x1="166.25" y1="108.00" x2="166.25" y2="130.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="170.75" y="109.85" width="13.59" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="172.25" y="124.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">C</text>
+<line x1="243.50" y1="108.00" x2="243.50" y2="130.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="248.00" y="109.85" width="13.39" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="249.50" y="124.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">G</text>
+<line x1="320.75" y1="108.00" x2="320.75" y2="130.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="325.25" y="109.85" width="12.84" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="326.75" y="124.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">D</text>
+<line x1="398.00" y1="108.00" x2="398.00" y2="130.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<text x="42.00" y="161.00" fill="#333333" style="font-family:'ms-Petaluma Script';font-size:10.50px" xml:space="preserve">Second time everybody</text>
+<text x="43.00" y="206.80" fill="#6b6b6b" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<line x1="42.00" y1="190.00" x2="398.00" y2="190.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="195.60" x2="398.00" y2="195.60" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="201.20" x2="398.00" y2="201.20" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="206.80" x2="398.00" y2="206.80" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="212.40" x2="398.00" y2="212.40" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<rect x="93.50" y="191.85" width="22.71" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="95.00" y="206.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">E</text>
+<text x="104.94" y="206.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.61" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:13.60px" xml:space="preserve">m</text>
+<line x1="166.25" y1="190.00" x2="166.25" y2="212.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="170.75" y="191.85" width="13.59" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="172.25" y="206.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">C</text>
+<line x1="243.50" y1="190.00" x2="243.50" y2="212.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="248.00" y="191.85" width="12.84" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="249.50" y="206.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">D</text>
+<line x1="320.75" y1="190.00" x2="320.75" y2="212.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="325.25" y="191.85" width="12.84" height="17.85" rx="0.00" fill="#ffffff"/>
+<text x="326.75" y="206.98" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">D</text>
+<line x1="393.00" y1="190.00" x2="393.00" y2="212.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<line x1="396.40" y1="190.00" x2="396.40" y2="212.40" stroke="#6b6b6b" stroke-width="3.20" stroke-linecap="butt"/>
+</svg></figure></div>
 <h2 id="notes-written-in-the-chs">Notes written in the .chs<a class="headerlink" href="#notes-written-in-the-chs">#</a></h2>
-<p>Instead of MusicXML, a few bars of notes can be written <strong>right in the song</strong>, inside a section:</p>
+<p>Parts with notes (intros, riffs, heads) are written <strong>right in the song</strong>, in a block inside a section:</p>
 <div class="example"><pre><code class="language-chs">{start_of_intro: Intro}
 {start_of_notes}
 | [Gm7] G8 Bb D F [C7] A G E C | [Am7] C E G B [D7] F# E D16 C Bb A |
@@ -744,53 +1082,314 @@
 <thead>
 <tr>
 <th>Write</th>
-<th>Means</th>
+<th>Meaning</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>G</code> <code>Bb</code> <code>F#</code></td>
-<td>the notes, as in chords; <strong>the accidental is always written</strong>, also when it is in the key signature (in F the B flat is <code>Bb</code>); <code>Bn</code> = a natural you mean</td>
+<td><code>G</code> <code>Bb</code> <code>F#</code> <code>C##</code> <code>Ebb</code></td>
+<td>notes, as in chords (lower case too); <strong>the accidental is always written</strong>, even when it is in the key signature (in F, B flat is <code>Bb</code>); <code>Bn</code> = intended natural</td>
 </tr>
 <tr>
-<td><code>8</code> <code>4</code> <code>2</code> <code>1</code> <code>16</code>, <code>4.</code></td>
-<td>the note value: eighth, quarter, half, whole, sixteenth; the dot. <strong>It stays until it changes</strong>: <code>G8 Bb D F</code> are four eighths</td>
+<td><code>1</code> <code>2</code> <code>4</code> <code>8</code> <code>16</code> <code>32</code></td>
+<td>the note value: whole, half, quarter, eighth, sixteenth, thirty-second; <code>.</code> or <code>..</code> for dots. <strong>It stays until it changes</strong>: <code>G8 Bb D F</code> are four eighths (at the start of the block: <code>4</code>)</td>
 </tr>
 <tr>
 <td>octave</td>
-<td>each note goes to the nearest one from the previous note; <code>'</code> raises it, <code>,</code> lowers it; <code>C@5</code> sets the octave (middle C = <code>C4</code>; duration after a slash: <code>C@5/2</code>)</td>
+<td>each note goes to the one nearest the previous note (within a fourth); <code>'</code> raises it an octave, <code>,</code> lowers it (<code>''</code> two). The block's first note goes near the staff's middle B</td>
 </tr>
 <tr>
-<td><code>R4</code> <code>R*</code></td>
-<td>rest; whole-bar rest</td>
+<td><code>C@5</code></td>
+<td>fixed octave: middle C = <code>C4</code>; the following notes are relative again from there. After <code>@N</code> the duration goes after a slash: <code>C@5/2</code></td>
+</tr>
+<tr>
+<td><code>R4</code> <code>R8.</code> <code>R*</code></td>
+<td>rest; <code>R*</code> = whole-bar rest, in any time signature</td>
 </tr>
 <tr>
 <td><code>F2- F4</code></td>
-<td>tie</td>
+<td>tie (also into the next bar and across a line break)</td>
 </tr>
 <tr>
 <td><code>3(F8 E D)</code></td>
-<td>triplet (in general <code>5:4( … )</code>)</td>
+<td>triplet; in general <code>N:M( … )</code> = N notes in the time of M (<code>5:4(C16 D E F G)</code>)</td>
 </tr>
 <tr>
 <td><code>&lt;C E G&gt;2</code></td>
-<td>several notes on one stem</td>
+<td>several notes on one stem, the duration after <code>&gt;</code></td>
 </tr>
 <tr>
 <td><code>A4~3</code></td>
-<td>for the tablature: the note on the 3rd string (1 = the highest)</td>
+<td>for the tablature only: the note on the 3rd string (1 = the highest); in <code>&lt; &gt;</code> after each note</td>
 </tr>
 <tr>
 <td><code>[Gm7]</code></td>
-<td>the chord, right before the note it falls on</td>
+<td>the chord, right before the note it falls on (no duration). To change chord over a held note: <code>G2- [C7] G2</code></td>
 </tr>
 </tbody>
 </table>
-<p>Lyrics go on a <code>w:</code> line under the row of notes, one syllable per note (<code>lu- ne- dì</code>; <code>_</code> skips a note, <code>|</code> moves to the next bar). Beams are added automatically. The result is the same as with MusicXML: it transposes, lays out and prints the same way; the <code>note_nel_chs</code> example is the blues with melody written like this.</p>
+<p>Order inside a note: name, accidental, octave, duration, dot, tie, string (<code>F#'8.-~2</code>). Notes are separated by spaces.</p>
+<ul>
+<li>The block's rows start with a bar line and accept everything ordinary bars do: <code>||</code>, <code>|: … :|</code>, <code>:| x3</code>, <code>{volta: 1}</code>, navigation signs; <code>{key}</code> and <code>{time}</code> on a line of their own change key and time. A bar with chords only is an ordinary bar.</li>
+<li><strong>Lyrics</strong>: a <code>w:</code> line under the row of notes, one syllable per note (<code>w: Blues, blues on Mon- day</code>). A syllable ending with <code>-</code> continues into the next; rests and tied notes are skipped by themselves; <code>_</code> skips a note (the previous syllable is held); <code>|</code> jumps to the next bar.</li>
+<li>Beams are automatic (per beat; in 4/4 four eighths in the same half bar share one beam). Accidentals on the sheet are recomputed against the key signature: <code>Bb</code> in F draws no flat.</li>
+<li>Useful warnings when copying from a score: a bar longer or shorter than the time signature, a note without an accidental that the key signature would alter (in F: <code>B</code> instead of <code>Bb</code>), a tie between different notes, an unclosed tuplet, extra syllables.</li>
+</ul>
+<p>In the app a <code>{musicxml: …}</code> reference can be turned into notes written like this with one button (see <a href="#notes-from-musicxml">Notes from MusicXML</a>).</p>
+<h2 id="guitar-tablature">Guitar tablature<a class="headerlink" href="#guitar-tablature">#</a></h2>
+<p>Bars with notes (written in the <code>.chs</code> or from MusicXML) can be shown in three ways, with the <code>notation</code> directive:</p>
+<table>
+<thead>
+<tr>
+<th>Write</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>{notation: staff}</code></td>
+<td>staff only (default)</td>
+</tr>
+<tr>
+<td><code>{notation: both}</code></td>
+<td>the staff and, under it, the <strong>tablature</strong>: the fret number on its string, in the same column as the note</td>
+</tr>
+<tr>
+<td><code>{notation: tab}</code></td>
+<td>tablature only, instead of the staff, with the <strong>rhythm</strong> drawn under the numbers (stems, beams, dots, rests)</td>
+</tr>
+</tbody>
+</table>
+<p>In the header it applies to the song, inside a section to that section only; the app also has a switch above the sheet (<em>Staff / Both / Tablature</em>), which wins over everything. The rhythm is never written separately: it comes from the notes.</p>
+<div class="example"><pre><code class="language-chs">{key: G}
+{notation: both}
+{start_of_intro: Riff}
+{start_of_notes}
+| [G] G@3/8 B D G [D] F# D A4 | [Em] E@3/8 G B E [C] E G C4 |
+{end_of_notes}
+{end_of_intro}
+</code></pre><figure class="render" aria-label="The sheet Modern Sheet draws for this example"><svg xmlns="http://www.w3.org/2000/svg" viewBox="34.0 35.0 323.4 178.7" width="349" height="193" role="img">
+<rect x="34.0" y="35.0" width="323.4" height="178.7" fill="#ffffff"/>
+<rect x="42.00" y="43.00" width="35.59" height="21.00" rx="4.00" fill="#0066cc"/>
+<text x="49.00" y="59.00" fill="#ffffff" stroke="#ffffff" stroke-width="0.58" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:13.00px" xml:space="preserve">Riff</text>
+<text x="43.00" y="130.80" fill="#6b6b6b" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<text x="68.00" y="114.00" fill="#6b6b6b" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<text x="82.60" y="119.60" fill="#6b6b6b" style="font-family:'ms-Petaluma';font-size:11.65px" xml:space="preserve"></text>
+<text x="82.60" y="130.80" fill="#6b6b6b" style="font-family:'ms-Petaluma';font-size:11.65px" xml:space="preserve"></text>
+<line x1="42.00" y1="114.00" x2="349.40" y2="114.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="119.60" x2="349.40" y2="119.60" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="125.20" x2="349.40" y2="125.20" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="130.80" x2="349.40" y2="130.80" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="136.40" x2="349.40" y2="136.40" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="105.88" y1="142.00" x2="118.40" y2="142.00" stroke="#6b6b6b" stroke-width="0.95" stroke-linecap="butt"/>
+<line x1="105.88" y1="147.60" x2="118.40" y2="147.60" stroke="#6b6b6b" stroke-width="0.95" stroke-linecap="butt"/>
+<text x="108.40" y="150.40" fill="#0f0f0f" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<line x1="115.43" y1="150.40" x2="115.43" y2="120.52" stroke="#0f0f0f" stroke-width="0.85" stroke-linecap="butt"/>
+<line x1="120.10" y1="142.00" x2="132.62" y2="142.00" stroke="#6b6b6b" stroke-width="0.85" stroke-linecap="butt"/>
+<text x="122.62" y="144.80" fill="#0f0f0f" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<line x1="129.65" y1="144.80" x2="129.65" y2="118.81" stroke="#0f0f0f" stroke-width="0.85" stroke-linecap="butt"/>
+<text x="136.83" y="139.20" fill="#0f0f0f" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<line x1="143.87" y1="139.20" x2="143.87" y2="117.11" stroke="#0f0f0f" stroke-width="0.85" stroke-linecap="butt"/>
+<text x="151.05" y="130.80" fill="#0f0f0f" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<line x1="158.08" y1="130.80" x2="158.08" y2="115.40" stroke="#0f0f0f" stroke-width="0.85" stroke-linecap="butt"/>
+<text x="165.27" y="133.60" fill="#0f0f0f" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<line x1="172.30" y1="133.60" x2="172.30" y2="114.00" stroke="#0f0f0f" stroke-width="0.85" stroke-linecap="butt"/>
+<text x="179.49" y="139.20" fill="#0f0f0f" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<line x1="186.52" y1="139.20" x2="186.52" y2="115.71" stroke="#0f0f0f" stroke-width="0.85" stroke-linecap="butt"/>
+<line x1="191.18" y1="142.00" x2="203.70" y2="142.00" stroke="#6b6b6b" stroke-width="0.85" stroke-linecap="butt"/>
+<line x1="191.18" y1="147.60" x2="203.70" y2="147.60" stroke="#6b6b6b" stroke-width="0.85" stroke-linecap="butt"/>
+<text x="193.70" y="147.60" fill="#0f0f0f" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<line x1="200.73" y1="147.60" x2="200.73" y2="128.00" stroke="#0f0f0f" stroke-width="0.85" stroke-linecap="butt"/>
+<path d="M115.03 120.57 L158.48 115.35 L158.48 118.15 L115.03 123.37 Z" fill="#0f0f0f"/>
+<path d="M171.90 113.95 L186.92 115.75 L186.92 118.55 L171.90 116.75 Z" fill="#0f0f0f"/>
+<line x1="224.40" y1="114.00" x2="224.40" y2="136.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<line x1="230.88" y1="142.00" x2="243.40" y2="142.00" stroke="#6b6b6b" stroke-width="0.95" stroke-linecap="butt"/>
+<line x1="230.88" y1="147.60" x2="243.40" y2="147.60" stroke="#6b6b6b" stroke-width="0.95" stroke-linecap="butt"/>
+<line x1="230.88" y1="153.20" x2="243.40" y2="153.20" stroke="#6b6b6b" stroke-width="0.95" stroke-linecap="butt"/>
+<text x="233.40" y="156.00" fill="#0f0f0f" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<line x1="240.43" y1="156.00" x2="240.43" y2="126.12" stroke="#0f0f0f" stroke-width="0.85" stroke-linecap="butt"/>
+<line x1="245.10" y1="142.00" x2="257.62" y2="142.00" stroke="#6b6b6b" stroke-width="0.85" stroke-linecap="butt"/>
+<line x1="245.10" y1="147.60" x2="257.62" y2="147.60" stroke="#6b6b6b" stroke-width="0.85" stroke-linecap="butt"/>
+<text x="247.62" y="150.40" fill="#0f0f0f" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<line x1="254.65" y1="150.40" x2="254.65" y2="124.41" stroke="#0f0f0f" stroke-width="0.85" stroke-linecap="butt"/>
+<line x1="259.31" y1="142.00" x2="271.84" y2="142.00" stroke="#6b6b6b" stroke-width="0.85" stroke-linecap="butt"/>
+<text x="261.83" y="144.80" fill="#0f0f0f" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<line x1="268.87" y1="144.80" x2="268.87" y2="122.71" stroke="#0f0f0f" stroke-width="0.85" stroke-linecap="butt"/>
+<text x="276.05" y="136.40" fill="#0f0f0f" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<line x1="283.08" y1="136.40" x2="283.08" y2="121.00" stroke="#0f0f0f" stroke-width="0.85" stroke-linecap="butt"/>
+<text x="290.27" y="136.40" fill="#0f0f0f" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<line x1="297.30" y1="136.40" x2="297.30" y2="116.80" stroke="#0f0f0f" stroke-width="0.85" stroke-linecap="butt"/>
+<text x="304.49" y="130.80" fill="#0f0f0f" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<line x1="311.52" y1="130.80" x2="311.52" y2="115.09" stroke="#0f0f0f" stroke-width="0.85" stroke-linecap="butt"/>
+<text x="318.70" y="122.40" fill="#0f0f0f" style="font-family:'ms-Petaluma';font-size:22.40px" xml:space="preserve"></text>
+<line x1="319.15" y1="122.40" x2="319.15" y2="142.00" stroke="#0f0f0f" stroke-width="0.85" stroke-linecap="butt"/>
+<path d="M240.03 126.17 L283.48 120.95 L283.48 123.75 L240.03 128.97 Z" fill="#0f0f0f"/>
+<path d="M296.90 116.85 L311.92 115.05 L311.92 117.85 L296.90 119.65 Z" fill="#0f0f0f"/>
+<line x1="344.40" y1="114.00" x2="344.40" y2="136.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<line x1="347.80" y1="114.00" x2="347.80" y2="136.40" stroke="#6b6b6b" stroke-width="3.20" stroke-linecap="butt"/>
+<text x="107.40" y="104.00" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">G</text>
+<text x="164.27" y="104.00" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">D</text>
+<text x="232.40" y="104.00" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">E</text>
+<text x="242.34" y="104.00" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.61" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:13.60px" xml:space="preserve">m</text>
+<text x="289.27" y="104.00" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">C</text>
+<line x1="42.00" y1="171.60" x2="224.40" y2="171.60" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="177.60" x2="224.40" y2="177.60" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="183.60" x2="224.40" y2="183.60" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="189.60" x2="224.40" y2="189.60" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="195.60" x2="224.40" y2="195.60" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="201.60" x2="224.40" y2="201.60" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<text x="46.93" y="180.01" fill="#6b6b6b" stroke="#6b6b6b" stroke-width="0.39" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:8.70px" xml:space="preserve">T</text>
+<text x="47.32" y="189.73" fill="#6b6b6b" stroke="#6b6b6b" stroke-width="0.39" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:8.70px" xml:space="preserve">A</text>
+<text x="47.48" y="199.45" fill="#6b6b6b" stroke="#6b6b6b" stroke-width="0.39" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:8.70px" xml:space="preserve">B</text>
+<line x1="224.40" y1="171.60" x2="224.40" y2="201.60" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<line x1="224.40" y1="171.60" x2="349.40" y2="171.60" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="224.40" y1="177.60" x2="349.40" y2="177.60" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="224.40" y1="183.60" x2="349.40" y2="183.60" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="224.40" y1="189.60" x2="349.40" y2="189.60" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="224.40" y1="195.60" x2="349.40" y2="195.60" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="224.40" y1="201.60" x2="349.40" y2="201.60" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="349.40" y1="171.60" x2="349.40" y2="201.60" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="108.90" y="198.56" width="6.48" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="109.90" y="204.18" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">3</text>
+<rect x="122.98" y="192.56" width="6.76" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="123.98" y="198.18" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">2</text>
+<rect x="137.41" y="186.56" width="6.33" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="138.41" y="192.18" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">0</text>
+<rect x="151.63" y="180.56" width="6.33" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="152.63" y="186.18" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">0</text>
+<rect x="165.68" y="186.56" width="6.67" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="166.68" y="192.18" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">4</text>
+<rect x="180.06" y="186.56" width="6.33" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="181.06" y="192.18" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">0</text>
+<rect x="194.28" y="192.56" width="6.33" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="195.28" y="198.18" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">0</text>
+<rect x="233.97" y="198.56" width="6.33" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="234.97" y="204.18" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">0</text>
+<rect x="248.12" y="198.56" width="6.48" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="249.12" y="204.18" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">3</text>
+<rect x="262.20" y="192.56" width="6.76" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="263.20" y="198.18" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">2</text>
+<rect x="276.41" y="186.56" width="6.76" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="277.41" y="192.18" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">2</text>
+<rect x="290.63" y="186.56" width="6.76" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="291.63" y="192.18" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">2</text>
+<rect x="305.06" y="180.56" width="6.33" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="306.06" y="186.18" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">0</text>
+<rect x="320.36" y="174.56" width="4.17" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="321.36" y="180.18" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">1</text>
+</svg></figure></div>
+<div class="example"><pre><code class="language-chs">{key: G}
+{start_of_outro: Ending}
+{notation: tab}
+{start_of_notes}
+| [C] C@4/8 E G E [D] D F# A F# | [G] &lt;G@3 B D G&gt;1 ||
+{end_of_notes}
+{end_of_outro}
+</code></pre><figure class="render" aria-label="The sheet Modern Sheet draws for this example"><svg xmlns="http://www.w3.org/2000/svg" viewBox="34.0 35.0 288.1 132.0" width="311" height="143" role="img">
+<rect x="34.0" y="35.0" width="288.1" height="132.0" fill="#ffffff"/>
+<rect x="42.00" y="43.00" width="53.75" height="21.00" rx="4.00" fill="#0066cc"/>
+<text x="49.00" y="59.00" fill="#ffffff" stroke="#ffffff" stroke-width="0.58" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:13.00px" xml:space="preserve">Ending</text>
+<text x="46.93" y="122.41" fill="#6b6b6b" stroke="#6b6b6b" stroke-width="0.39" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:8.70px" xml:space="preserve">T</text>
+<text x="47.32" y="132.13" fill="#6b6b6b" stroke="#6b6b6b" stroke-width="0.39" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:8.70px" xml:space="preserve">A</text>
+<text x="47.48" y="141.85" fill="#6b6b6b" stroke="#6b6b6b" stroke-width="0.39" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:8.70px" xml:space="preserve">B</text>
+<text x="74.20" y="123.40" fill="#6b6b6b" style="font-family:'ms-Petaluma';font-size:11.65px" xml:space="preserve"></text>
+<text x="74.20" y="134.60" fill="#6b6b6b" style="font-family:'ms-Petaluma';font-size:11.65px" xml:space="preserve"></text>
+<line x1="42.00" y1="114.00" x2="99.40" y2="114.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="120.00" x2="99.40" y2="120.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="126.00" x2="99.40" y2="126.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="132.00" x2="99.40" y2="132.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="138.00" x2="99.40" y2="138.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="42.00" y1="144.00" x2="99.40" y2="144.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="99.40" y1="114.00" x2="239.40" y2="114.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="99.40" y1="120.00" x2="239.40" y2="120.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="99.40" y1="126.00" x2="239.40" y2="126.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="99.40" y1="132.00" x2="239.40" y2="132.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="99.40" y1="138.00" x2="239.40" y2="138.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="99.40" y1="144.00" x2="239.40" y2="144.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="239.40" y1="114.00" x2="314.05" y2="114.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="239.40" y1="120.00" x2="314.05" y2="120.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="239.40" y1="126.00" x2="314.05" y2="126.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="239.40" y1="132.00" x2="314.05" y2="132.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="239.40" y1="138.00" x2="314.05" y2="138.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<line x1="239.40" y1="144.00" x2="314.05" y2="144.00" stroke="#9e9e9e" stroke-width="0.75" stroke-linecap="butt"/>
+<rect x="108.90" y="134.96" width="6.48" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="109.90" y="140.58" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">3</text>
+<line x1="112.14" y1="147.00" x2="112.14" y2="159.00" stroke="#0f0f0f" stroke-width="0.85" stroke-linecap="butt"/>
+<rect x="123.58" y="128.96" width="6.76" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="124.58" y="134.58" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">2</text>
+<line x1="126.96" y1="147.00" x2="126.96" y2="159.00" stroke="#0f0f0f" stroke-width="0.85" stroke-linecap="butt"/>
+<rect x="138.60" y="122.96" width="6.33" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="139.60" y="128.58" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">0</text>
+<line x1="141.77" y1="147.00" x2="141.77" y2="159.00" stroke="#0f0f0f" stroke-width="0.85" stroke-linecap="butt"/>
+<rect x="153.21" y="128.96" width="6.76" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="154.21" y="134.58" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">2</text>
+<line x1="156.59" y1="147.00" x2="156.59" y2="159.00" stroke="#0f0f0f" stroke-width="0.85" stroke-linecap="butt"/>
+<rect x="168.23" y="128.96" width="6.33" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="169.23" y="134.58" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">0</text>
+<line x1="171.40" y1="147.00" x2="171.40" y2="159.00" stroke="#0f0f0f" stroke-width="0.85" stroke-linecap="butt"/>
+<rect x="182.88" y="128.96" width="6.67" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="183.88" y="134.58" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">4</text>
+<line x1="186.21" y1="147.00" x2="186.21" y2="159.00" stroke="#0f0f0f" stroke-width="0.85" stroke-linecap="butt"/>
+<rect x="197.65" y="122.96" width="6.76" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="198.65" y="128.58" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">2</text>
+<line x1="201.03" y1="147.00" x2="201.03" y2="159.00" stroke="#0f0f0f" stroke-width="0.85" stroke-linecap="butt"/>
+<rect x="212.51" y="128.96" width="6.67" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="213.51" y="134.58" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">4</text>
+<line x1="215.84" y1="147.00" x2="215.84" y2="159.00" stroke="#0f0f0f" stroke-width="0.85" stroke-linecap="butt"/>
+<rect x="111.74" y="157.10" width="45.24" height="1.90" rx="0.00" fill="#0f0f0f"/>
+<rect x="171.00" y="157.10" width="45.24" height="1.90" rx="0.00" fill="#0f0f0f"/>
+<line x1="239.40" y1="114.00" x2="239.40" y2="136.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<line x1="239.40" y1="136.40" x2="239.40" y2="144.00" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<rect x="248.90" y="140.96" width="6.48" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="249.90" y="146.58" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">3</text>
+<rect x="248.76" y="134.96" width="6.76" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="249.76" y="140.58" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">2</text>
+<rect x="248.97" y="128.96" width="6.33" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="249.97" y="134.58" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">0</text>
+<rect x="248.97" y="122.96" width="6.33" height="6.08" rx="0.00" fill="#ffffff"/>
+<text x="249.97" y="128.58" fill="#0f0f0f" style="font-family:'ms-Petaluma Script';font-size:7.60px" xml:space="preserve">0</text>
+<line x1="309.05" y1="114.00" x2="309.05" y2="136.40" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<line x1="312.45" y1="114.00" x2="312.45" y2="136.40" stroke="#6b6b6b" stroke-width="3.20" stroke-linecap="butt"/>
+<line x1="314.05" y1="136.40" x2="314.05" y2="144.00" stroke="#6b6b6b" stroke-width="1.20" stroke-linecap="butt"/>
+<text x="107.40" y="104.00" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">C</text>
+<text x="166.66" y="104.00" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">D</text>
+<text x="247.40" y="104.00" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.77" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:17.00px" xml:space="preserve">G</text>
+</svg></figure></div>
+<ul>
+<li><strong>String and fret</strong> are chosen by the app, for the whole passage at once: it stays in a comfortable hand position, prefers open strings and low frets, avoids jumps; notes on one stem go on different strings within reach. A tied note repeats its fret in parentheses: <code>(3)</code>.</li>
+<li><strong>Octave</strong>: notes are read as written for guitar, which sounds an octave below the written note: the open strings are written E3 A3 D4 G4 B4 E5 (the low E is <code>E@3</code>). A note out of range moves by octaves, with a warning.</li>
+<li><strong>Capo</strong>: with <code>{capo: 2}</code> frets count from the capo (0 = the capo).</li>
+<li><strong>Manual corrections</strong>, where the automatic choice is not the one you want:</li>
+<li><code>{tab_position: 5}</code> keeps the hand around the 5th fret (4th to 9th) for the notes that follow, until the end of the section or the next <code>{tab_position}</code>; <code>{tab_position: auto}</code> goes back to the automatic choice;</li>
+<li><code>~N</code> after a note puts it on string N (<code>A4~3</code>; 1 = the highest); if the note does not fit on that string, a warning and the automatic choice.</li>
+<li><strong>Tunings</strong> with <code>{tuning: …}</code>: <code>standard</code>, <code>drop D</code>, <code>double drop D</code>, <code>DADGAD</code>, <code>open G</code>, <code>open D</code>, <code>open E</code>, <code>half step down</code>, <code>bass</code> (4 strings), <code>bass 5</code>, <code>ukulele</code>; or the open strings from the lowest, <code>{tuning: D A D G B E}</code> (also <code>DADGBE</code>). The tablature has as many lines as strings and, with a tuning other than standard, shows the string names at the start of the row instead of "TAB".</li>
+<li>From <strong>MusicXML</strong> guitar parts (exported by MuseScore, for example) the string and fret written in the file are used.</li>
+</ul>
+<h2 id="notes-from-musicxml">Notes from MusicXML<a class="headerlink" href="#notes-from-musicxml">#</a></h2>
+<p>Instead of notes written in the song, a part prepared in a notation editor (MuseScore, Dorico, Sibelius…) and exported as <strong>MusicXML</strong> is referenced like this:</p>
+<pre><code>{start_of_intro: Intro}
+{musicxml: intro.musicxml}
+{end_of_intro}
+</code></pre>
+<ul>
+<li><code>{musicxml: head.musicxml | 3-6}</code> uses measures 3 to 6 only (<code>| 5</code>: only 5). The path is relative to the song's folder; <code>.musicxml</code>, <code>.xml</code> and <code>.mxl</code> (compressed) are all fine.</li>
+<li>The <strong>first part</strong>, voice 1, is read: notes, rests, chords, dots, ties, beams, triplets and tuplets, repeats, endings, chord symbols (turned into <code>.chs</code> chords) and lyrics. Other parts and voices, grace notes, dynamics, articulations and clefs other than treble are ignored.</li>
+<li>Each measure becomes a bar of the song, transposed and laid out like the others. A different time signature in the file becomes a time change; the key stays the song's (a different key signature gives a warning).</li>
+<li>In the app the MusicXML files a song cites are shown in a tab next to it, read only. The <strong>Convert to notes in the song</strong> button turns them into a <code>{start_of_notes}</code> block, much easier to edit, and keeps the reference as a comment.</li>
+</ul>
+<h2 id="diagnostics">Diagnostics<a class="headerlink" href="#diagnostics">#</a></h2>
+<p>The app never stops on an error: it shows the sheet with what it can read and, under the editor, the <strong>warnings</strong> with their line number (tapping one jumps to the line). What is reported:</p>
+<ul>
+<li>a bar longer than its time signature; an invalid duration, or one that is not a multiple of half a beat;</li>
+<li>an unrecognised chord; an unknown directive, or one with an invalid value (key, time, tuning, <code>bar_width</code>, <code>notation</code>, <code>row_spacing</code>…);</li>
+<li>a section not closed, <code>end_of_</code> without <code>start_of_</code>, music outside a section, an incomplete bar without bar lines;</li>
+<li>a <code>{ref}</code> to a section that does not exist or comes later;</li>
+<li>in written notes and MusicXML: the cases listed in their sections.</li>
+</ul>
 <h2 id="format-versions">Format versions<a class="headerlink" href="#format-versions">#</a></h2>
-<p><code>{format: v1}</code> declares the version. Additions arrive in the current version without changing the meaning of existing files; should the syntax ever change incompatibly, the app will still read v1 files and offer to upgrade them.</p>
+<p><code>{format: v1}</code> declares the version. Additions land in the current version without changing the meaning of existing files; should the syntax ever change incompatibly, the app will still read v1 files and offer to upgrade them.</p>
 <hr />
-<p>All the details (layout rules, special cases) are in the <a href="https://github.com/supermariolabs/modernsheet/blob/main/SPEC.md">full specification</a> in the repository (in Italian).</p>
+<p>For every detail (layout rules, special cases) see the <a href="https://github.com/supermariolabs/modernsheet/blob/main/SPEC.md">full specification</a> in the repository (in Italian).</p>
 </main>
 <footer class="foot">
   <div class="wrap">
