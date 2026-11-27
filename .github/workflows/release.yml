@@ -191,7 +191,7 @@ jobs:
           FLET_ANDROID_SIGNING_KEY_STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           FLET_ANDROID_SIGNING_KEY_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           FLET_ANDROID_SIGNING_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-        run: flet build apk --split-per-abi --yes --no-rich-output --skip-flutter-doctor
+        run: flet build apk --split-per-abi --build-number ${{ github.run_number }} --yes --no-rich-output --skip-flutter-doctor
       - name: flet build aab (Google Play)
         if: steps.key.outputs.ok == 'true'
         shell: bash
@@ -202,7 +202,7 @@ jobs:
           FLET_ANDROID_SIGNING_KEY_STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           FLET_ANDROID_SIGNING_KEY_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           FLET_ANDROID_SIGNING_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-        run: flet build aab --yes --no-rich-output --skip-flutter-doctor
+        run: flet build aab --build-number ${{ github.run_number }} --yes --no-rich-output --skip-flutter-doctor
       - name: Package
         if: steps.key.outputs.ok == 'true'
         shell: bash
@@ -287,7 +287,8 @@ jobs:
           PYTHONIOENCODING: utf-8
           PYTHONUTF8: "1"
         run: |
-          flet build ipa --ios-team-id "${{ secrets.APPLE_TEAM_ID }}" --ios-export-method app-store-connect \
+          # every upload needs a new build number (TestFlight and Play refuse a number already used): the run number
+          flet build ipa --build-number ${{ github.run_number }} --ios-team-id "${{ secrets.APPLE_TEAM_ID }}" --ios-export-method app-store-connect \
             --ios-provisioning-profile "${{ steps.profile.outputs.uuid }}" --ios-signing-certificate "Apple Distribution" \
             --yes --no-rich-output --skip-flutter-doctor
           mkdir -p ios && cp build/ipa/*.ipa ios/ModernSheet-ios.ipa

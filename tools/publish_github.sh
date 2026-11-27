@@ -1,5 +1,6 @@
 #!/bin/sh
-# Publish the current `main` on the local `github` branch as ONE new commit (its files, not its history):
+# Publish the current `main` on the local `github` branch as ONE new commit (its files, not its history,
+# and never the private/ folder):
 # GitHub gets a short history of releases, while `main` keeps the full development history locally.
 #
 #   tools/publish_github.sh "Modern Sheet 0.36.0"     # make the commit (message optional) and the tag v<version>
@@ -15,6 +16,17 @@ fi
 version=$(sed -n 's/^version = "\(.*\)"/\1/p' pyproject.toml)
 msg=${1:-"Modern Sheet $version"}
 tree=$(git rev-parse "main^{tree}")
+# private/ (store publishing plan, accounts, listing material) never goes to GitHub: the published tree is main's
+# without it, built in a throwaway index so the working tree and the real index are untouched
+idx=$(mktemp -u "${TMPDIR:-/tmp}/publish-index.XXXXXX")
+GIT_INDEX_FILE="$idx" git read-tree "$tree"
+GIT_INDEX_FILE="$idx" git rm -r -q --cached --ignore-unmatch private
+tree=$(GIT_INDEX_FILE="$idx" git write-tree)
+rm -f "$idx"
+if git ls-tree -r --name-only "$tree" | grep -q '^private/'; then
+    echo "private/ is still in the tree to publish: stopping." >&2
+    exit 1
+fi
 if git rev-parse -q --verify refs/heads/github >/dev/null; then
     if [ "$(git rev-parse 'github^{tree}')" = "$tree" ]; then
         echo "Nothing to publish: github already has the files of main."

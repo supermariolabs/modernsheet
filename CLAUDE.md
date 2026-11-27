@@ -43,7 +43,7 @@ Controllo visivo di un PDF (i test non vedono la grafica):
 
 Fuori dall'app (non entra in `flet build`): `chordsheet_cli.py` + `tools/chordsheet_import/` (`convert.py` testo di
 chordsheet.com → `.chs`, `account.py` login al sito, elenco e sorgenti dei brani; nessuna API, si leggono le pagine; password
-mai salvata; tolto dall'app nella 0.49 per le regole degli store, SPEC §8.6 e §9).
+mai salvata; tolto dall'app nella 0.49 per le regole degli store, SPEC §9).
 
 Altro: `library.py` (cartella di brani per
 l'app), `settings.py` (impostazioni dell'app), `syntax.py` (evidenziazione e completamento del `.chs`), `edits.py` (sfondo delle parti modificate e annulla/ripristina dell'editor) / `xml_syntax.py` (evidenziazione e indentazione dei MusicXML, in sola lettura), `sync.py` / `gdrive.py` (sincronizzazione
@@ -66,6 +66,9 @@ nella libreria "Modern Sheet" di una nuova installazione).
 - Versione: aggiorna insieme `pyproject.toml`, `src/modernsheet/__init__.py` (`__version__`) e l'intestazione
   di `SPEC.md`.
 - Commit piccoli, uno per funzionalità, messaggio in italiano.
+- **`private/` non va mai su GitHub**: piano e stato della pubblicazione negli store, account, ID, materiali delle
+  schede (`private/PUBBLICAZIONE.md`, `private/store/`). Lo esclude `tools/publish_github.sh`; nulla di quanto riguarda
+  la pubblicazione negli store va in SPEC, README, sito o altri file pubblicati.
 - **Mai pubblicare `main`** (la cronologia di sviluppo resta locale): su GitHub va solo il ramo `github`, creato da
   `tools/publish_github.sh` (un commit per pubblicazione con i file di `main`, più l'etichetta `v<versione>`) e spinto con
   `git push origin github:main v<versione>`: l'etichetta fa compilare le app desktop (`.github/workflows/release.yml`).
@@ -110,8 +113,8 @@ nella libreria "Modern Sheet" di una nuova installazione).
 - Sincronizzazione (SPEC §8.3b): fase 1 (motore local-first + provider cartella) e fase 2 (Google Drive, `gdrive.py`,
   device flow + `drive.file`) fatte e provate con un vero account Google (credenziali in `src/google_client.json`,
   fuori da git; app Google pubblicata senza logo, il logo richiede la verifica del brand). Poi eventualmente iCloud nativo.
-- Pubblicazione negli store (App Store, Google Play, Mac con Developer ID): piano e rischi di rifiuto in SPEC §8.6;
-  primo passo la libreria interna all'app su mobile.
+- Pubblicazione negli store (App Store, Google Play, Mac con Developer ID): piano, account, stato e materiali in
+  `private/` (vedi le regole di lavoro); la parte tecnica (modalità store, `.zip`) è in SPEC §8.6.
 - `flet build macos` provato e funzionante (servono Xcode completo e CocoaPods). Identificativo app `app.modernsheet`.
 - Pubblicazione: licenza GPL-3.0, sito https://modernsheet.app (GitHub Pages da `docs/`, sorgenti in `site/`,
   italiano e inglese), test su GitHub Actions. Repository https://github.com/supermariolabs/modernsheet.
