@@ -67,12 +67,11 @@
 </div>
 <p>Every version, with its changes, is on the project's <a href="https://github.com/supermariolabs/modernsheet/releases">Releases</a> page. The iPad and iPhone versions will come to the App Store.</p>
 <h2 id="installing-and-opening">Installing and opening<a class="headerlink" href="#installing-and-opening">#</a></h2>
-<p>The apps are <strong>not signed yet</strong> with an Apple or Microsoft certificate: on first start the system asks for a confirmation. This is normal for software distributed this way; all the code is public on <a href="https://github.com/supermariolabs/modernsheet">GitHub</a>.</p>
+<p>The <strong>macOS</strong> app is signed and verified by Apple: it opens like any other app. The <strong>Windows</strong>, <strong>Linux</strong> and <strong>Android</strong> apps are not signed with a store certificate yet: on first start the system asks for a confirmation. This is normal for software distributed this way; all the code is public on <a href="https://github.com/supermariolabs/modernsheet">GitHub</a>.</p>
 <h3 id="macos_1">macOS<a class="headerlink" href="#macos_1">#</a></h3>
 <ol>
 <li>Open <code>ModernSheet-macos.zip</code>: <strong>Modern Sheet.app</strong> appears. Drag it to <strong>Applications</strong>.</li>
-<li>On first start macOS says the app cannot be opened because the developer cannot be verified. <strong>Right-click › Open</strong> the app, then <strong>Open</strong>. If there is no such button: <em>System Settings › Privacy &amp; Security</em>, then <strong>Open Anyway</strong> at the bottom.</li>
-<li>From the second start it opens normally.</li>
+<li>Open it: on first start macOS only asks you to confirm that it is an app downloaded from the Internet.</li>
 </ol>
 <p>Or, from the Terminal: <code>xattr -dr com.apple.quarantine "/Applications/Modern Sheet.app"</code>.</p>
 <h3 id="windows_1">Windows<a class="headerlink" href="#windows_1">#</a></h3>

@@ -51,13 +51,12 @@ Every version, with its changes, is on the project's [Releases]({{repo}}/release
 
 ## Installing and opening
 
-The apps are **not signed yet** with an Apple or Microsoft certificate: on first start the system asks for a confirmation. This is normal for software distributed this way; all the code is public on [GitHub]({{repo}}).
+The **macOS** app is signed and verified by Apple: it opens like any other app. The **Windows**, **Linux** and **Android** apps are not signed with a store certificate yet: on first start the system asks for a confirmation. This is normal for software distributed this way; all the code is public on [GitHub]({{repo}}).
 
 ### macOS
 
 1. Open `ModernSheet-macos.zip`: **Modern Sheet.app** appears. Drag it to **Applications**.
-2. On first start macOS says the app cannot be opened because the developer cannot be verified. **Right-click › Open** the app, then **Open**. If there is no such button: *System Settings › Privacy & Security*, then **Open Anyway** at the bottom.
-3. From the second start it opens normally.
+2. Open it: on first start macOS only asks you to confirm that it is an app downloaded from the Internet.
 
 Or, from the Terminal: `xattr -dr com.apple.quarantine "/Applications/Modern Sheet.app"`.
 

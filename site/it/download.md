@@ -51,13 +51,12 @@ Tutte le versioni, con le novità, sono nella pagina [Releases]({{repo}}/release
 
 ## Installare e aprire
 
-Le app **non sono ancora firmate** con un certificato Apple o Microsoft: al primo avvio il sistema chiede una conferma. È normale per il software distribuito così; il codice è tutto pubblico su [GitHub]({{repo}}).
+L'app per **macOS** è firmata e verificata da Apple: si apre come qualunque altra app. Quelle per **Windows**, **Linux** e **Android** non sono ancora firmate con il certificato di uno store: al primo avvio il sistema chiede una conferma. È normale per il software distribuito così; il codice è tutto pubblico su [GitHub]({{repo}}).
 
 ### macOS
 
 1. Apri `ModernSheet-macos.zip`: compare **Modern Sheet.app**. Trascinala in **Applicazioni**.
-2. Al primo avvio macOS dice che l'app non può essere aperta perché lo sviluppatore non è verificato. Fai **clic destro › Apri** sull'app, poi **Apri**. Se il pulsante non c'è: *Impostazioni di Sistema › Privacy e sicurezza*, in fondo **Apri comunque**.
-3. Dal secondo avvio si apre normalmente.
+2. Aprila: al primo avvio macOS chiede solo di confermare che è un'app scaricata da Internet.
 
 In alternativa, dal Terminale: `xattr -dr com.apple.quarantine "/Applications/Modern Sheet.app"`.
 

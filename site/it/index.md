@@ -111,6 +111,6 @@ PDF da stampare o mandare, brani con i loro MusicXML in un `.zip`, backup della 
 
 ## Stato del progetto
 
-Modern Sheet è in sviluppo attivo. Le app per **macOS, Windows e Linux** si [scaricano qui](/it/download/) (non ancora firmate: la pagina spiega come aprirle); iPad e Android sono in prova.
+Modern Sheet è in sviluppo attivo. Le app per **macOS, Windows e Linux** si [scaricano qui](/it/download/) (quella per Mac è firmata da Apple; la pagina spiega come aprire le altre); iPad e Android sono in prova.
 
 Il codice è su [GitHub]({{repo}}) con licenza **GPL-3.0**. Segnalazioni e idee sono benvenute nelle *Issues*.

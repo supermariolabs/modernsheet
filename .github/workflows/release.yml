@@ -273,6 +273,8 @@ jobs:
           rm "$RUNNER_TEMP/ios.p12"
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KC_PASS" "$KC" > /dev/null
           security list-keychains -d user -s "$KC" $(security list-keychains -d user | tr -d '"')
+          security default-keychain -s "$KC"        # xcodebuild looks for the identity here
+          security find-identity -v -p codesigning "$KC"   # names only: shows that the key came with the certificate
           printf '%s' "$PROFILE" | base64 --decode > "$RUNNER_TEMP/app.mobileprovision"
           UUID=$(security cms -D -i "$RUNNER_TEMP/app.mobileprovision" | plutil -extract UUID raw -)
           mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
@@ -295,7 +297,7 @@ jobs:
           name: ios
           path: ios/ModernSheet-ios.ipa
       - name: Upload to TestFlight (with the App Store Connect API key)
-        if: steps.sign.outputs.ok == 'true' && startsWith(github.ref, 'refs/tags/v')
+        if: steps.sign.outputs.ok == 'true' && (startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch')
         shell: bash
         env:
           API_KEY: ${{ secrets.APPLE_API_KEY_P8 }}
@@ -355,7 +357,8 @@ jobs:
               echo "Non compilate in questa versione (nella pagina Download resta la precedente) · Not built in this version (the Download page keeps the previous one): ${missing#, }"
             fi
             echo
-            if [ "$MAC_SIGNED" = "true" ]; then
+            # "signed" only if the signing secrets exist AND the macOS app was actually built
+            if [ "$MAC_SIGNED" = "true" ] && [ -f dist/ModernSheet-macos.zip ]; then
               echo "L'app per macOS è firmata e notarizzata da Apple; Windows, Linux e Android non sono firmate con un certificato di uno store · The macOS app is signed and notarized by Apple. Istruzioni · Instructions: https://modernsheet.app/it/download/ (English: https://modernsheet.app/en/download/)."
             else
               echo "Le app non sono firmate: istruzioni per aprirle su https://modernsheet.app/it/download/ (English: https://modernsheet.app/en/download/)."
