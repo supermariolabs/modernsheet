@@ -14,8 +14,10 @@ Un brano è un file di testo UTF-8 con estensione `.chs`. Contiene **direttive**
 
 ## Regole generali
 
-- Le righe che iniziano con `#` sono **commenti** (anche se volevano essere testo: "#1 in classifica" va scritto dopo l'accordo, `| [C]#1 in classifica |`); le righe vuote non contano.
+- Le righe che iniziano con `#` sono **commenti** (anche se volevano essere testo: "#1 in classifica" si scrive `\#1 in classifica`, o dopo l'accordo); le righe vuote non contano.
+- I caratteri che hanno un significato (`|` `[` `]` `{` `}` `"`, e `#` a inizio riga) si scrivono come testo con una barra rovesciata davanti: `| [C]lei \| lui |`, `[G]\[parlato\]`, `{c: Ritornello \{x2\}}`, `[A "\"forte\""]`, `\\` per la barra stessa.
 - Il testo cantato sta nelle battute, dopo un accordo o una stanghetta: una riga di solo testo, senza accordi né stanghette, non ha una battuta a cui appartenere e dà un avviso. Per una riga di testo nello spartito c'è `{text: …}`.
+- Nomi delle direttive e valori sono in **inglese**, come in ChordPro (`{title}`, `{key}`, `{bar_width: fit}`), più i termini musicali d'uso internazionale (`volta`, `fermata`, `segno`, `coda`, `fine`). I **tipi** e i **nomi** delle sezioni sono liberi, anche in italiano.
 - Una direttiva è `{nome}` oppure `{nome: valore}`: può stare su una riga propria o **dentro** una riga di musica. I nomi delle direttive non distinguono maiuscole e minuscole, quelli degli accordi sì.
 - La musica sta **dentro una sezione** (`{start_of_…}` … `{end_of_…}`); fuori, l'app ne apre una senza titolo e lo segnala.
 - Il file non si "rompe" mai: ciò che non si capisce diventa un **avviso** (warning) con il numero di riga, mostrato sotto l'editor, e il resto si disegna comunque (vedi [Diagnostica](#diagnostica)).
@@ -43,7 +45,7 @@ Un brano è un file di testo UTF-8 con estensione `.chs`. Contiene **direttive**
 
 ## Intestazione
 
-Le direttive in cima al file descrivono il brano. Quelle che regolano l'impaginazione (`bar_width`, `notation`, `bars_per_line`) valgono per tutto il brano, ma scritte **dentro una sezione** valgono solo per quella.
+Le direttive in cima al file, prima della prima sezione, descrivono il brano e valgono per tutto il brano. Quelle che regolano l'impaginazione (`bar_width`, `notation`, `bars_per_line`) si possono scrivere anche più avanti: **fra due sezioni** valgono da lì in avanti, **dentro una sezione** solo per quella. Le altre (titolo, tempo, colori, accordatura…) vanno nell'intestazione: scritte più in basso danno un avviso.
 
 | Direttiva | Esempio | Note |
 |---|---|---|
@@ -61,7 +63,7 @@ Le direttive in cima al file descrivono il brano. Quelle che regolano l'impagina
 | `label_colors`, `section_colors` | `{label_colors: by_type}` | Colori dei box delle sezioni. Vedi [Colori delle sezioni](#colori-delle-sezioni). |
 | `notation`, `tuning`, `tab_position` | `{notation: both}` | Pentagramma e/o tablatura per le battute con le note. Vedi [Tablatura](#tablatura-per-chitarra). |
 | `created`, `modified` | | Date di creazione e di ultimo salvataggio: le scrive l'app, non serve toccarle. |
-| `comment` (o `c`) | `{comment: …}` | Commento, non stampato. |
+| `comment` (o `c`) | `{c: Solo chitarra}` | Riga di testo **stampata**, come `{text}` (e come in ChordPro). Per una nota che non va stampata: una riga che inizia con `#`. |
 
 ## Sezioni
 
@@ -151,9 +153,9 @@ In `section_colors` la chiave può essere l'**etichetta** di una sezione (`Ritor
 
 ## Accordi e durate
 
-- `[Am7]` un accordo: radice (`A`–`G` con `#` o `b`), qualità libera (`m`, `maj7`, `m7b5`, `7#9`, `sus4`, `dim7`, `6/9`…) e basso facoltativo dopo `/` (`[C/E]`). Nello spartito `b` e `#` diventano ♭ e ♯.
-- `[C:2]` dura 2 **movimenti** (quarti); la durata minima è mezzo movimento (`[G:1.5]`, `[D:0.5]`).
-- In una battuta, gli accordi senza durata si dividono il tempo che resta in parti uguali, arrotondate al mezzo movimento; l'ultimo prende il resto. In 4/4: `| [C] [G] |` = 2 + 2; `| [C] [G] [D] |` = 1,5 + 1,5 + 1; `| [C:3] [G] [D] |` = 3 + 0,5 + 0,5.
+- `[Am7]` un accordo: radice (`A`–`G` con `#` o `b`), qualità libera (`m`, `maj7`, `m7b5`, `7#9`, `sus4`, `dim7`, `6/9`…) e basso facoltativo dopo `/` (`[C/E]`). Nello spartito `b` e `#` diventano ♭ e ♯, e le scritture equivalenti si vedono tutte allo stesso modo: `Maj7`, `M7`, `Δ` come `maj7`; `-`, `min` come `m`; `ø` come `m7b5`; `°` come `dim`; `+` come `aug` (o tutte nei simboli jazz Δ – ø ° +, con l'opzione *Simboli jazz*).
+- `[C:2]` dura 2 note del **denominatore del metro**: 2 quarti in 4/4 e 3/4, 2 ottavi in 6/8 e 7/8, 2 minime in 2/2 (`[C:3] [G:3]` divide a metà una battuta di 6/8). La durata minima è mezza unità (`[G:1.5]`, `[D:0.5]`).
+- In una battuta, gli accordi senza durata si dividono il tempo che resta in parti uguali, arrotondate a mezza unità; l'ultimo prende il resto. In 4/4: `| [C] [G] |` = 2 + 2; `| [C] [G] [D] |` = 1,5 + 1,5 + 1; `| [C:3] [G] [D] |` = 3 + 0,5 + 0,5.
 - `[/]` è uno **stop** (silenzio fino all'accordo seguente; anche con durata: `[/:2]`); `[%]` dice esplicitamente "nessun accordo nuovo".
 - Una battuta **senza accordi** (`| |` o solo testo) continua l'accordo precedente e si vede come **%**.
 - Il **testo** dopo un accordo è quello cantato su quell'accordo; il testo prima del primo accordo di una battuta va con il primo accordo.
@@ -200,7 +202,7 @@ Si combinano tra loro e con la durata, in quest'ordine: anticipo, nome (eventual
 {volta: 2} [Gm7] [C7] | [F7] ||
 ```
 
-Una volta si chiude da sola al `:|` (con il gancio), all'apertura della volta seguente, con `{volta_end}` o **a fine riga del file**. La 2ª volta va a capo, allineata a destra sotto la 1ª, e l'ultima volta riceve la doppia stanghetta.
+Una volta si chiude da sola al `:|` (con il gancio), all'apertura della volta seguente, con `{volta_end}` o a fine sezione; gli a capo del file non la chiudono, quindi una volta lunga può stare su più righe. La 2ª volta va a capo, allineata a destra sotto la 1ª, e l'ultima volta riceve la doppia stanghetta.
 
 ## Cambi di tonalità e di metro
 
@@ -220,14 +222,14 @@ Gli a capo del file **non** decidono gli a capo dello spartito: contano le battu
 | Scrivi | Effetto |
 |---|---|
 | `{bars_per_line: 6}` dentro una sezione | 6 battute per riga in quella sezione |
-| `{bars_per_line: 6}` fuori dalle sezioni | 6 battute per riga da lì in avanti |
+| `{bars_per_line: 6}` fra due sezioni | 6 battute per riga da lì in avanti (lo stesso per `{bar_width}` e `{notation}`) |
 | `{bars_per_line}` (senza valore) | torna al valore delle impostazioni (4) |
 | `{br}` in una riga di battute | la battuta in cui compare comincia una nuova riga |
 | `{bar_width: uniform}` | **Griglia**: battute tutte larghe uguali e allineate in colonna anche fra sezioni diverse; una battuta affollata occupa due posti invece di rimpicciolire le sigle |
 | `{bar_width: fit}` | **Riempi**: ogni battuta larga quanto le serve (in proporzione ai movimenti); si va a capo solo quando le battute non ci stanno |
 | `{row_spacing: wide}` | più spazio fra le righe (`compact`, `normal`, `wide`, `extra`, o `50%`–`300%`) |
 
-`bar_width` e `bars_per_line` scritti nell'intestazione valgono per il brano, dentro una sezione solo per quella; nell'app le impostazioni e la barra sopra lo spartito danno il valore predefinito.
+`bar_width` e `bars_per_line` nell'intestazione valgono per il brano, fra due sezioni da lì in avanti, dentro una sezione solo per quella; nell'app le impostazioni e la barra sopra lo spartito danno il valore predefinito.
 
 ## Segni di navigazione
 
@@ -366,6 +368,3 @@ L'app non si ferma mai su un errore: mostra lo spartito con quello che riesce a 
 
 `{format: v1}` dichiara la versione. Le aggiunte arrivano nella versione corrente senza cambiare il significato dei file esistenti; se un giorno la sintassi cambiasse in modo incompatibile, l'app saprà ancora leggere i file v1 e offrirà di aggiornarli.
 
----
-
-Per tutti i dettagli (regole di impaginazione, casi particolari) c'è la [specifica completa]({{repo}}/blob/main/SPEC.md) nel repository.

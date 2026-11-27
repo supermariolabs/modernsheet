@@ -32,8 +32,8 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
-from ..formats import CURRENT
-from ..theory import CHORD_RE, PITCH, spelling_for
+from modernsheet.formats import CURRENT
+from modernsheet.theory import CHORD_RE, PITCH, spelling_for
 
 HEADER_RE = re.compile(r"^\s*(title|titolo|artist|artista|composer|compositore|key|tonalit[aà]|bpm|tempo|"
                        r"time|metro|capo|subtitle|annotation)\s*[:=]\s*(.+?)\s*$", re.I)
@@ -408,12 +408,12 @@ class _Converter:
     def serialize(self) -> str:
         """The .chs source: header, conversion notes as comments, then each section with one source
         line per original line. Lines after the first start with {br} so the original line breaks
-        are kept; an ending that is still open continues on the same source line, because in the
-        .chs an ending bracket closes at the end of its line (SPEC §2.7). Fractions of a bar from
-        the original (r2, r4) become durations in beats of the time signature in force."""
+        are kept; an ending that is still open continues on the same source line, so each ending reads
+        as one line (the .chs closes it at :|, {volta_end} or the section's end, not at a line break). Fractions of a bar from
+        the original (r2, r4) become durations in notes of the denominator of the time in force."""
         m = self.meta
         num, den = (m.get("time") or "4/4").replace(":", "/").split("/")
-        beats = int(num) * 4 / int(den)
+        beats = int(num)                    # a bar in notes of the denominator, the unit of :n
         out = ["# Importato da Chord Sheet Maker (chordsheet.com)", f"{{format: v{CURRENT}}}"]
         for k in ("title", "subtitle", "artist", "key", "tempo", "capo"):
             if m.get(k):
@@ -457,7 +457,7 @@ class _Converter:
                     if b.time:
                         parts.append(f"{{time: {b.time}}}")
                         n_, d_ = b.time.split("/")
-                        cur_beats = int(n_) * 4 / int(d_)
+                        cur_beats = int(n_)
                     if b.volta:
                         parts.append(f"{{volta: {b.volta}}}")
                         volta_open = True

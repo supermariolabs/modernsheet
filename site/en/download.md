@@ -47,7 +47,7 @@ x86_64, with GTK 3 (the most common desktop distributions).
 </div>
 </div>
 
-Every version, with its changes, is on the project's [Releases]({{repo}}/releases) page. The iPad app is in testing: for now you can try it with the *Flet* app (see the [guide](/en/guide/)).
+Every version, with its changes, is on the project's [Releases]({{repo}}/releases) page. The iPad and iPhone versions will come to the App Store.
 
 ## Installing and opening
 

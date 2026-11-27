@@ -12,6 +12,49 @@ Le versioni di Modern Sheet pubblicate, dalla più recente. Le app da scaricare 
 [Download](/it/download/); ogni versione con le app compilate ha la sua pagina di
 [release su GitHub]({{repo}}/releases).
 
+## 0.53.0 — 27 novembre 2026 {#v0.53.0}
+
+[Release su GitHub]({{repo}}/releases/tag/v0.53.0) · app per macOS, Windows, Linux e Android
+
+Raccoglie le versioni da 0.47 a 0.53, in preparazione della 1.0 e degli store.
+
+**Formato .chs, versione definitiva per la 1.0**
+
+- `{comment}` e `{c}` si **stampano** come in ChordPro (come `{text}`); le note che non vuoi stampate si
+  scrivono con `#`.
+- `{bar_width}`, `{notation}` e `{bars_per_line}` scritti **fra le sezioni** valgono da lì in avanti; dentro
+  una sezione solo per lei. Le direttive del brano (titolo, tonalità…) dopo la prima sezione danno un avviso.
+- Le durate `:n` contano le note del **denominatore**: quarti in 4/4, ottavi in 6/8, minime in 2/2.
+- Una volta si chiude solo con un segno (`:|`, la volta seguente, `{volta_end}`, fine della sezione), mai
+  perché la riga del file va a capo.
+- I caratteri speciali si scrivono come testo con la **barra rovesciata**: `\|`, `\[parlato\]`,
+  `{c: Ritornello \{x2\}}`, `\#1`.
+- Parole chiave in inglese, come in ChordPro (`{volta_end: hook}`; `chiusa` dà un avviso).
+- Le **sigle equivalenti** si vedono tutte allo stesso modo: `CMaj7` come `Cmaj7`, `F#-` come `F#m`, `Dø`
+  come `Dm7b5`.
+- L'estensione `.chs` è definitiva.
+
+**Spartito**
+
+- **Do Re Mi**: accordi e tonalità con i nomi italiani delle note (interruttore sopra lo spartito e
+  impostazione predefinita); il brano resta scritto con le lettere.
+- Il tema scritto a mano si chiama ora **Fake Book**.
+
+**App**
+
+- **Condividi**: su iPad, iPhone e Android il PDF o il sorgente vanno a Mail, File, AirDrop, WhatsApp…
+- **Archivi .zip**: un brano con i suoi MusicXML (*Brano con MusicXML (.zip)*) e la **libreria intera**
+  (*Impostazioni › Esporta la libreria*), per backup o per cambiare dispositivo; *Importa* accetta anche i `.zip`.
+- Su **iPad, iPhone e Android** la libreria sta dentro l'app (su iPad e iPhone visibile nell'app **File**),
+  si sincronizza con Google Drive e i file entrano ed escono con Importa e Condividi.
+- L'importazione da chordsheet.com non è più nell'app: è uno strumento a parte, su GitHub.
+- L'app per **macOS** è ora firmata e notarizzata da Apple: si apre senza avvisi.
+
+**Sito**
+
+- Informativa sulla privacy completata, con il contatto **privacy@modernsheet.app**.
+- Il sito è dedicato a chi usa l'app; i dettagli per sviluppatori sono su GitHub.
+
 ## 0.46.1 — 25 novembre 2026 {#v0.46.1}
 
 [Release su GitHub]({{repo}}/releases/tag/v0.46.1) · app per macOS, Windows, Linux e Android

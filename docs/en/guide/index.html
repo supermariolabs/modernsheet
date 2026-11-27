@@ -24,7 +24,7 @@
     <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Menu">
     <label for="nav-toggle" class="nav-button" aria-hidden="true"><span></span><span></span><span></span></label>
     <nav class="menu">
-      <a href="/en/">Home</a><a href="/en/download/">Download</a><a href="/en/guide/" aria-current="page">App guide</a><a href="/en/format/">The .chs format</a><a href="/en/chordsheet/">chordsheet.com</a><a href="/en/changelog/">Changelog</a>
+      <a href="/en/">Home</a><a href="/en/download/">Download</a><a href="/en/guide/" aria-current="page">App guide</a><a href="/en/format/">The .chs format</a><a href="/en/changelog/">Changelog</a>
       <a class="lang" href="/it/guida/" hreflang="it">Italiano</a>
       <a class="gh" href="https://github.com/supermariolabs/modernsheet">GitHub</a>
     </nav>
@@ -34,7 +34,7 @@
 <h1 id="app-guide">App guide<a class="headerlink" href="#app-guide">#</a></h1>
 <div class="toc">
 <ul>
-<li><a href="#running-modern-sheet">Running Modern Sheet</a></li>
+<li><a href="#installing-modern-sheet">Installing Modern Sheet</a></li>
 <li><a href="#the-library">The library</a><ul>
 <li><a href="#search">Search</a></li>
 </ul>
@@ -45,57 +45,8 @@
 <li><a href="#settings">Settings</a></li>
 </ul>
 </div>
-<h2 id="running-modern-sheet">Running Modern Sheet<a class="headerlink" href="#running-modern-sheet">#</a></h2>
-<p>The simplest way is to <strong>download the app</strong> for macOS, Windows or Linux from the <a href="/en/download/">Download</a> page. Otherwise it runs from source, with <strong>Python 3.10 or later</strong>:</p>
-<pre><code>git clone https://github.com/supermariolabs/modernsheet.git
-cd modernsheet
-python3 -m venv .venv &amp;&amp; source .venv/bin/activate     # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-flet run                                               # the desktop app
-</code></pre>
-<p>To make a real app, use <code>flet build</code>:</p>
-<table>
-<thead>
-<tr>
-<th>Command</th>
-<th>Result</th>
-<th>Needs</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>flet build macos</code></td>
-<td>Mac app</td>
-<td>full Xcode and CocoaPods (<code>brew install cocoapods</code>)</td>
-</tr>
-<tr>
-<td><code>flet build windows</code></td>
-<td>Windows app</td>
-<td>Visual Studio with the C++ tools</td>
-</tr>
-<tr>
-<td><code>flet build linux</code></td>
-<td>Linux app</td>
-<td>the GTK development packages</td>
-</tr>
-<tr>
-<td><code>flet build ipa</code></td>
-<td>iPad and iPhone</td>
-<td>a Mac with Xcode and an Apple Developer account</td>
-</tr>
-<tr>
-<td><code>flet build apk</code></td>
-<td>Android</td>
-<td>nothing: Flet downloads the Android SDK</td>
-</tr>
-</tbody>
-</table>
-<p>To try the app on iPad or Android without building it: install the <strong>Flet</strong> app from the store, run <code>flet run --ios</code> (or <code>--android</code>) and scan the QR code.</p>
-<p>From the command line, without the app, you get PDF files:</p>
-<pre><code>python modernsheet_cli.py song.chs -o pdf/               # one PDF per song
-python modernsheet_cli.py *.chs --theme clean -t 3       # Clean theme, 3 semitones up
-python modernsheet_cli.py --check *.chs                  # check for errors only
-</code></pre>
+<h2 id="installing-modern-sheet">Installing Modern Sheet<a class="headerlink" href="#installing-modern-sheet">#</a></h2>
+<p>Download the app for macOS, Windows, Linux or Android from the <a href="/en/download/">Download</a> page, which also explains how to open it the first time. The iPad and iPhone versions will come to the App Store.</p>
 <h2 id="the-library">The library<a class="headerlink" href="#the-library">#</a></h2>
 <p>On first start the library holds the <strong>examples</strong> folder with the example songs: a good way to see every feature. Your songs go next to it, in folders of your choice.</p>
 <ul>
@@ -147,7 +98,7 @@ python modernsheet_cli.py --check *.chs                  # check for errors only
 <h2 id="reading-and-editing-a-song">Reading and editing a song<a class="headerlink" href="#reading-and-editing-a-song">#</a></h2>
 <p>Tapping a card opens the song in <strong>view mode</strong>: just the sheet, with the options above it.</p>
 <ul>
-<li><strong>Transpose</strong> – / +: changes chords and key signatures; <strong>Real Book</strong> or <strong>Clean</strong>; <strong>Grid</strong> (all bars equal) or <strong>Fill</strong> (a song or a section can set one in the source with <code>{bar_width}</code>); <strong>jazz symbols</strong>; <strong>colours by section</strong>.</li>
+<li><strong>Transpose</strong> – / +: changes chords and key signatures; <strong>Fake Book</strong> or <strong>Clean</strong>; <strong>Grid</strong> (all bars equal) or <strong>Fill</strong> (a song or a section can set one in the source with <code>{bar_width}</code>); <strong>jazz symbols</strong>; <strong>Do Re Mi</strong> (chords and keys with Italian note names; the source keeps the letters); <strong>colours by section</strong>.</li>
 <li><strong>Staff / Both / Tab</strong>: for guitar players, the notated parts also as <strong>tablature</strong>, under the staff or in its place (with the rhythm under the numbers). The app chooses string and fret to stay in a comfortable position; with <code>{capo}</code> frets start from the capo. Where needed, correct it in the song: <code>{tab_position: 5}</code> (the hand around the 5th fret), <code>~3</code> after a note (that string), <code>{tuning: drop D}</code> (tuning, also bass and ukulele).</li>
 <li><strong>⛶ Full screen</strong>: only the pages remain. To leave, use the button at the top right or the <strong>Esc</strong> key.</li>
 <li>Arrow keys, Page Up/Down, the space bar and <strong>Bluetooth pedals</strong> that send those keys turn the pages.</li>
@@ -160,23 +111,24 @@ python modernsheet_cli.py --check *.chs                  # check for errors only
 <li>the preview updates as you type; <strong>warnings</strong> are listed under the editor, and tapping one jumps to the line;</li>
 <li>a <strong>tab for every MusicXML file</strong> the song cites, <strong>read only</strong>: the file is shown indented and coloured, and the <strong>Convert to notes in the song</strong> button writes its bars into the <code>.chs</code> as notes (<code>{start_of_notes}</code>), in place of the reference, which stays as a comment for the record (the MusicXML file is not touched); check the preview and save;</li>
 <li><strong>Save</strong> (⌘S / Ctrl+S) turns green when there is something to save; <strong>Save as</strong> makes a copy next to the song;</li>
-<li><strong>Export PDF</strong>; the <strong>red bin</strong> deletes the song and its MusicXML files, after a confirmation listing the files.</li>
+<li><strong>Export PDF</strong>; on iPad, iPhone and Android <strong>Share</strong> sends the PDF or the <code>.chs</code> source to Mail, Files, AirDrop, WhatsApp…; <em>Song with MusicXML (.zip)</em> exports the song together with its MusicXML files; the <strong>red bin</strong> deletes the song and its MusicXML files, after a confirmation listing the files.</li>
 </ul>
 <p>The app writes the <code>{created}</code> and <code>{modified}</code> dates into the file by itself.</p>
 <h2 id="sync">Sync<a class="headerlink" href="#sync">#</a></h2>
 <p>The library is always <strong>local</strong>: the app works without a network. In <em>Settings › Sync</em> you can keep it in step with:</p>
 <ul>
-<li><strong>Google Drive</strong>: <em>Connect</em>, then enter the code shown at google.com/device. The app only sees the files it creates (<code>drive.file</code> permission), in a "Modern Sheet" folder of your Drive (the name can be changed).</li>
+<li><strong>Google Drive</strong>: <em>Connect</em>, then enter the code shown at google.com/device. The app only sees the files it creates, in a "Modern Sheet" folder of your Drive (the name can be changed).</li>
 <li><strong>a folder</strong>: for example inside iCloud Drive, Dropbox or Google Drive for desktop, whose client carries it to your other computers.</li>
 </ul>
 <p>Sync runs at start, after every save, every 5 minutes and with <em>Sync now</em>. Nothing gets lost: if the same song changes on two devices <strong>both versions</strong> are kept, and deleted files go to the <strong>trash</strong> (the app's or Drive's). When a second device connects, the app first downloads what is already there and then adds only the missing songs.</p>
 <h2 id="importing-songs">Importing songs<a class="headerlink" href="#importing-songs">#</a></h2>
 <ul>
-<li><strong>Import a .chs file</strong> (icon in the library bar): copies a <code>.chs</code> into the open folder, with the MusicXML files it cites, never overwriting anything.</li>
-<li><strong>Import from chordsheet.com</strong>: log in to your account, pick the songs from a list and they are imported converted. Details on the <a href="/en/chordsheet/">chordsheet.com</a> page.</li>
+<li><strong>Import a .chs or .zip file</strong> (icon in the library bar): copies a <code>.chs</code> into the open folder, with the MusicXML files it cites, never overwriting anything. A <strong><code>.zip</code></strong> with one song brings its MusicXML files too (handy on iPad and Android); a <code>.zip</code> with several songs, such as an exported library, goes into a new folder named after the archive.</li>
+<li><strong>Export the library</strong> (<em>Settings › Folders</em>): all songs and MusicXML files in a <code>.zip</code>, with their folders: a backup, or the way to move to another device.</li>
+<li><strong>From chordsheet.com</strong>: if your songs are on Chord Sheet Maker, a <a href="https://github.com/supermariolabs/modernsheet/tree/main/tools/chordsheet_import">command-line tool</a> (it needs Python) converts them, then you open them in the app like the others.</li>
 </ul>
 <h2 id="settings">Settings<a class="headerlink" href="#settings">#</a></h2>
-<p>Language (Italian or English), songs folder, PDF folder, default display options (theme, grid, row spacing, chord symbols, colours) and sync. A song can set its own row spacing with <code>{row_spacing}</code>. Settings are kept on the device.</p>
+<p>Language (Italian or English), songs folder, PDF folder, default display options (theme, grid, row spacing, chord symbols, note names, colours) and sync. On <strong>iPad, iPhone and Android</strong> the library lives inside the app: on iPad and iPhone you find it in the <strong>Files</strong> app under <em>On My iPad › Modern Sheet</em> (you can drag songs into it; with Google Drive it is the <em>Modern Sheet (Google Drive · account)</em> folder); folders are not chosen and syncing uses Google Drive. A song can set its own row spacing with <code>{row_spacing}</code>. Settings are kept on the device.</p>
 </main>
 <footer class="foot">
   <div class="wrap">

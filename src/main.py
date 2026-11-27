@@ -32,7 +32,6 @@ from dataclasses import dataclass, field
 from modernsheet import edits, formats, gdrive, layout, library, parse, sync, syntax, xml_syntax
 from modernsheet.flet_view import FLET_FONTS, page_shapes
 from modernsheet.fonts import registry
-from modernsheet.importers import chordsheet_account, from_chordsheet_com
 from modernsheet.pdf import pdf_bytes
 from modernsheet.i18n import LANGUAGES, set_language, tr, tr_count, tr_date, tr_datetime
 from modernsheet.settings import Settings, env
@@ -98,7 +97,8 @@ DEFAULT_LIBRARY = "Modern Sheet"             # the library of a new installation
 
 
 def default_library(data: str | None = None) -> Path:
-    """The library of a new installation: a "Modern Sheet" folder in the app's data with the bundled
+    """The library of a new installation: a "Modern Sheet" folder in the app's data (on iPad/iPhone in
+    its Documents folder, `data` given by the app, so that the Files app shows it) with the bundled
     examples in its "examples" subfolder, made on first start (the user's own songs and folders go
     next to it; the examples can be edited). Without a data folder: the bundled examples themselves."""
     data = data or os.environ.get("FLET_APP_STORAGE_DATA")
@@ -200,7 +200,8 @@ def edit_caret(old: str, new: str) -> int:
 def theme_selector(on_change) -> ft.SegmentedButton:
     return ft.SegmentedButton(
         selected=["realbook"], show_selected_icon=False,
-        segments=[ft.Segment(value="realbook", label=ft.Text("Real Book")),
+        # the "realbook" theme is shown as "Fake Book" (a generic name): "The Real Book" is a trademark (SPEC §8.6)
+        segments=[ft.Segment(value="realbook", label=ft.Text("Fake Book")),
                   ft.Segment(value="clean", label=ft.Text("Clean"))],
         on_change=lambda e: on_change(e.control.selected[0]))
 
@@ -237,7 +238,13 @@ class App:
         self.prefs = ft.SharedPreferences()
         self.launcher = ft.UrlLauncher()
         self.clipboard = ft.Clipboard()
-        page.services.extend([self.picker, self.prefs, self.launcher, self.clipboard])
+        self.share = ft.Share()
+        self.paths = ft.StoragePaths()
+        page.services.extend([self.picker, self.prefs, self.launcher, self.clipboard, self.share, self.paths])
+        # store mode (iPad/iPhone, Android, Mac App Store): the library lives inside the app, no folders in
+        # the settings, files in and out through the system dialogs (SPEC §8.6, library.store_mode)
+        self.store = library.store_mode(page.platform.value if page.platform else "")
+        self.home: str | None = None              # iOS: the app's Documents folder (default_library)
         self._drive: gdrive.DriveProvider | None = None
 
         self.settings = Settings()
@@ -315,10 +322,29 @@ class App:
         if not self.settings.library_root:
             self.settings.library_root = await self.prefs.get(PREF_ROOT)      # older versions
         self.opts = self.settings.layout_options()
+        await self.find_home()
         self.apply_language()
         self.set_root(self.library_root())
         self.run(self.sync_now())
         self.run(self.sync_loop())
+
+    async def find_home(self):
+        """iPad/iPhone: the library goes in the app's Documents folder, which the Files app shows ("On My
+        iPad › Modern Sheet", Info.plist UIFileSharingEnabled); a library made by an earlier version in the
+        hidden app data is moved there. Elsewhere the app data folder stays (Android shows no app folder:
+        files go in and out by import, export and Google Drive)."""
+        if self.page.platform != ft.PagePlatform.IOS or env("LIBRARY"):
+            return
+        try:
+            self.home = await self.paths.get_application_documents_directory()
+        except Exception:                         # noqa: BLE001 — without it the data folder still works
+            return
+        data = os.environ.get("FLET_APP_STORAGE_DATA")
+        if data and self.home:
+            try:
+                library.move_library(Path(data) / DEFAULT_LIBRARY, Path(self.home) / DEFAULT_LIBRARY)
+            except OSError:
+                pass
 
     def apply_language(self):
         """Use the language of the settings: texts are read when the screens are built, so they are
@@ -347,13 +373,14 @@ class App:
         """Library folder: MODERNSHEET_LIBRARY (development), the local copy of a synced library,
         the chosen folder, or the examples."""
         if not env("LIBRARY") and self.sync_state():
-            local = self.sync_state() / "library"
+            local = self.local_copy(self.sync_state())
             local.mkdir(parents=True, exist_ok=True)
             return local
-        for root in (env("LIBRARY"), self.settings.library_root):
+        # in store mode a folder chosen earlier is not readable after a restart: always the app's library
+        for root in (env("LIBRARY"), None if self.store else self.settings.library_root):
             if root and Path(root).is_dir():
                 return Path(root)
-        return default_library()
+        return default_library(self.home)
 
     async def save_settings(self):
         await self.prefs.set(PREF_SETTINGS, self.settings.to_json())
@@ -365,7 +392,7 @@ class App:
         st = self.settings
         if not data:
             return None
-        if st.sync_mode == "folder" and st.sync_folder:
+        if st.sync_mode == "folder" and st.sync_folder and not self.store:      # store mode: Drive only
             return sync.state_dir(Path(data), f"folder:{Path(st.sync_folder).resolve()}")
         if st.sync_mode == "gdrive" and st.sync_account:
             folder = gdrive.clean_folder_name(st.sync_drive_folder)
@@ -373,6 +400,22 @@ class App:
             key = f"gdrive:{st.sync_account}" + ("" if folder == gdrive.LEGACY_ROOT_NAME else f":{folder}")
             return sync.state_dir(Path(data), key)
         return None
+
+    def local_copy(self, state: Path) -> Path:
+        """The local copy of a synced library: "library" in the remote's app-data folder (with the manifest
+        and the trash), or on iPad/iPhone a folder of the app's Documents, which the Files app shows, named
+        after what it is a copy of ("Modern Sheet (Google Drive · account)": one per Drive folder and
+        account, as the state folders). A copy made by an earlier version in the app data is moved there."""
+        st = self.settings
+        if not self.home or st.sync_mode != "gdrive":
+            return state / "library"
+        name = library.safe_filename(f"{gdrive.clean_folder_name(st.sync_drive_folder)} (Google Drive · {st.sync_account})")
+        visible = Path(self.home) / name
+        try:
+            library.move_library(state / "library", visible)
+        except OSError:
+            pass
+        return visible
 
     # ---- Google Drive
     def google_client(self) -> gdrive.ClientConfig | None:
@@ -402,7 +445,7 @@ class App:
                 return None
         else:
             provider = sync.FolderProvider(Path(self.settings.sync_folder))
-        return sync.Syncer(state / "library", provider, sync.Manifest(state / "manifest.json"), trash=state / "trash",
+        return sync.Syncer(self.local_copy(state), provider, sync.Manifest(state / "manifest.json"), trash=state / "trash",
                            device=platform.node().split(".")[0] or str(self.page.platform.value))
 
     async def sync_now(self, e=None):
@@ -641,7 +684,6 @@ class App:
                 self.sync_btn,
                 ft.IconButton(ft.Icons.REFRESH, tooltip=tr("lib.refresh"), on_click=lambda e: self.rescan()),
                 ft.IconButton(ft.Icons.NOTE_ADD_OUTLINED, tooltip=tr("lib.open_file"), on_click=self.pick_file),
-                ft.IconButton(ft.Icons.UPLOAD_FILE, tooltip=tr("lib.import"), on_click=self.import_csm),
                 ft.IconButton(ft.Icons.SETTINGS_OUTLINED, tooltip=tr("settings"), on_click=self.show_settings),
             ])
         self.search = ft.TextField(
@@ -822,7 +864,8 @@ class App:
     def home_label(self) -> str:
         """Name of the main folder as the user knows it: for a synced library its local copy (a folder
         called "library" in the app data) is shown as what it is a copy of."""
-        if self.sync_state() is not None and self.root and self.root.is_relative_to(self.sync_state()):
+        state = self.sync_state()
+        if state is not None and self.root and self.root == self.local_copy(state):
             st = self.settings
             return Path(st.sync_folder).name if st.sync_mode == "folder" else tr("gd.title")
         return self.root.name or str(self.root)
@@ -1108,6 +1151,8 @@ class App:
         self.gd_folder = ft.TextField(label=tr("gd.folder"), helper=tr("gd.folder_help"), dense=True,
                                       value=self.settings.sync_drive_folder, prefix_icon=ft.Icons.FOLDER_OUTLINED,
                                       on_submit=self.set_drive_folder, on_blur=self.set_drive_folder)
+        self.sync_folder_help = ft.Container(ft.Text(tr("sync.folder_help"), size=12, color=ft.Colors.BLUE_GREY_600),
+                                             padding=ft.Padding.only(left=16, right=16, bottom=4))
         self.sync_info = ft.Text("", size=12, color=ft.Colors.BLUE_GREY_600)
         self.sync_now_btn = ft.OutlinedButton(tr("sync.now"), icon=ft.Icons.SYNC, on_click=self.sync_now)
         self.pdf_tile = ft.ListTile(
@@ -1128,6 +1173,11 @@ class App:
             segments=[ft.Segment(value="text", label=ft.Text(tr("opt.standard"))),
                       ft.Segment(value="jazz", label=ft.Text(tr("opt.jazz")))],
             on_change=lambda e: self.set_default("chord_symbols", e.control.selected[0]))
+        self.set_names = ft.SegmentedButton(
+            selected=["letters"], show_selected_icon=False,
+            segments=[ft.Segment(value="letters", label=ft.Text(tr("opt.letters"))),
+                      ft.Segment(value="italian", label=ft.Text(tr("opt.italian")))],
+            on_change=lambda e: self.set_default("note_names", e.control.selected[0]))
         self.set_lang = ft.SegmentedButton(
             selected=[self.settings.language], show_selected_icon=False,
             segments=[ft.Segment(value=code, label=ft.Text(name)) for code, name in LANGUAGES.items()],
@@ -1155,10 +1205,13 @@ class App:
                     heading(tr("set.folders")),
                     self.root_tile,
                     self.pdf_tile,
+                    ft.ListTile(leading=ft.Icon(ft.Icons.ARCHIVE_OUTLINED), title=ft.Text(tr("set.export_library")),
+                                subtitle=ft.Text(tr("set.export_library_help"), color=ft.Colors.BLUE_GREY_600),
+                                trailing=ft.IconButton(ft.Icons.DOWNLOAD, tooltip=tr("set.export_library"),
+                                                       on_click=self.export_library_zip)),
                     ft.Divider(height=24),
                     heading(tr("sync.section")),
-                    ft.Container(ft.Text(tr("sync.folder_help"), size=12, color=ft.Colors.BLUE_GREY_600),
-                                 padding=ft.Padding.only(left=16, right=16, bottom=4)),
+                    self.sync_folder_help,
                     self.sync_tile,
                     ft.Container(ft.Text(tr("gd.help"), size=12, color=ft.Colors.BLUE_GREY_600),
                                  padding=ft.Padding.only(left=16, right=16, top=8)),
@@ -1178,6 +1231,7 @@ class App:
                     option(tr("set.notation"), tr("set.notation_help"), self.set_notation),
                     option(tr("set.chords"), tr("set.chords_help"),
                            self.set_chords),
+                    option(tr("set.note_names"), tr("set.note_names_help"), self.set_names),
                     option(tr("set.colors"), tr("set.colors_help"), self.set_colors),
                     ]))])]))
 
@@ -1193,12 +1247,15 @@ class App:
         if self.screen != "settings":
             return
         st = self.settings
-        default = default_library()
+        default = default_library(self.home)
         syncing = self.syncer() is not None
         if env("LIBRARY"):
             root = tr("set.from_env", path=self.root)
         elif syncing:
             root = tr("sync.local_copy", path=self.root)
+        elif self.store:
+            root = tr("set.in_app_ios", folder=self.root.name) if self.page.platform == ft.PagePlatform.IOS \
+                else tr("set.in_app")
         elif self.root == default:
             root = tr("set.examples", path=default)
         else:
@@ -1206,6 +1263,10 @@ class App:
         self.root_tile.subtitle = ft.Text(root, color=ft.Colors.BLUE_GREY_600)
         for b in self.root_tile.trailing.controls:
             b.disabled = syncing                  # a synced library lives in its local copy
+        # store mode: no folders kept in the settings (the library is the app's, PDFs go through the
+        # system dialog every time) and no folder sync (Google Drive only)
+        self.root_tile.trailing.visible = not self.store
+        self.pdf_tile.visible = self.sync_tile.visible = self.sync_folder_help.visible = not self.store
         self.sync_tile.subtitle = ft.Text(st.sync_folder if st.sync_mode == "folder" and st.sync_folder
                                           else tr("sync.folder_none"), color=ft.Colors.BLUE_GREY_600)
         self.sync_tile.trailing.controls[1].disabled = st.sync_mode != "folder"
@@ -1231,6 +1292,7 @@ class App:
         self.set_spacing.selected = [st.row_spacing]
         self.set_notation.selected = [st.notation]
         self.set_chords.selected = [st.chord_symbols]
+        self.set_names.selected = [st.note_names]
         self.set_colors.value = st.label_colors == "by_type"
         self.set_lang.selected = [st.language]
         self.page.update()
@@ -1289,6 +1351,14 @@ class App:
                 self.save_btn,
                 ft.IconButton(ft.Icons.SAVE_AS_OUTLINED, tooltip=tr("ed.save_as"), on_click=self.save_as_clicked),
                 ft.IconButton(ft.Icons.PICTURE_AS_PDF_OUTLINED, tooltip=tr("ed.export_pdf"), on_click=self.export_pdf),
+                # share sheet (Mail, Files, AirDrop…) on iPad/iPhone and Android, where files leave the app this
+                # way; the song with its MusicXML as .zip everywhere (shared on mobile, saved on desktop)
+                ft.PopupMenuButton(icon=ft.Icons.IOS_SHARE if self.page.platform == ft.PagePlatform.IOS
+                                   else ft.Icons.SHARE, tooltip=tr("ed.share"),
+                                   items=([ft.PopupMenuItem(content=ft.Text(tr("ed.share_pdf")), on_click=self.share_pdf),
+                                           ft.PopupMenuItem(content=ft.Text(tr("ed.share_chs")), on_click=self.share_chs)]
+                                          if self.page.platform in (ft.PagePlatform.IOS, ft.PagePlatform.ANDROID) else [])
+                                   + [ft.PopupMenuItem(content=ft.Text(tr("ed.export_zip")), on_click=self.export_song_zip)]),
                 self.delete_btn,
             ])
         self.theme_seg = theme_selector(lambda v: self.set_opt("theme", v))
@@ -1296,6 +1366,8 @@ class App:
         self.notation_seg = notation_selector(self.choose_notation)
         self.jazz_sw = ft.Switch(value=False, on_change=lambda e: self.set_opt(
             "chord_symbols", "jazz" if e.control.value else "text"))
+        self.names_sw = ft.Switch(value=False, on_change=lambda e: self.set_opt(
+            "note_names", "italian" if e.control.value else "letters"))
         self.colors_sw = ft.Switch(value=False, on_change=lambda e: self.set_opt(
             "label_colors", "by_type" if e.control.value else "theme"))
         self.tr_label = ft.Text("0", width=34, text_align=ft.TextAlign.CENTER, weight=ft.FontWeight.W_600)
@@ -1311,9 +1383,10 @@ class App:
                 self.theme_seg,
                 self.width_seg,
                 self.notation_seg,
-                # the two switches stay together on one line (the toolbar wraps between groups)
+                # the switches stay together on one line (the toolbar wraps between groups)
                 ft.Row(spacing=16, tight=True, controls=[
                     ft.Row(spacing=4, tight=True, controls=[self.jazz_sw, ft.Text(tr("ed.jazz"))]),
+                    ft.Row(spacing=4, tight=True, controls=[self.names_sw, ft.Text(tr("ed.italian"))]),
                     ft.Row(spacing=4, tight=True, controls=[self.colors_sw, ft.Text(tr("ed.colors"))])]),
             ])
 
@@ -1875,6 +1948,7 @@ class App:
         self.width_seg.selected = [self.opts["bar_width"]]
         self.notation_seg.selected = [self.opts["notation"]]
         self.jazz_sw.value = self.opts["chord_symbols"] == "jazz"
+        self.names_sw.value = self.opts["note_names"] == "italian"
         self.colors_sw.value = self.opts["label_colors"] == "by_type"
 
     def set_transpose(self, d: int):
@@ -2114,12 +2188,15 @@ class App:
         MusicXML files it cites, never overwriting (library.import_song); then open the copy."""
         if not self.root:
             return
-        files = await self.picker.pick_files(dialog_title=tr("ed.open_song"), allowed_extensions=["chs"],
+        files = await self.picker.pick_files(dialog_title=tr("ed.open_song"), allowed_extensions=["chs", "zip"],
                                              with_data=True)
         if not files:
             return
         f = files[0]
         src = Path(f.path) if f.path and Path(f.path).exists() else None
+        if f.name.lower().endswith(".zip"):
+            await self.import_zip_file(f, src)
+            return
         try:
             text = src.read_text(encoding="utf-8") if src else (f.bytes or b"").decode("utf-8")
         except (OSError, UnicodeDecodeError) as err:
@@ -2142,154 +2219,62 @@ class App:
         self.toast(msg)
         self.run(self.sync_now())
 
-    # ---- import from a chordsheet.com account (importers/chordsheet_account.py)
-    def busy_dialog(self, text: str, cancel=None) -> tuple[ft.Text, ft.ProgressBar]:
-        """A modal "working…" dialog; returns its label and progress bar (value None = indeterminate)."""
-        label, bar = ft.Text(text), ft.ProgressBar(width=420, value=None)
-        actions = [ft.TextButton(tr("lib.csm_stop"), on_click=cancel)] if cancel else []
-        self.page.show_dialog(ft.AlertDialog(modal=True, content=ft.Column(tight=True, spacing=12, controls=[label, bar]),
-                                             actions=actions))
-        return label, bar
-
-    async def import_csm(self, e=None):
-        """Log in to chordsheet.com (email remembered if asked, password never), pick songs, import them
-        converted into the open folder; or import a .txt file as before."""
-        if not self.root:
-            return
-        email = ft.TextField(label=tr("lib.csm_email"), value=self.settings.csm_email, autofocus=not self.settings.csm_email,
-                             keyboard_type=ft.KeyboardType.EMAIL)
-        password = ft.TextField(label=tr("lib.csm_password"), password=True, can_reveal_password=True,
-                                autofocus=bool(self.settings.csm_email))
-        remember = ft.Checkbox(label=tr("lib.csm_remember"), value=bool(self.settings.csm_email))
-        choice = await self.ask(tr("lib.import"), ft.Column(tight=True, spacing=10, width=420, controls=[
-            ft.Text(tr("lib.csm_login_help"), size=12, color=ft.Colors.BLUE_GREY_600), email, password, remember]),
-            [(tr("cancel"), None), (tr("lib.csm_txt"), "txt"), (tr("lib.csm_login"), "login")])
-        if choice == "txt":
-            await self.import_csm_file()
-            return
-        if choice != "login":
-            return
-        address = (email.value or "").strip()
-        self.settings.csm_email = address if remember.value else ""
-        await self.save_settings()
-        client = chordsheet_account.Client()
-        self.busy_dialog(tr("lib.csm_connecting"))
+    async def import_zip_file(self, f, src: Path | None):
+        """A .zip into the open folder (library.import_zip): one song with its MusicXML (then opened), or
+        several songs, e.g. an exported library, in a new folder named after the archive."""
+        dest = self.cwd if self.cwd and not self.query.strip() else self.root
         try:
-            await asyncio.to_thread(client.login, address, password.value or "")
-            songs = await asyncio.to_thread(client.songs)
-        except chordsheet_account.LoginFailed:
-            self.page.pop_dialog()
-            self.toast(tr("lib.csm_wrong"))
+            data = src.read_bytes() if src else (f.bytes or b"")
+            result = await asyncio.to_thread(library.import_zip, dest, data, f.name)
+        except library.BadZip as err:
+            self.toast(tr("lib.zip_bad", name=f.name, err=err))
             return
-        except chordsheet_account.SiteError as err:
-            self.page.pop_dialog()
-            self.toast(tr("lib.csm_site_error", err=err))
+        except OSError as err:
+            self.toast(tr("lib.import_chs_failed", err=err))
             return
-        self.page.pop_dialog()
-        if not songs:
-            self.toast(tr("lib.csm_none"))
-            return
-        chosen = await self.pick_csm_songs(songs)
-        if chosen:
-            await self.import_csm_songs(client, chosen)
-
-    async def pick_csm_songs(self, songs: list) -> list:
-        """Modal list of the account's songs with check boxes; already imported ones are marked and
-        left unchecked. Returns the chosen songs."""
-        done = chordsheet_account.imported_ids(
-            p.read_text(encoding="utf-8", errors="replace") for p in self.root.rglob("*.chs"))
-        boxes = []
-        for s in songs:
-            old = s.id in done
-            boxes.append(ft.Checkbox(value=False, data=s, label=" — ".join(x for x in (s.title, s.artist) if x) +
-                                     (f"  ({tr('lib.csm_already')})" if old else "")))
-        listing = ft.ListView(controls=list(boxes), spacing=0, height=360, width=520)
-        import_btn = ft.FilledButton(tr("lib.csm_import_n", n=0))
-        query = ft.TextField(hint_text=tr("lib.csm_filter"), prefix_icon=ft.Icons.SEARCH, dense=True)
-
-        def refresh(e=None):
-            q = library._fold(query.value or "")
-            listing.controls = [b for b in boxes if q in library._fold(b.label)]
-            n = sum(1 for b in boxes if b.value)
-            import_btn.content = tr("lib.csm_import_n", n=n)
-            import_btn.disabled = n == 0
-            self.page.update()
-
-        def select(new_only: bool | None):
-            for b in listing.controls:
-                b.value = bool(new_only) and b.data.id not in done
-            refresh()
-        for b in boxes:
-            b.on_change = refresh
-        query.on_change = refresh
-        fut = asyncio.get_running_loop().create_future()
-
-        def finish(value):
-            self.page.pop_dialog()
-            if not fut.done():
-                fut.set_result(value)
-        import_btn.on_click = lambda e: finish([b.data for b in boxes if b.value])
-        import_btn.disabled = True
-        dest = self.cwd if self.cwd and not self.query.strip() else self.root
-        self.page.show_dialog(ft.AlertDialog(
-            modal=True, title=ft.Text(tr("lib.csm_pick_title", n=len(songs), done=len(done & {s.id for s in songs}))),
-            content=ft.Column(tight=True, spacing=8, controls=[
-                ft.Text(tr("lib.new_in", folder=self.place_label(dest)), size=12, color=ft.Colors.BLUE_GREY_600),
-                query,
-                ft.Row(spacing=4, controls=[ft.TextButton(tr("lib.csm_all_new"), on_click=lambda e: select(True)),
-                                            ft.TextButton(tr("lib.csm_none_sel"), on_click=lambda e: select(None))]),
-                listing]),
-            actions=[ft.TextButton(tr("cancel"), on_click=lambda e: finish([])), import_btn]))
-        return await fut
-
-    async def import_csm_songs(self, client, songs: list):
-        """Fetch, convert and write the chosen songs into the open folder (never overwriting), with a
-        progress dialog that can stop between two songs."""
-        dest = self.cwd if self.cwd and not self.query.strip() else self.root
-        stop = {"now": False}
-        label, bar = self.busy_dialog(tr("lib.csm_importing", i=0, n=len(songs), title=""),
-                                      cancel=lambda e: stop.update(now=True))
-        ok = warn = failed = 0
-        for i, s in enumerate(songs):
-            if stop["now"]:
-                break
-            label.value = tr("lib.csm_importing", i=i + 1, n=len(songs), title=s.title)
-            bar.value = i / len(songs)
-            self.page.update()
-            if i:
-                await asyncio.sleep(chordsheet_account.PAUSE)          # gentle with the site
-            try:
-                fetched = await asyncio.to_thread(client.fetch, s)
-                conv = chordsheet_account.to_chs(fetched)
-                library.new_song_path(dest, fetched.song.title).write_text(conv.text, encoding="utf-8")
-            except (chordsheet_account.SiteError, OSError):
-                failed += 1
-                continue
-            warn += bool(conv.problems)
-            ok += 1
-        self.page.pop_dialog()
         self.rescan()
-        msg = tr("lib.csm_done", n=ok, folder=self.place_label(dest))
-        if warn:
-            msg += tr("lib.csm_done_warn", n=warn)
-        if failed:
-            msg += tr("lib.csm_done_failed", n=failed)
+        if result.folder is None:
+            msg = tr("lib.imported_chs", name=result.songs[0].name, folder=self.place_label(dest))
+            if result.copied:
+                msg += tr("lib.imported_xml", n=len(result.copied))
+            if result.missing:
+                msg += tr("lib.imported_missing", names=", ".join(result.missing))
+            self.open_song(result.songs[0])
+        else:
+            msg = tr("lib.zip_imported", n=len(result.songs), folder=self.place_label(result.folder))
         self.toast(msg)
         self.run(self.sync_now())
 
-    async def import_csm_file(self, e=None):
-        """Chord Sheet Maker (chordsheet.com): paste the "Chords" field in a .txt file, then import it."""
-        files = await self.picker.pick_files(dialog_title=tr("lib.import"),
-                                             allowed_extensions=["txt"], with_data=True)
-        if not files:
+    async def export_song_zip(self, e=None):
+        """The song with its MusicXML files as a .zip: shared on iPad/iPhone and Android, saved elsewhere."""
+        data = await asyncio.to_thread(library.song_zip, self.text, self.song_title or self.name, self.base_dir)
+        name = self.export_name(".zip")
+        if self.page.platform in (ft.PagePlatform.IOS, ft.PagePlatform.ANDROID):
+            await self.share_file(ft.ShareFile.from_bytes(data, mime_type="application/zip", name=name))
             return
-        f = files[0]
-        raw = Path(f.path).read_text(encoding="utf-8") if f.path and Path(f.path).exists() else f.bytes.decode("utf-8")
-        name = Path(f.name).stem
-        conv = from_chordsheet_com(raw, title=name)
-        await self.open_text(conv.chs, name, Path(f.path).parent if f.path else None, None, conv.notes, saved=False,
-                             edit=True)
-        self.toast(tr("ed.imported"))
+        await self.save_bytes(data, name, "zip", tr("ed.export_zip"))
+
+    async def export_library_zip(self, e=None):
+        """The whole library as a .zip (backup, or moving it to another device), through the save dialog."""
+        if not self.root:
+            return
+        data = await asyncio.to_thread(library.library_zip, self.root)
+        name = f"Modern Sheet {datetime.now():%Y-%m-%d}.zip"
+        await self.save_bytes(data, name, "zip", tr("set.export_library"))
+
+    async def save_bytes(self, data: bytes, name: str, ext: str, title: str):
+        """Save a file through the system dialog (on desktop it only returns the path: we write it)."""
+        path = await self.picker.save_file(dialog_title=title, file_name=name, allowed_extensions=[ext],
+                                           src_bytes=data)
+        if not path:
+            return
+        if self.page.platform in DESKTOP:
+            try:
+                Path(path).write_bytes(data)
+            except OSError as err:
+                self.toast(tr("ed.save_failed", err=err))
+                return
+        self.toast(tr("ed.file_saved", name=Path(path).name))
 
     # ---- keyboard: ⌘S / Ctrl+S, page turning (keyboard and Bluetooth pedals send arrow / page keys)
     async def on_key(self, e: ft.KeyboardEvent):
@@ -2328,14 +2313,41 @@ class App:
         if not self.dl:
             return
         data = await asyncio.to_thread(pdf_bytes, self.dl)
-        name = f"{library.safe_filename(self.song_title or self.name)}{'' if not self.transpose else f'_{self.transpose:+d}'}.pdf"
-        folder = self.settings.pdf_dir if self.settings.pdf_dir and Path(self.settings.pdf_dir).is_dir() else None
+        name = self.export_name(".pdf")
+        folder = self.settings.pdf_dir if not self.store and self.settings.pdf_dir and Path(self.settings.pdf_dir).is_dir() \
+            else None
         path = await self.picker.save_file(dialog_title=tr("ed.export_pdf"), file_name=name, initial_directory=folder,
                                            allowed_extensions=["pdf"], src_bytes=data)
         if path and self.page.platform in DESKTOP:
             Path(path).write_bytes(data)          # desktop: the dialog only returns the path
         if path:
             self.toast(tr("ed.pdf_saved", name=Path(path).name))
+
+    def export_name(self, ext: str) -> str:
+        """File name for an exported song: the title (transposition added for a PDF)."""
+        tr_part = f"_{self.transpose:+d}" if self.transpose and ext == ".pdf" else ""
+        return f"{library.safe_filename(self.song_title or self.name)}{tr_part}{ext}"
+
+    async def share_pdf(self, e=None):
+        """The sheet as PDF through the system share sheet (as shown: transposition and options included)."""
+        if not self.dl:
+            return
+        data = await asyncio.to_thread(pdf_bytes, self.dl)
+        await self.share_file(ft.ShareFile.from_bytes(data, mime_type="application/pdf", name=self.export_name(".pdf")))
+
+    async def share_chs(self, e=None):
+        """The .chs source (as in the editor, saved or not) through the system share sheet."""
+        await self.share_file(ft.ShareFile.from_bytes(self.text.encode("utf-8"), mime_type="text/plain",
+                                                      name=self.export_name(".chs")))
+
+    async def share_file(self, f: ft.ShareFile):
+        # on iPad the share sheet is a popover and needs a point to come from (else it fails): the share
+        # button, top right
+        origin = ft.Offset((self.page.width or 800) - 120, 56)
+        try:
+            await self.share.share_files([f], share_position_origin=origin)
+        except Exception as err:                  # noqa: BLE001 — report, never crash the editor
+            self.toast(tr("ed.share_failed", err=err))
 
     # ---- helpers
     def run(self, coro):

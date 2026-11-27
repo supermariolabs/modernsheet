@@ -3,15 +3,15 @@ title: Modern Sheet
 slug:
 nav: 1
 other:
-description: Scrivi accordi in un file di testo, ottieni un lead sheet in stile Real Book. Libreria, editor con anteprima dal vivo, PDF, sincronizzazione con Google Drive.
+description: Scrivi accordi in un file di testo, ottieni un lead sheet in stile Fake Book. Libreria, editor con anteprima dal vivo, PDF, sincronizzazione con Google Drive.
 ---
 
 <div class="hero" markdown="1">
 <div markdown="1">
 
-# Lead sheet in stile Real Book, da un file di testo
+# Lead sheet in stile Fake Book, da un file di testo
 
-<p class="lead">Scrivi gli accordi in un formato semplice (<code>.chs</code>) e Modern Sheet li impagina come in un Real Book: pentagramma, sigle, ritornelli, segni, testo. Sullo schermo e in PDF.</p>
+<p class="lead">Scrivi gli accordi in un formato semplice (<code>.chs</code>) e Modern Sheet li impagina come in un Fake Book: pentagramma, sigle, ritornelli, segni, testo. Sullo schermo e in PDF.</p>
 
 <div class="cta">
 <a class="btn primary" href="/it/download/">Scarica</a>
@@ -22,7 +22,7 @@ description: Scrivi accordi in un file di testo, ottieni un lead sheet in stile 
 <span class="tag">Software libero (GPL-3.0) · macOS, Windows, Linux · iPad e Android in prova</span>
 
 </div>
-<img src="/assets/img/sheet-demo.png" alt="Un brano impaginato da Modern Sheet in stile Real Book">
+<img src="/assets/img/sheet-demo.png" alt="Un brano impaginato da Modern Sheet in stile Fake Book">
 </div>
 
 ## Cosa fa
@@ -33,7 +33,7 @@ description: Scrivi accordi in un file di testo, ottieni un lead sheet in stile 
 Accordi tra parentesi quadre, stanghette, sezioni, testo cantato. Si scrive con qualunque editor e si legge anche senza l'app.
 </div>
 <div class="card" markdown="1"><span class="ico">🎼</span>
-### Aspetto Real Book
+### Aspetto Fake Book
 Font Petaluma scritto a mano, sigle con estensioni in apice, box colorati per le sezioni, griglia uniforme delle battute. In alternativa il tema *Clean*.
 </div>
 <div class="card" markdown="1"><span class="ico">🔁</span>
@@ -46,7 +46,7 @@ Intro, riff e temi scritti direttamente nel brano (`G8 Bb D F`) o importati da M
 </div>
 <div class="card" markdown="1"><span class="ico">↕️</span>
 ### Trasposizione e sigle jazz
-Un clic per trasporre (armature e sigle comprese); sigle standard o jazz (Δ, –, ø, °); segni ritmici, accordi opzionali, annotazioni.
+Un clic per trasporre (armature e sigle comprese); sigle standard o jazz (Δ, –, ø, °), con le lettere o in italiano (Do, Re, Mi); segni ritmici, accordi opzionali, annotazioni.
 </div>
 <div class="card" markdown="1"><span class="ico">🗂️</span>
 ### Libreria di brani
@@ -60,9 +60,9 @@ Evidenziazione della sintassi, suggerimenti delle direttive, schede per i MusicX
 ### Sempre con te, anche offline
 La libreria è locale e si sincronizza con Google Drive o con una cartella (iCloud, Dropbox…). Nessun brano si perde: conflitti e cancellazioni passano dal cestino.
 </div>
-<div class="card" markdown="1"><span class="ico">📥</span>
-### Importa da chordsheet.com
-Accedi al tuo account, scegli i brani e importali convertiti, con ritornelli, volte, segni e annotazioni.
+<div class="card" markdown="1"><span class="ico">📤</span>
+### Condividi ed esporta
+PDF da stampare o mandare, brani con i loro MusicXML in un `.zip`, backup della libreria intera in un file.
 </div>
 </div>
 
@@ -111,6 +111,6 @@ Accedi al tuo account, scegli i brani e importali convertiti, con ritornelli, vo
 
 ## Stato del progetto
 
-Modern Sheet è in sviluppo attivo. Le app per **macOS, Windows e Linux** si [scaricano qui](/it/download/) (non ancora firmate: la pagina spiega come aprirle); iPad e Android sono in prova. Si può anche avviare dai sorgenti, come spiega la [guida](/it/guida/).
+Modern Sheet è in sviluppo attivo. Le app per **macOS, Windows e Linux** si [scaricano qui](/it/download/) (non ancora firmate: la pagina spiega come aprirle); iPad e Android sono in prova.
 
 Il codice è su [GitHub]({{repo}}) con licenza **GPL-3.0**. Segnalazioni e idee sono benvenute nelle *Issues*.

@@ -12,10 +12,11 @@ from .formats import CURRENT, detect, label, upgrade
 from .parser import parse
 
 def main(argv=None):
-    """Command line: render .chs files to PDF, validate them (--check), or import chordsheet.com text
-    (--from-chordsheet), show or upgrade the format version. Returns the exit status: 1 with --check
+    """Command line: render .chs files to PDF, validate them (--check), show or upgrade the format version
+    (the chordsheet.com import is a separate tool: chordsheet_cli.py). Returns the exit status: 1 with --check
     if a file has warnings (so it can be used in scripts and CI), else 0."""
-    ap = argparse.ArgumentParser(description="Render .chs chord sheets to PDF lead sheets.")
+    ap = argparse.ArgumentParser(description="Render .chs chord sheets to PDF lead sheets. "
+                                 "To import from chordsheet.com use chordsheet_cli.py.")
     ap.add_argument("files", nargs="+", help=".chs input files")
     ap.add_argument("-o", "--output", help="output PDF (single input) or folder")
     ap.add_argument("-t", "--transpose", type=int, default=0, help="semitones, e.g. 2 or -3")
@@ -28,9 +29,11 @@ def main(argv=None):
                     help="notated bars: staff (default), staff + guitar tablature, or tablature only")
     ap.add_argument("--paper", choices=["A4", "Letter"], default="A4")
     ap.add_argument("--theme", choices=list(THEMES), default="realbook",
-                    help="realbook: handwritten jazz look (default); clean: plain sans-serif")
+                    help="realbook: the Fake Book look, handwritten (default); clean: plain sans-serif")
     ap.add_argument("--chord-symbols", choices=["text", "jazz"], default="text",
                     help="text: as written (Cmaj7, Cm7); jazz: CΔ7, C-7, Cø7, C°7")
+    ap.add_argument("--note-names", choices=["letters", "italian"], default="letters",
+                    help="letters: C D E (as written); italian: Do Re Mi (display only, the source keeps letters)")
     ap.add_argument("--label-colors", default="theme", metavar="theme|by_type|#RRGGBB",
                     help="section box colour: theme default, one colour per section type, or a fixed hex colour")
     ap.add_argument("--check", action="store_true", help="only parse and report warnings")
@@ -39,17 +42,9 @@ def main(argv=None):
                      help=f"print the format of each file (this version reads up to {label(CURRENT)})")
     fmt.add_argument("--upgrade", action="store_true",
                      help=f"rewrite the files in place in the current format ({label(CURRENT)})")
-    imp = ap.add_argument_group("import from Chord Sheet Maker (chordsheet.com)")
-    imp.add_argument("--from-chordsheet", action="store_true",
-                     help="inputs are chordsheet.com texts: convert them to .chs (and render the PDF with --pdf)")
-    imp.add_argument("--pdf", action="store_true", help="with --from-chordsheet: also render the converted song")
-    for opt in ("title", "artist", "key", "tempo", "time"):
-        imp.add_argument(f"--{opt}", default="", help=f"{opt} (chordsheet.com keeps it outside the chords text)")
     args = ap.parse_args(argv)
 
     status = 0
-    if args.from_chordsheet:
-        return import_chordsheet(args)
     if args.format_info or args.upgrade:
         return formats(args)
     for f in args.files:
@@ -61,7 +56,7 @@ def main(argv=None):
             out = output_path(args, src, ".pdf")
             render_pdf(song, str(out), bars_per_line=args.bars_per_line, bar_width=args.bar_width, row_spacing=args.row_spacing, notation=args.notation,
                        paper=args.paper, theme=args.theme, chord_symbols=args.chord_symbols,
-                       label_colors=args.label_colors)
+                       note_names=args.note_names, label_colors=args.label_colors)
             print(f"{src} -> {out}")
         for w in song.warnings:
             print(f"  warning: {w}", file=sys.stderr)
@@ -107,26 +102,3 @@ def output_path(args, src: Path, suffix: str) -> Path:
         return o / (src.stem + suffix)
     o.parent.mkdir(parents=True, exist_ok=True)
     return o
-
-
-def import_chordsheet(args) -> int:
-    from .importers import from_chordsheet_com
-    for f in args.files:
-        src = Path(f)
-        conv = from_chordsheet_com(src.read_text(encoding="utf-8"), title=args.title or "", artist=args.artist,
-                                   key=args.key, tempo=args.tempo, time=args.time)
-        out = output_path(args, src, ".chs")
-        out.write_text(conv.chs, encoding="utf-8")
-        print(f"{src} -> {out}")
-        for n in conv.notes:
-            print(f"  note: {n}", file=sys.stderr)
-        song = parse(conv.chs, base_dir=out.parent)
-        for w in song.warnings:
-            print(f"  warning: {w}", file=sys.stderr)
-        if args.pdf:
-            pdf = out.with_suffix(".pdf")
-            render_pdf(song, str(pdf), bars_per_line=args.bars_per_line, bar_width=args.bar_width, row_spacing=args.row_spacing, notation=args.notation,
-                       paper=args.paper, theme=args.theme, chord_symbols=args.chord_symbols,
-                       label_colors=args.label_colors)
-            print(f"{out} -> {pdf}")
-    return 0

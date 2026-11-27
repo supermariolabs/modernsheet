@@ -257,3 +257,108 @@ def test_song_card_key_and_time_only_from_the_header(tmp_path):
     a, b = library.read_info(tmp_path / "a.chs"), library.read_info(tmp_path / "b.chs")
     assert (a.key, a.time) == ("", "")              # only changes, after the music: no key on the card
     assert (b.key, b.time) == ("G", "3/4")
+
+
+def test_store_mode_keeps_the_library_inside_the_app(tmp_path, monkeypatch):
+    """Store mode (iPad/iPhone, Android, Mac App Store sandbox, SPEC §8.6): a folder chosen in the settings
+    and folder sync are ignored, the library is the app's own (on iOS in Documents, moved there once)."""
+    import main
+    from modernsheet import library as L
+    from modernsheet.settings import Settings
+    assert L.store_mode("ios") and L.store_mode("android") and not L.store_mode("macos", {})
+    assert L.store_mode("macos", {"APP_SANDBOX_CONTAINER_ID": "app.modernsheet"})
+    assert not L.store_mode("windows", {"APP_SANDBOX_CONTAINER_ID": "x"}) and not L.store_mode("linux", {})
+    data, docs = tmp_path / "data", tmp_path / "Documents"
+    old = main.default_library(str(data))
+    (old / "mine.chs").write_text("x", encoding="utf-8")
+    assert L.move_library(old, docs / "Modern Sheet") and (docs / "Modern Sheet" / "mine.chs").exists()
+    assert not old.exists() and not L.move_library(old, docs / "Modern Sheet")         # once only
+    monkeypatch.setenv("FLET_APP_STORAGE_DATA", str(data))
+    monkeypatch.delenv("MODERNSHEET_LIBRARY", raising=False)
+    monkeypatch.delenv("CHORDSHEET_LIBRARY", raising=False)
+    elsewhere = tmp_path / "chosen"
+    elsewhere.mkdir()
+    app = object.__new__(main.App)
+    app.settings = Settings(library_root=str(elsewhere), sync_mode="folder", sync_folder=str(tmp_path / "remote"))
+    app.home, app.store = str(docs), True
+    assert app.sync_state() is None                                    # no folder sync in store mode
+    assert app.library_root() == docs / "Modern Sheet"                 # not the folder chosen earlier
+    app.store = False                                                  # desktop: as before
+    assert app.sync_state() is not None and app.library_root().name == "library"   # the synced local copy
+    app.settings.sync_mode = "none"
+    assert app.library_root() == elsewhere
+
+
+def test_song_and_library_zip_roundtrip(tmp_path):
+    """A song goes out as a .zip with its MusicXML (references made local), the library as a .zip with
+    its folders; importing never overwrites, and unsafe or foreign entries are left out (SPEC §8.6)."""
+    import io
+    import zipfile
+    from modernsheet import library as L
+    lib, shared = tmp_path / "lib", tmp_path / "lib" / "shared"
+    (lib / "Jazz").mkdir(parents=True)
+    shared.mkdir()
+    (shared / "x.musicxml").write_text("<x/>", encoding="utf-8")
+    src = "{title: A}\n{start_of_verse: V}\n  {musicxml: ../shared/x.musicxml | 1-2}\n{end_of_verse}\n"
+    (lib / "Jazz" / "A.chs").write_text(src, encoding="utf-8")
+    (lib / "Jazz" / "B.chs").write_text("{title: B}\n", encoding="utf-8")
+    (lib / ".trash").mkdir()
+    (lib / ".trash" / "old.chs").write_text("x", encoding="utf-8")
+    (lib / "notes.txt").write_text("x", encoding="utf-8")
+    z = zipfile.ZipFile(io.BytesIO(L.song_zip(src, "A.chs", lib / "Jazz")))
+    assert sorted(z.namelist()) == ["A.chs", "x.musicxml"]
+    assert "  {musicxml: x.musicxml | 1-2}" in z.read("A.chs").decode()
+    dest = tmp_path / "phone"
+    dest.mkdir()
+    (dest / "A.chs").write_text("mine", encoding="utf-8")
+    r = L.import_zip(dest, L.song_zip(src, "A", lib / "Jazz"), "A.zip")
+    assert r.songs == [dest / "A 2.chs"] and r.copied == ["x.musicxml"] and r.missing == [] and r.folder is None
+    assert (dest / "A.chs").read_text() == "mine"
+    assert L.library_files(lib) == ["Jazz/A.chs", "Jazz/B.chs", "shared/x.musicxml"]
+    r = L.import_zip(dest, L.library_zip(lib), "Modern Sheet.zip")
+    assert r.folder == dest / "Modern Sheet" and sorted(p.relative_to(r.folder).as_posix() for p in r.songs) == [
+        "Jazz/A.chs", "Jazz/B.chs"]
+    assert (r.folder / "shared" / "x.musicxml").exists()                       # references still work
+    assert L.import_zip(dest, L.library_zip(lib), "Modern Sheet.zip").folder == dest / "Modern Sheet 2"
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as w:
+        for name in ("../evil.chs", "/abs.chs", "C:/win.chs", "__MACOSX/._a.chs", "Song/.hidden.chs", "Song/run.sh"):
+            w.writestr(name, "x")
+        w.writestr("Song/a.chs", "{title: a}")
+        w.writestr("Song/b.chs", "{title: b}")
+    r = L.import_zip(dest, buf.getvalue(), "evil.zip")
+    assert r.skipped == 6 and sorted(p.name for p in r.songs) == ["a.chs", "b.chs"]
+    assert not (tmp_path / "evil.chs").exists() and all(p.is_relative_to(dest) for p in tmp_path.rglob("*.chs")
+                                                         if "lib" not in p.parts)
+    with pytest.raises(L.BadZip):
+        L.import_zip(dest, b"not a zip")
+    empty = io.BytesIO()
+    with zipfile.ZipFile(empty, "w") as w:
+        w.writestr("readme.txt", "x")
+    with pytest.raises(L.BadZip):
+        L.import_zip(dest, empty.getvalue())
+
+
+def test_drive_copy_is_visible_on_ios(tmp_path, monkeypatch):
+    """With Google Drive on iPad/iPhone the local copy of the library lives in the app's Documents (shown
+    by the Files app), one folder per Drive folder and account; an older copy in the app data moves there."""
+    import main
+    from modernsheet.settings import Settings
+    data, docs = tmp_path / "data", tmp_path / "Documents"
+    monkeypatch.setenv("FLET_APP_STORAGE_DATA", str(data))
+    monkeypatch.delenv("MODERNSHEET_LIBRARY", raising=False)
+    monkeypatch.delenv("CHORDSHEET_LIBRARY", raising=False)
+    app = object.__new__(main.App)
+    app.settings = Settings(sync_mode="gdrive", sync_account="me@example.com")
+    app.home, app.store = None, True                                     # Android: in the app data
+    hidden = app.library_root()
+    assert hidden == app.sync_state() / "library"
+    (hidden / "old.chs").write_text("x", encoding="utf-8")
+    app.home = str(docs)                                                 # iPad/iPhone
+    visible = app.library_root()
+    assert visible == docs / "Modern Sheet (Google Drive · me@example.com)" and (visible / "old.chs").exists()
+    assert not hidden.exists() and app.local_copy(app.sync_state()) == visible
+    app.root = visible
+    assert app.home_label() == "Google Drive"
+    app.settings.sync_account = "other@example.com"                      # another account: its own copy
+    assert app.library_root() == docs / "Modern Sheet (Google Drive · other@example.com)"

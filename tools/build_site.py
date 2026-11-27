@@ -173,8 +173,11 @@ def render(template: str, lang: str, meta: dict, body: str, nav: list[tuple[str,
     md = markdown.Markdown(extensions=["tables", "fenced_code", "attr_list", "md_in_html", "toc", "sane_lists"],
                            extension_configs={"toc": {"permalink": "#", "permalink_title": "", "toc_depth": "2-3"}})
     content = md.convert(body.replace("{{repo}}", REPO))
-    # "\|" keeps a pipe from splitting a table cell; inside <code> Markdown leaves the backslash: drop it
-    content = re.sub(r"<code>(.*?)</code>", lambda m: "<code>" + m.group(1).replace("\\|", "|") + "</code>", content)
+    # "\|" keeps a pipe from splitting a table cell; inside <code> Markdown leaves the backslash: drop it,
+    # in table cells only (elsewhere "\|" is the .chs escape for a literal bar and must stay)
+    content = re.sub(r"<(t[dh])>(.*?)</\1>", lambda c: f"<{c.group(1)}>" + re.sub(
+        r"<code>(.*?)</code>", lambda m: "<code>" + m.group(1).replace("\\|", "|") + "</code>", c.group(2))
+        + f"</{c.group(1)}>", content, flags=re.S)
     content = render_snippets(content, f"{lang}/{meta.get('slug', '')}", UI[lang]["render"])
     slug = meta.get("slug", "")
     other = "en" if lang == "it" else "it"

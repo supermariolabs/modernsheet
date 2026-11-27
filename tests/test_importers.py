@@ -127,7 +127,7 @@ class FakeChordsheet:
 
 
 def test_chordsheet_account_import():
-    from modernsheet.importers import chordsheet_account as A
+    from chordsheet_import import account as A
     site = FakeChordsheet()
     client = A.Client("https://chordsheet.test", site, pause=0.5, sleep=lambda s: None)
     with pytest.raises(A.LoginFailed):
@@ -144,3 +144,31 @@ def test_chordsheet_account_import():
     assert vuoto.problems == ["empty"] and "{tags: import_warn}" in vuoto.text
     assert A.imported_ids([amore.text, vuoto.text, "x"]) == {"12", "13"}
     assert "secret" not in "".join(map(str, site.requests))      # the password only travels in the POST body
+
+
+def test_chordsheet_tool_outside_the_app(tmp_path, capsys):
+    """The import is a separate command-line tool (chordsheet_cli.py), not part of the app's package:
+    `convert` writes .chs (and PDF) from texts, `account` downloads only the songs not yet in the folder."""
+    import importlib.util
+    from chordsheet_import import account as A
+    from chordsheet_import.cli import main
+    assert importlib.util.find_spec("modernsheet.importers") is None          # nothing of it in the app
+    assert "chordsheet" not in (Path(__file__).resolve().parents[1] / "src" / "main.py").read_text().replace(
+        "chordsheet.settings", "").replace("chordsheet.library_root", "")
+    txt = tmp_path / "blue.txt"
+    txt.write_text("Title: Blue\nA B C D", encoding="utf-8")
+    assert main(["convert", str(txt), "-o", str(tmp_path / "out"), "--pdf"]) == 0
+    assert "{title: Blue}" in (tmp_path / "out" / "blue.chs").read_text() and (tmp_path / "out" / "blue.pdf").exists()
+    lib = tmp_path / "lib"
+    client = lambda: A.Client("https://chordsheet.test", FakeChordsheet(), sleep=lambda s: None)
+    assert main(["account", "me@example.com", "-o", str(lib)], client=client(), ask_password=lambda p: "wrong") == 1
+    assert main(["account", "me@example.com", "-o", str(lib), "--match", "amore"], client=client(),
+                ask_password=lambda p: "secret") == 0
+    assert [p.name for p in lib.glob("*.chs")] == ["L'amore.chs"]
+    assert main(["account", "me@example.com", "-o", str(lib)], client=client(), ask_password=lambda p: "secret") == 0
+    assert len(list(lib.glob("*.chs"))) == 3                                   # the two new ones only
+    capsys.readouterr()
+    assert main(["account", "me@example.com", "-o", str(lib), "--list"], client=client(),
+                ask_password=lambda p: "secret") == 0
+    out = capsys.readouterr().out
+    assert "* " in out and "3 songs, 3 already in" in out and not list(lib.glob("*(*"))   # nothing overwritten or doubled

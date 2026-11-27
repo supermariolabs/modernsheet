@@ -108,8 +108,8 @@ THEMES = {
 }
 
 # Jazz chord-symbol spelling (option --chord-symbols jazz)
-JAZZ_SUBS = [(r"^maj", "Δ"), (r"^ma", "Δ"), (r"^M(?=\d|$)", "Δ"), (r"^m7b5", "ø7"), (r"^dim", "°"),
-             (r"^min", "-"), (r"^m(?!a)", "-")]
+# (applied to the standard spelling: theory.normalize_quality runs first)
+JAZZ_SUBS = [(r"^maj", "Δ"), (r"^m7b5", "ø7"), (r"^dim", "°"), (r"^aug", "+"), (r"^m(?!aj)", "-")]
 
 
 @dataclass
@@ -141,13 +141,14 @@ class Layout:
     def __init__(self, song: Song, *, bars_per_line: int = 4, bar_width: str = "uniform", row_spacing="normal",
                  notation: str = "staff", notation_force: bool = False,
                  paper: str = "A4", theme: str = "realbook", chord_symbols: str = "text",
-                 label_colors: str = "theme", style: Style | None = None):
+                 note_names: str = "letters", label_colors: str = "theme", style: Style | None = None):
         self.metrics = fonts.registry(theme)
         self.theme_name = theme
         self.song = song
         self.st = style or Style()
         self.th = THEMES[theme]
         self.chord_symbols = chord_symbols
+        self.note_names = note_names              # letters (C D E) | italian (Do Re Mi): display only
         self.label_colors = song.meta.get("label_colors", label_colors)   # theme | by_type | #RRGGBB
         self.bpl_default = bars_per_line
         self.bar_width = song.meta.get("bar_width", bar_width)
@@ -252,6 +253,7 @@ class Layout:
         if not m:
             return [(pretty_chord(chord), 1.0, 0.0)]
         root, quality, bass = m.groups()
+        quality = normalize_quality(quality)        # equivalent spellings shown one way (Maj7 = maj7, - = m…)
         if self.chord_symbols == "jazz":
             for pat, rep in JAZZ_SUBS:
                 new = re.sub(pat, rep, quality)
@@ -260,7 +262,7 @@ class Layout:
                     break
         sup = self.th.superscript
         acc = lambda a: a.replace("b", "♭").replace("#", "♯")
-        runs = [(root[0], 1.0, 0.0)]
+        runs = [(note_name(root[0], self.note_names), 1.0, 0.0)]
         if len(root) > 1:
             runs.append((acc(root[1]), 0.72 if sup else 1.0, 0.3 if sup else 0.0))
         if quality:
@@ -274,10 +276,19 @@ class Layout:
             if q:
                 runs.append((q, 0.62 if sup else 1.0, 0.36 if sup else 0.0))
         if bass:
-            runs.append(("/" + bass[0], 0.85 if sup else 1.0, 0.0))
+            runs.append(("/" + note_name(bass[0], self.note_names), 0.85 if sup else 1.0, 0.0))
             if len(bass) > 1:
                 runs.append((acc(bass[1]), 0.62 if sup else 1.0, 0.25 if sup else 0.0))
         return runs
+
+    def key_text(self, key: str) -> str:
+        """A key as printed: "Key E♭", "Key Gm", or with Italian names "Key Mi♭", "Key Solm"."""
+        m = KEY_RE.match(key or "")
+        if not m:
+            return pretty_chord(f"Key {key}")
+        root, minor = m.groups()
+        acc = root[1:].replace("b", "♭").replace("#", "♯")
+        return f"Key {note_name(root[0], self.note_names)}{acc}{minor}"
 
     def chord_width(self, chord, size):
         return sum(self.text_width(t, self.th.chord, size * sc) for t, sc, _ in self.chord_runs(chord))
@@ -347,7 +358,7 @@ class Layout:
         second = [m["time"]] + ([f"♩ = {m['tempo']}"] if m.get("tempo") else [])
         if m.get("capo"):
             second.append(f"Capo {m['capo']}")
-        lines = [pretty_chord(f"Key {m['key']}"), sep.join(second)]
+        lines = [self.key_text(m['key']), sep.join(second)]
         for i, ln in enumerate(lines):
             self.text(R - self.text_width(ln, th.text, 10), info_base - i * 14, ln, th.text, 10, th.grey)
         line_y = min(sub_base, info_base - 14) - 10
@@ -489,7 +500,7 @@ class Layout:
         (under the lyrics of notated bars, if any)."""
         below = self.notation_room(row)[1]
         y = top - self.STAFF_H - 10 - below
-        self.text(x, y, pretty_chord(f"Key {key}"), self.th.note, self.KEY_LABEL_SIZE, self.th.grey)
+        self.text(x, y, self.key_text(key), self.th.note, self.KEY_LABEL_SIZE, self.th.grey)
 
     def slash(self, x, mid):
         g = SMUFL["slash"]
@@ -1491,7 +1502,7 @@ class Layout:
             lw += 2 * pad_x
         else:
             self.text(L, base, label, th.label, th.label_size, self.label_color(sec), bold=True)
-        key = pretty_chord(f"Key {sec.ref_key}") if sec.ref_key else ""   # a short {ref}: its key, no bar shows it
+        key = self.key_text(sec.ref_key) if sec.ref_key else ""   # a short {ref}: its key, no bar shows it
         note = " - ".join(p for p in (("reprise" if sec.is_ref else ""), key, sec.note) if p)
         if note:
             self.text(L + lw + 8, base, note, th.note, 9.5, th.grey)
@@ -1631,7 +1642,7 @@ class Layout:
             ex = ax + e.start * cell - 1
             if e.chord:
                 w = self.event_width(e, size)
-                # chords sit on the middle of the staff (Real Book style): a white patch hides the
+                # chords sit on the middle of the staff (Fake Book style): a white patch hides the
                 # staff lines under the symbol so it stays readable
                 self.knockout(ex - 1.5, mid - size * 0.5, w + 3, size * 1.05)
                 xr = self.draw_event(ex, mid - size * 0.34, e, size)

@@ -1,7 +1,7 @@
 # CLAUDE.md — Modern Sheet
 
 Progetto personale di Mario: motore Python + app Flet per scrivere chord sheet nel formato `.chs` e
-renderli come lead sheet in stile Real Book (PDF e schermo). Possibile futuro prodotto.
+renderli come lead sheet in stile Fake Book (PDF e schermo). Possibile futuro prodotto.
 
 ## Fonte di verità
 
@@ -20,7 +20,8 @@ pytest                                                      # test di regression
 python modernsheet_cli.py src/examples/demo.chs -o out/            # PDF di un brano
 python modernsheet_cli.py src/examples/*.chs -o examples-pdf/      # rigenera i PDF di esempio
 python modernsheet_cli.py --check src/examples/*.chs              # solo validazione
-python modernsheet_cli.py --from-chordsheet --pdf examples-import/esempio_chordsheet_com.txt
+python chordsheet_cli.py convert --pdf examples-import/esempio_chordsheet_com.txt  # import chordsheet.com (fuori dall'app)
+python chordsheet_cli.py account EMAIL -o cartella/ [--list]                      # brani di un account chordsheet.com
 flet run                                                    # app desktop (Flet 1.x)
 python tools/build_site.py                                  # sito modernsheet.app: site/ → docs/ (GitHub Pages)
 ```
@@ -40,8 +41,11 @@ Controllo visivo di un PDF (i test non vedono la grafica):
    in coordinate schermo per Flet e SVG. I backend **riproducono** la DisplayList, non decidono nulla
    di impaginazione.
 
-Altro: `importers/chordsheet_com.py` (testo di chordsheet.com → `.chs`), `importers/chordsheet_account.py`
-(login al sito, elenco e sorgenti dei brani dell'account; nessuna API, si leggono le pagine; password mai salvata), `library.py` (cartella di brani per
+Fuori dall'app (non entra in `flet build`): `chordsheet_cli.py` + `tools/chordsheet_import/` (`convert.py` testo di
+chordsheet.com → `.chs`, `account.py` login al sito, elenco e sorgenti dei brani; nessuna API, si leggono le pagine; password
+mai salvata; tolto dall'app nella 0.49 per le regole degli store, SPEC §8.6 e §9).
+
+Altro: `library.py` (cartella di brani per
 l'app), `settings.py` (impostazioni dell'app), `syntax.py` (evidenziazione e completamento del `.chs`), `edits.py` (sfondo delle parti modificate e annulla/ripristina dell'editor) / `xml_syntax.py` (evidenziazione e indentazione dei MusicXML, in sola lettura), `sync.py` / `gdrive.py` (sincronizzazione
 local-first della libreria, cartella o Google Drive), `cli.py`,
 `src/main.py` (app Flet: libreria + editor con anteprima + impostazioni),
@@ -53,7 +57,8 @@ nella libreria "Modern Sheet" di una nuova installazione).
 - **Una modifica completa** = codice + `SPEC.md` (sezione giusta e riga "Versione" in cima) + esempio che la
   mostri + test in `tests/` (un file per area: `test_engine.py` motore e impaginazione, `test_notes.py`, `test_tab.py`,
   `test_library.py`, `test_editor.py`, `test_importers.py`, `test_formats.py`, `test_sync.py`; aiuti comuni in `helpers.py`) + PDF di esempio rigenerati in `examples-pdf/`. Se cambia qualcosa che
-  l'utente vede, aggiorna anche la documentazione del sito (`site/it/` **e** `site/en/`) e rigenera `docs/` con
+  l'utente vede, aggiorna anche la documentazione del sito (solo per gli utenti finali: i dettagli per sviluppatori vanno nel README o
+  nel repository, SPEC §8.3c) (`site/it/` **e** `site/en/`) e rigenera `docs/` con
   `python tools/build_site.py`.
 - Dopo ogni modifica grafica: rigenera i PDF coinvolti, **guardali** (PNG) e controlla anche le varianti
   `--theme clean`, `--bar-width fit` e una trasposizione (`-t 3`).
@@ -105,6 +110,8 @@ nella libreria "Modern Sheet" di una nuova installazione).
 - Sincronizzazione (SPEC §8.3b): fase 1 (motore local-first + provider cartella) e fase 2 (Google Drive, `gdrive.py`,
   device flow + `drive.file`) fatte e provate con un vero account Google (credenziali in `src/google_client.json`,
   fuori da git; app Google pubblicata senza logo, il logo richiede la verifica del brand). Poi eventualmente iCloud nativo.
+- Pubblicazione negli store (App Store, Google Play, Mac con Developer ID): piano e rischi di rifiuto in SPEC §8.6;
+  primo passo la libreria interna all'app su mobile.
 - `flet build macos` provato e funzionante (servono Xcode completo e CocoaPods). Identificativo app `app.modernsheet`.
 - Pubblicazione: licenza GPL-3.0, sito https://modernsheet.app (GitHub Pages da `docs/`, sorgenti in `site/`,
   italiano e inglese), test su GitHub Actions. Repository https://github.com/supermariolabs/modernsheet.

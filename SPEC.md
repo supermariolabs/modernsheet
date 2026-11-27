@@ -1,6 +1,6 @@
 # SPEC — Modern Sheet: formato `.chs` e motore di rendering
 
-> Versione 0.46.1 — 25 novembre 2026 (0.46.1: le opzioni dei richiami si scrivono `$volta N`, `$once`, `$short` (senza `$` sono parole del nome della sezione); un richiamo il cui testo è il nome di una sezione la richiama anche se contiene `x2`, `=` o `|`; warning per le righe di solo testo, che andavano perse; `:|` attaccato a una parola è testo più stanghetta; 0.46: `{ref: Sezione $once}` richiama una sezione senza i suoi ritornelli e `{ref: Sezione $short}` ne stampa solo il box, senza battute (§2.9); 0.45.1: un `{ref}` di una sezione con il suo `{key}` all'inizio si traspone dalla tonalità giusta; la Release si pubblica con le build riuscite e la pagina Download tiene la versione precedente per le piattaforme fallite; 0.45: un richiamo si può mostrare con un altro nome, `{ref: Strofa 1 = Strofa finale}`, e andare dritto a una volta, `{ref: Ritornello $volta 2}` (§2.9); esempi `amazing_grace` e `ripetizioni_e_volte`; 0.44.1: `{key}` e `{time}` dopo la prima battuta sono sempre cambi, anche in un brano senza intestazione (§2.8); sul sito gli esempi del formato hanno accanto lo spartito disegnato dal motore; 0.44: nell'editor le **parti modificate** dall'ultimo salvataggio hanno lo sfondo verde (riga cambiata più chiara, testo scritto più acceso), che sparisce salvando; **Annulla / Ripristina** passo per passo (pulsanti e ⌘Z / ⌘⇧Z / Ctrl+Y), modulo `edits.py`; 0.43: nell'app i **MusicXML sono in sola lettura** (indentati e colorati) con il pulsante **Converti in note nel brano**, che scrive le battute nel `.chs` come `{start_of_notes}` e lascia il riferimento come commento; tolti modifica, completamento, *Indenta*, *Comprimi/Espandi* e *Crea il file MusicXML*; 0.42: tablatura, seconda fase: `{tab_position}`, corda di una nota `~N`, accordature `{tuning}` (anche basso e ukulele) con i nomi delle corde, corda e tasto dal MusicXML; esempio `riff_drop_d`; 0.41: **tablatura per chitarra** delle battute notate (§4.8b): pentagramma, pentagramma + tablatura o sola tablatura con il ritmo, diteggiatura calcolata, capotasto; globale, per brano e per sezione; esempio `riff_per_chitarra`; 0.40: spazio fra le righe regolabile, globale (impostazioni, `--row-spacing`) e per brano (`{row_spacing}`); 0.39.1: `fit` va a capo solo quando le battute non ci stanno davvero, le righe chiuse per mancanza di spazio arrivano al margine, nessuna battuta più stretta del necessario; 0.39: `{bar_width}` dentro una sezione vale solo per quella sezione, sopra l'impostazione del brano e dell'app; 0.38: **note scritte nel `.chs`** (§2.12b), blocco `{start_of_notes}` … `{end_of_notes}` in alternativa al MusicXML, con evidenziazione e completamento nell'editor ed esempio `note_nel_chs`; 0.37: nell'editor MusicXML barra con *Indenta* (rientra le righe o un elemento per riga) e *Comprimi/Espandi* degli elementi, battute comprese; 0.36.1: build Linux su GitHub Actions corretta (conflitto di libunwind con GStreamer sulle macchine Ubuntu 22.04); 0.36: app desktop per macOS, Windows e Linux compilate da GitHub Actions e scaricabili dalla pagina Download del sito; 0.35: pubblicazione su GitHub (licenza GPL-3.0, README, test automatici), sito modernsheet.app con documentazione in italiano e inglese, identificativo dell'app `app.modernsheet`; 0.34: importazione dal proprio account chordsheet.com con scelta multipla dei brani, email ricordata e password mai salvata; 0.33: "Importa file .chs" copia il brano e i suoi MusicXML nella libreria invece di aprirlo fuori; 0.32: pulsante Salva disattivato senza modifiche, verde quando c'è qualcosa da salvare; 0.31: rinomina delle cartelle della libreria (menu ⋮), con i riferimenti MusicXML aggiornati; la sincronizzazione toglie le cartelle che ha svuotato, anche su Google Drive; 0.30: libreria di una nuova installazione = cartella "Modern Sheet" con dentro solo `examples/`; l'unione con la libreria sincronizzata copia solo i file mancanti, dopo la prima sincronizzazione; 0.29: al cambio di tonalità la nuova tonalità è scritta per esteso sotto il pentagramma ("Key E♭"); 0.28: esempi che coprono tutto il formato (`formato_base`, `ripetizioni_e_volte`, `tempi_e_tonalita`); una volta successiva più lunga della 1ª ha il pentagramma intero; 0.27: ricerca con `A*` (inizia con), `*xyz` (finisce con), `*testo*` (contiene), `&` (e) e `|` (o); 0.26: libreria con i brani raggruppati per lettera (A–Z) ordinando per titolo o artista, cartelle in cima; 0.25: annotazioni sugli accordi `[A "1°"]`; importazione da chordsheet.com provata su 234 brani reali: annotazioni, `*` e `X` dentro `_`, finali attaccati `1.C`, `x4` staccato, rientri e palette ignorati; 0.24: segni ritmici (anticipi, legature, barre ritmiche, corona, rombo) e accordi opzionali dentro le parentesi dell'accordo (§2.4b), anche dall'importazione da chordsheet.com; 0.23: segni di navigazione `{segno}` `{coda}` `{to_coda}` `{fine}` `{dc}` `{ds}` e righe di testo `{text}` (§2.8b), anche dall'importazione da chordsheet.com; 0.22: i brani si aprono in modalità vista (matita per modificare); schermo intero con pulsante di uscita sempre visibile ed Esc; schede della libreria con il titolo in una fascia blu e altezza fissa (niente tagli su iPad); 0.21: eliminazione di un brano e dei suoi MusicXML dall'editor, con conferma ed elenco dei file; *Salva con nome* chiede il nome e salva accanto al brano, nella libreria; le schede mostrano il nome del file; direttive `{created}`/`{modified}` scritte dall'app al salvataggio, mostrate sempre nelle schede e usate per ordinare; brani con lo stesso titolo: il più recente prima, il dato che li distingue in arancione; `python src/main.py` usa la cartella dati di `flet run`; 0.20.1: nome, descrizione e icona di Modern Sheet nell'app Flet su iPad/Android (`src/assets/manifest.json`); 0.20: icona dell'app per tutte le piattaforme; 0.19: il progetto si chiama **Modern Sheet** (prima Chord Sheet): pacchetto `modernsheet`, `modernsheet_cli.py`, variabili `MODERNSHEET_*`, cartella Drive predefinita "Modern Sheet"; il formato resta `.chs`; 0.18: nome della cartella su Google Drive configurabile; remoto vuoto o ricreato mai trattato come cancellazione di tutto; 0.17: sincronizzazione con Google Drive, fase 2; 0.16: sincronizzazione della libreria local-first, fase 1: motore con conflitti senza perdita di dati e provider "cartella"; 0.15: editor a tab, una per ogni MusicXML citato dal brano, con evidenziazione e completamento; anteprima con il MusicXML non salvato; 0.14: libreria con *Nuova cartella*, percorso con tasto "su", cartelle vuote visibili; 0.13: interfaccia in italiano e inglese, lingua nelle impostazioni; 0.12: direttiva `{tags}`, libreria con vista a card, ricerca per artista e tag, ordinamento, indice dei brani; 0.11: versione del formato `{format: v1}` e parser per versione, conversione al formato corrente; 0.10: esempi come cartella dei brani predefinita, pagina Impostazioni, editor scuro con evidenziazione della sintassi e completamento delle direttive; 0.9: app con libreria di brani da una cartella con sottocartelle, editor del sorgente con anteprima dal vivo; 0.8.1: sigle e testo delle battute notate allineati su un'unica linea per riga; 0.8: colori personalizzati per sezione `{section_colors}`, testo dei box nero o bianco secondo il contrasto, brano demo; 0.7: importazione da Chord Sheet Maker / chordsheet.com; 0.6: motore a tre strati, prototipo app Flet; 0.5: terzine, ritornelli e casse di volta (MusicXML e .chs), 2ª volta allineata a destra sotto la 1ª; 0.2: battute affollate su più slot, dimensione accordi uniforme per battuta; 0.3: tema grafico "Real Book" predefinito, estensioni in apice, simboli jazz opzionali; 0.4: zone notate da MusicXML; 0.3.1: blu #0066CC come colore predefinito dei box di sezione, sigle standard come predefinite, accordi in grassetto, etichette di sezione in box pieni arrotondati, colori per tipo di sezione, titolo a sinistra, intestazione solo in prima pagina)
+> Versione 0.53 — 26 novembre 2026 (0.53: "Real Book" (marchio di terzi, §8.6) diventa "Fake Book" in app, guida, sito e README; pagina privacy completa per gli store; build per gli store nel workflow (Mac firmato e notarizzato, .aab per Google Play, .ipa su TestFlight), attive con i segreti di GitHub; 0.52: con Google Drive su iPad/iPhone la copia locale della libreria sta nella cartella Documenti, visibile nell'app File; 0.51: archivi .zip: un brano con i suoi MusicXML (Condividi › Brano con MusicXML), la libreria intera (Impostazioni › Esporta la libreria), importazione di .zip con un brano o con più brani in una nuova cartella; 0.50: modalità store su iPad/iPhone, Android e Mac App Store: libreria dentro l'app (su iOS nella cartella Documenti, visibile in File), niente cartelle nelle impostazioni né sincronizzazione su cartella, pulsante Condividi per PDF e sorgente; 0.49: l'importazione da chordsheet.com esce dall'app e diventa lo strumento a riga di comando `chordsheet_cli.py` (`convert`, `account`), per le regole degli store; 0.48: opzione di visualizzazione `note_names = italian`, accordi e tonalità con i nomi Do Re Mi, il sorgente resta con le lettere; 0.47: consolidamento del formato prima della 1.0 (§9b): `{comment}` e `{c}` sono stampati come in ChordPro, sinonimi di `{text}`; `{bar_width}`, `{notation}` e `{bars_per_line}` fra le sezioni valgono da lì in avanti; le direttive del brano dopo la prima sezione danno un warning; le durate `:n` contano in note del denominatore del metro (ottavi in 6/8); una volta non si chiude più a fine riga; la barra rovesciata scrive i caratteri speciali come testo (`\[parlato\]`); parole chiave solo in inglese (`{volta_end: hook}`, non più `chiusa`); sigle equivalenti disegnate in un solo modo (`CMaj7` = `Cmaj7`, `F#-` = `F#m`); `.chs` estensione definitiva; 0.46.1: le opzioni dei richiami si scrivono `$volta N`, `$once`, `$short` (senza `$` sono parole del nome della sezione); un richiamo il cui testo è il nome di una sezione la richiama anche se contiene `x2`, `=` o `|`; warning per le righe di solo testo, che andavano perse; `:|` attaccato a una parola è testo più stanghetta; 0.46: `{ref: Sezione $once}` richiama una sezione senza i suoi ritornelli e `{ref: Sezione $short}` ne stampa solo il box, senza battute (§2.9); 0.45.1: un `{ref}` di una sezione con il suo `{key}` all'inizio si traspone dalla tonalità giusta; la Release si pubblica con le build riuscite e la pagina Download tiene la versione precedente per le piattaforme fallite; 0.45: un richiamo si può mostrare con un altro nome, `{ref: Strofa 1 = Strofa finale}`, e andare dritto a una volta, `{ref: Ritornello $volta 2}` (§2.9); esempi `amazing_grace` e `ripetizioni_e_volte`; 0.44.1: `{key}` e `{time}` dopo la prima battuta sono sempre cambi, anche in un brano senza intestazione (§2.8); sul sito gli esempi del formato hanno accanto lo spartito disegnato dal motore; 0.44: nell'editor le **parti modificate** dall'ultimo salvataggio hanno lo sfondo verde (riga cambiata più chiara, testo scritto più acceso), che sparisce salvando; **Annulla / Ripristina** passo per passo (pulsanti e ⌘Z / ⌘⇧Z / Ctrl+Y), modulo `edits.py`; 0.43: nell'app i **MusicXML sono in sola lettura** (indentati e colorati) con il pulsante **Converti in note nel brano**, che scrive le battute nel `.chs` come `{start_of_notes}` e lascia il riferimento come commento; tolti modifica, completamento, *Indenta*, *Comprimi/Espandi* e *Crea il file MusicXML*; 0.42: tablatura, seconda fase: `{tab_position}`, corda di una nota `~N`, accordature `{tuning}` (anche basso e ukulele) con i nomi delle corde, corda e tasto dal MusicXML; esempio `riff_drop_d`; 0.41: **tablatura per chitarra** delle battute notate (§4.8b): pentagramma, pentagramma + tablatura o sola tablatura con il ritmo, diteggiatura calcolata, capotasto; globale, per brano e per sezione; esempio `riff_per_chitarra`; 0.40: spazio fra le righe regolabile, globale (impostazioni, `--row-spacing`) e per brano (`{row_spacing}`); 0.39.1: `fit` va a capo solo quando le battute non ci stanno davvero, le righe chiuse per mancanza di spazio arrivano al margine, nessuna battuta più stretta del necessario; 0.39: `{bar_width}` dentro una sezione vale solo per quella sezione, sopra l'impostazione del brano e dell'app; 0.38: **note scritte nel `.chs`** (§2.12b), blocco `{start_of_notes}` … `{end_of_notes}` in alternativa al MusicXML, con evidenziazione e completamento nell'editor ed esempio `note_nel_chs`; 0.37: nell'editor MusicXML barra con *Indenta* (rientra le righe o un elemento per riga) e *Comprimi/Espandi* degli elementi, battute comprese; 0.36.1: build Linux su GitHub Actions corretta (conflitto di libunwind con GStreamer sulle macchine Ubuntu 22.04); 0.36: app desktop per macOS, Windows e Linux compilate da GitHub Actions e scaricabili dalla pagina Download del sito; 0.35: pubblicazione su GitHub (licenza GPL-3.0, README, test automatici), sito modernsheet.app con documentazione in italiano e inglese, identificativo dell'app `app.modernsheet`; 0.34: importazione dal proprio account chordsheet.com con scelta multipla dei brani, email ricordata e password mai salvata; 0.33: "Importa file .chs" copia il brano e i suoi MusicXML nella libreria invece di aprirlo fuori; 0.32: pulsante Salva disattivato senza modifiche, verde quando c'è qualcosa da salvare; 0.31: rinomina delle cartelle della libreria (menu ⋮), con i riferimenti MusicXML aggiornati; la sincronizzazione toglie le cartelle che ha svuotato, anche su Google Drive; 0.30: libreria di una nuova installazione = cartella "Modern Sheet" con dentro solo `examples/`; l'unione con la libreria sincronizzata copia solo i file mancanti, dopo la prima sincronizzazione; 0.29: al cambio di tonalità la nuova tonalità è scritta per esteso sotto il pentagramma ("Key E♭"); 0.28: esempi che coprono tutto il formato (`formato_base`, `ripetizioni_e_volte`, `tempi_e_tonalita`); una volta successiva più lunga della 1ª ha il pentagramma intero; 0.27: ricerca con `A*` (inizia con), `*xyz` (finisce con), `*testo*` (contiene), `&` (e) e `|` (o); 0.26: libreria con i brani raggruppati per lettera (A–Z) ordinando per titolo o artista, cartelle in cima; 0.25: annotazioni sugli accordi `[A "1°"]`; importazione da chordsheet.com provata su 234 brani reali: annotazioni, `*` e `X` dentro `_`, finali attaccati `1.C`, `x4` staccato, rientri e palette ignorati; 0.24: segni ritmici (anticipi, legature, barre ritmiche, corona, rombo) e accordi opzionali dentro le parentesi dell'accordo (§2.4b), anche dall'importazione da chordsheet.com; 0.23: segni di navigazione `{segno}` `{coda}` `{to_coda}` `{fine}` `{dc}` `{ds}` e righe di testo `{text}` (§2.8b), anche dall'importazione da chordsheet.com; 0.22: i brani si aprono in modalità vista (matita per modificare); schermo intero con pulsante di uscita sempre visibile ed Esc; schede della libreria con il titolo in una fascia blu e altezza fissa (niente tagli su iPad); 0.21: eliminazione di un brano e dei suoi MusicXML dall'editor, con conferma ed elenco dei file; *Salva con nome* chiede il nome e salva accanto al brano, nella libreria; le schede mostrano il nome del file; direttive `{created}`/`{modified}` scritte dall'app al salvataggio, mostrate sempre nelle schede e usate per ordinare; brani con lo stesso titolo: il più recente prima, il dato che li distingue in arancione; `python src/main.py` usa la cartella dati di `flet run`; 0.20.1: nome, descrizione e icona di Modern Sheet nell'app Flet su iPad/Android (`src/assets/manifest.json`); 0.20: icona dell'app per tutte le piattaforme; 0.19: il progetto si chiama **Modern Sheet** (prima Chord Sheet): pacchetto `modernsheet`, `modernsheet_cli.py`, variabili `MODERNSHEET_*`, cartella Drive predefinita "Modern Sheet"; il formato resta `.chs`; 0.18: nome della cartella su Google Drive configurabile; remoto vuoto o ricreato mai trattato come cancellazione di tutto; 0.17: sincronizzazione con Google Drive, fase 2; 0.16: sincronizzazione della libreria local-first, fase 1: motore con conflitti senza perdita di dati e provider "cartella"; 0.15: editor a tab, una per ogni MusicXML citato dal brano, con evidenziazione e completamento; anteprima con il MusicXML non salvato; 0.14: libreria con *Nuova cartella*, percorso con tasto "su", cartelle vuote visibili; 0.13: interfaccia in italiano e inglese, lingua nelle impostazioni; 0.12: direttiva `{tags}`, libreria con vista a card, ricerca per artista e tag, ordinamento, indice dei brani; 0.11: versione del formato `{format: v1}` e parser per versione, conversione al formato corrente; 0.10: esempi come cartella dei brani predefinita, pagina Impostazioni, editor scuro con evidenziazione della sintassi e completamento delle direttive; 0.9: app con libreria di brani da una cartella con sottocartelle, editor del sorgente con anteprima dal vivo; 0.8.1: sigle e testo delle battute notate allineati su un'unica linea per riga; 0.8: colori personalizzati per sezione `{section_colors}`, testo dei box nero o bianco secondo il contrasto, brano demo; 0.7: importazione da Chord Sheet Maker / chordsheet.com; 0.6: motore a tre strati, prototipo app Flet; 0.5: terzine, ritornelli e casse di volta (MusicXML e .chs), 2ª volta allineata a destra sotto la 1ª; 0.2: battute affollate su più slot, dimensione accordi uniforme per battuta; 0.3: tema grafico "Real Book" predefinito, estensioni in apice, simboli jazz opzionali; 0.4: zone notate da MusicXML; 0.3.1: blu #0066CC come colore predefinito dei box di sezione, sigle standard come predefinite, accordi in grassetto, etichette di sezione in box pieni arrotondati, colori per tipo di sezione, titolo a sinistra, intestazione solo in prima pagina)
 > Stato: **Fase 1 (motore + generatore PDF) implementata** in `src/modernsheet/`; **Fase 2: app Flet** in `src/main.py` con libreria, editor e impostazioni (§8).
 > In caso di dubbio, il motore in `src/modernsheet/` è l'implementazione di riferimento: il comportamento descritto qui e quello dello script devono coincidere.
 
@@ -30,13 +30,16 @@ Non è un requisito la compatibilità con ChordPro standard né con i suoi letto
 
 | Regola | Dettaglio |
 |---|---|
-| Codifica | UTF-8, testo semplice. Estensione **`.chs`** (provvisoria). |
+| Codifica | UTF-8, testo semplice. Estensione **`.chs`** (definitiva, §9b punto 8). |
 | Righe vuote | Ignorate. |
 | Commenti | Riga che inizia con `#` → ignorata. |
 | Direttive | `{nome}` oppure `{nome: valore}`. Possono stare su una riga propria o **dentro** una riga musicale. |
 | Righe musicali | Contengono accordi `[...]`, testo, stanghette e direttive in linea. Devono stare dentro una sezione (altrimenti il parser apre una sezione senza titolo e segnala un warning). |
 | Case | Nomi di direttive case-insensitive; nomi di accordi case-sensitive. |
+| Caratteri speciali | Una **barra rovesciata** davanti a un carattere che ha un significato lo scrive come testo (vedi sotto). |
 | Versione del formato | `{format: v1}` come **prima direttiva** del file (§2.14). Senza, il file è in formato v1. |
+
+**Caratteri speciali come testo** (dalla 0.47, §9b punto 5): `\|` `\[` `\]` `\{` `\}` `\"` `\\` e `\#` scrivono il carattere stesso, senza il suo significato, ovunque ci sia testo: nel testo cantato (`| [C]lei \| lui |`, `[G]\[parlato\]`), in `{text}`/`{c}` (`{c: Ritornello \{x2\}}`), nelle annotazioni (`[A "\"forte\""]`), nei nomi delle sezioni e nell'intestazione; `\#` serve per un testo che comincia con `#`. Prima non c'era modo di scriverli. Una barra rovesciata davanti ad altri caratteri resta com'è. L'editor colora queste sequenze come testo e le schede della libreria mostrano il testo senza barre.
 
 ### 2.2 Metadati (intestazione)
 
@@ -80,8 +83,8 @@ Tonalità ammesse: `C D E F G A B` con `#` o `b` opzionale, seguite da `m` per i
 [Accordo:durata]    durata esplicita in movimenti
 ```
 
-- **Unità = movimento** (quarto / semiminima). Il numero di movimenti di una battuta è `num × 4 / den` (4/4 → 4, 3/4 → 3, 2/4 → 2, 6/8 → 3).
-- Risoluzione minima: **mezzo movimento** (`[C:1.5]`, `[G:0.5]`). Durate non multiple di 0,5 vengono arrotondate con warning.
+- **Unità = la nota del denominatore del metro** (dalla 0.47, §9b punto 3): quarti in 4/4, 3/4, 2/4; ottavi in 6/8, 7/8, 12/8; minime in 2/2. Una battuta vale quindi `num` unità (6/8 → 6, 2/2 → 2) e `[C:3]` in 6/8 è mezza battuta. Prima della 0.47 l'unità era sempre il quarto (6/8 = 3 movimenti). Il motore conta internamente in quarti.
+- Risoluzione minima: **mezza unità** (`[C:1.5]`, `[G:0.5]`; in 6/8 mezzo ottavo). Durate non multiple di 0,5 vengono arrotondate con warning.
 - Il **testo** che segue un accordo (fino al prossimo accordo o stanghetta) è la sillaba/parola cantata su quell'accordo.
 - Il testo prima del primo accordo di una battuta viene agganciato al primo evento della battuta.
 
@@ -93,7 +96,7 @@ Radice   := [A-G] ( "#" | "b" )?
 Basso    := [A-G] ( "#" | "b" )?
 Qualità  := testo libero: m, maj7, m7b5, 7b9, 7#9, sus4, dim7, add9, 6/9* …
 ```
-\* Il parser riconosce radice e basso (necessari per la trasposizione); la qualità è conservata così com'è. Nel rendering `b` e `#` diventano `♭` e `♯` sulla radice, sul basso e davanti ai numeri (`Bbm7b5` → `B♭m7♭5`, `F7#9` → `F7♯9`).
+\* Il parser riconosce radice e basso (necessari per la trasposizione); la qualità è conservata così com'è. Nel disegno le **scritture equivalenti** si mostrano in un solo modo (dalla 0.47, §9b punto 7): `Maj7` `M7` `ma7` `Δ` → `maj7`, `-` `min` `mi` → `m`, `ø` `-7b5` → `m7b5`, `°` `o` → `dim`, `+` → `aug` (e con i simboli jazz Δ, –, ø, °, +); conta solo l'inizio della qualità, il resto (`7`, `9`, `add9`, `sus4`, `#11`…) resta com'è scritto. Nel rendering `b` e `#` diventano `♭` e `♯` sulla radice, sul basso e davanti ai numeri (`Bbm7b5` → `B♭m7♭5`, `F7#9` → `F7♯9`).
 
 **Simboli speciali al posto dell'accordo**
 
@@ -188,7 +191,7 @@ Una riga **senza stanghette** è in modalità implicita:
 | Regola | Dettaglio |
 |---|---|
 | Apertura | `{volta: N}` (o `{volta: 1, 2}` → "1., 2.") prima della prima battuta della volta, in linea o su riga propria. |
-| Chiusura | La volta termina: alla battuta con `:\|` (parentesi **chiusa**, con gancio verso il basso); all'apertura di un'altra volta; con `{volta_end}` (aperta) o `{volta_end: hook}` (chiusa); **a fine riga del sorgente** o a fine sezione (aperta). |
+| Chiusura | La volta termina: alla battuta con `:\|` (parentesi **chiusa**, con gancio verso il basso); all'apertura di un'altra volta; con `{volta_end}` (aperta) o `{volta_end: hook}` (chiusa); a fine sezione (aperta). **Gli a capo del file non la chiudono** (dalla 0.47, §9b punto 4): una volta lunga può occupare più righe. |
 | Fine della 2ª volta | L'ultima volta (2ª, 3ª…) che non torna indietro chiude la struttura ripetuta: riceve **automaticamente la doppia stanghetta**. Dal MusicXML viene letto anche lo stile della stanghetta (`bar-style` light-light / light-heavy → doppia). |
 | Allineamento | La 2ª volta (e le successive) **inizia sempre una riga nuova, allineata a destra**: finisce dove finisce la riga della 1ª volta, così le due volte stanno una sotto l'altra. A sinistra resta **spazio bianco** (nessun rigo al posto delle battute "mancanti"): la riga contiene **solo le battute** della volta, senza chiave né armatura, aperte da una stanghetta; dopo la volta si va a capo. Se è **più lunga** della 1ª, comincia sotto l'inizio della 1ª volta e prosegue oltre, con il pentagramma intero. |
 | Resa | Linea orizzontale sopra il rigo con gancio iniziale e numero in grassetto; gancio finale solo se chiusa. Se la volta attraversa l'a capo continua sulla riga successiva senza ripetere il numero. Le righe con una volta ricevono 15 pt di spazio in più in alto. |
@@ -225,7 +228,7 @@ Aggiunte al formato v1 (compatibili: i file v1 esistenti non cambiano significat
 - **Diagnostica**: warning per un segno di fine prima di qualsiasi battuta, per un `{segno}`/`{coda}` a fine sezione (nessuna battuta lo segue).
 - Il brano **non viene "srotolato"**: i segni sono indicazioni per chi suona, come sulla carta.
 
-**Righe di testo** `{text: …}` (su riga propria, **dentro una sezione**): una riga di testo libero nello spartito, nel punto in cui è scritta (indicazioni d'esecuzione, note per i musicisti). Prima della prima battuta → sotto il titolo della sezione; fra due righe musicali → la riga seguente comincia dopo il testo (a capo forzato); dopo l'ultima battuta → in fondo alla sezione. Testo a tutta larghezza, a capo automatico, nel font delle note del tema (10,5 pt); resta sulla stessa pagina della riga che lo segue. Fuori da una sezione → warning, ignorata. Non si traspone. Diversa da `{comment}` e dalle righe `#`, che non vengono stampate.
+**Righe di testo** `{text: …}` (su riga propria, **dentro una sezione**): una riga di testo libero nello spartito, nel punto in cui è scritta (indicazioni d'esecuzione, note per i musicisti). Prima della prima battuta → sotto il titolo della sezione; fra due righe musicali → la riga seguente comincia dopo il testo (a capo forzato); dopo l'ultima battuta → in fondo alla sezione. Testo a tutta larghezza, a capo automatico, nel font delle note del tema (10,5 pt); resta sulla stessa pagina della riga che lo segue. Fuori da una sezione → warning, ignorata. Non si traspone. Diversa da `{comment}` e dalle righe `#`, che non vengono stampate. `{comment: …}` e `{c: …}` sono **sinonimi** di `{text}` (dalla 0.47, come in ChordPro, dove `{comment}` è stampato); le note che non vanno stampate si scrivono nelle righe che iniziano con `#`.
 
 Esempi: `src/examples/segno_e_coda.chs` (D.S. al Coda, solo sigle: segni bassi), `src/examples/segni_con_testo.chs` (D.S. al Coda con testo cantato: segni sopra il testo) e `src/examples/da_capo_al_fine.chs` (D.C. al Fine).
 
@@ -259,7 +262,7 @@ Le opzioni dopo l'etichetta (`xN`, `$volta N`, `$once`, `$short`) vanno in quals
 | Direttiva | Effetto |
 |---|---|
 | `{bars_per_line: N}` **dentro** una sezione | N battute per riga solo per quella sezione. |
-| `{bars_per_line: N}` **fuori** da sezioni | N battute per riga da quel punto in poi. |
+| `{bars_per_line: N}` **fuori** da sezioni | N battute per riga da quel punto in poi (come `{bar_width}` e `{notation}` fra le sezioni, §9b punto 2). |
 | `{bars_per_line}` (senza valore) | Torna al valore di configurazione. |
 | `{br}` in linea | La battuta in cui compare **inizia una nuova riga**; il conteggio riparte. |
 
@@ -504,7 +507,7 @@ Il layout (§4.1–4.6) è lo stesso per tutti i temi; cambiano font, colori e a
 
 | | **`realbook`** *(default)* | `clean` |
 |---|---|---|
-| Ispirazione | Real Book manoscritto | Lead sheet tipografico pulito |
+| Ispirazione | Fake Book scritto a mano | Lead sheet tipografico pulito |
 | Testo, titolo, accordi, etichette | **Petaluma Script** (scrittura a mano) | DejaVu Sans / Bold |
 | Simboli musicali (chiave, alterazioni, metro, `%`, ♩) | **Petaluma** (font SMuFL a mano) | FreeSerif (Unicode) + DejaVu Bold |
 | Titolo | A sinistra, 26 pt in grassetto | A sinistra, bold 20 pt |
@@ -616,7 +619,7 @@ I colori della tabella `by_type` garantiscono un contrasto ≥ 4,5:1 con il test
 
 ### 4.7 Grafica delle sigle (tema `realbook`)
 
-Come nei Real Book, la sigla ha una gerarchia visiva:
+Come nei Fake Book scritti a mano, la sigla ha una gerarchia visiva:
 
 | Parte | Rendering | Esempio |
 |---|---|---|
@@ -640,6 +643,12 @@ Le alterazioni dentro la qualità (`b9`, `#11`) diventano ♭ e ♯.
 | `dim`, `dim7` | °, °7 |
 
 La sostituzione riguarda solo la grafica: il file sorgente non cambia.
+
+**Nomi delle note in italiano** (dalla 0.48, opzione `note_names = italian`; default `letters`): radice e basso
+degli accordi e le tonalità (in intestazione, ai cambi di tonalità, nei richiami corti) si leggono con i nomi
+italiani Do Re Mi Fa Sol La Si, con le alterazioni ♯/♭: `F#m7/C#` → Fa♯m⁷/Do♯, `{key: Bb}` → "Key Si♭", `Em` →
+"Key Mim". La qualità resta com'è (anche con i simboli jazz: Si♭Δ7); le sigle non riconosciute (`N.C.`) e le note
+del pentagramma e della tablatura non cambiano. Il sorgente si scrive sempre con le lettere.
 
 ---
 
@@ -710,6 +719,7 @@ Ordine di precedenza (vince l'ultimo): **default → configurazione (CLI / impos
 | Formato carta | `A4` | `--paper A4\|Letter` | — |
 | Tema grafico | `realbook` | `--theme realbook\|clean` | — |
 | Simboli accordi | `text` | `--chord-symbols text\|jazz` | — |
+| Nomi delle note | `letters` | `--note-names letters\|italian` | — |
 | Colore box sezioni | `theme` | `--label-colors theme\|by_type\|#RRGGBB` | `{label_colors: by_type}` |
 
 Parametri di stile: spazio del rigo 5,6 pt e altezza riga 62 pt (classe `Style`); dimensioni dei caratteri per tema (classe `Theme`): `realbook` accordi 17 pt, `chord_fit_size` 13, minimo 11, testo 9,5 pt; `clean` accordi 13,5 pt, `chord_fit_size` 11, minimo 9, testo 8,6 pt. `chord_fit_size` è la soglia sotto la quale una battuta occupa più slot invece di rimpicciolire ancora; tra due accordi resta sempre almeno ~7 pt di spazio.
@@ -742,6 +752,7 @@ python modernsheet_cli.py a.chs b.chs -o out/            # più file in una cart
 python modernsheet_cli.py song.chs -t -2                 # un tono sotto
 python modernsheet_cli.py song.chs --bar-width fit --bars-per-line 6
 python modernsheet_cli.py song.chs --chord-symbols jazz  # CΔ7, C-7, Cø7, C°7
+python modernsheet_cli.py song.chs --note-names italian  # Do, Fa♯m7, Si♭maj7 (sorgente con le lettere)
 python modernsheet_cli.py song.chs --theme clean         # stile tipografico pulito
 python modernsheet_cli.py song.chs --check               # solo validazione (exit 1 se ci sono warning)
 python modernsheet_cli.py *.chs --format-info            # versione del formato di ogni file (§2.14)
@@ -788,7 +799,7 @@ L'app ha tre schermate: libreria, editor e impostazioni.
 - **Rinomina cartella**: menu **⋮** sulla scheda o sulla riga di ogni cartella → *Rinomina*. Il nome si pulisce come per *Nuova cartella*; sono rifiutati un nome vuoto e un nome già usato da un'altra cartella accanto (un cambio di sole maiuscole, `jazz` → `Jazz`, passa da un nome temporaneo, per i dischi che non distinguono le maiuscole). La cartella principale della libreria non si rinomina (il nome della cartella su Drive è un'impostazione). Il dialogo dice quanti brani contiene, avvisa se brani di **altre** cartelle citano MusicXML di questa (i loro riferimenti `{musicxml: …}` vengono **riscritti** con il nuovo percorso; quelli dei brani interni, relativi, restano validi) e, con la libreria sincronizzata, che la rinomina arriverà anche sul remoto e sugli altri dispositivi. La rinomina aspetta la fine di una sincronizzazione in corso e nessuna ne parte finché non è finita. Funzioni `library.rename_folder` e `library.outside_refs`.
 - I pulsanti **Nuova cartella** e **Nuovo brano** stanno in basso a destra, uno accanto all'altro.
 - La libreria si rilegge tornando dall'editor e con il pulsante *Aggiorna*.
-- Restano disponibili l'apertura di un singolo `.chs` fuori dalla libreria e l'importazione da chordsheet.com (§9). Non c'è più un menu degli esempi: sono la libreria predefinita.
+- Resta disponibile l'apertura di un singolo `.chs` fuori dalla libreria; l'importazione da chordsheet.com è uno strumento a riga di comando separato (§9, dalla 0.49). Non c'è più un menu degli esempi: sono la libreria predefinita.
 
 **Impostazioni** (icona ingranaggio nella libreria; salvate nelle preferenze dell'app, modulo `settings.py`):
 
@@ -797,11 +808,12 @@ L'app ha tre schermate: libreria, editor e impostazioni.
 | Lingua | Italiano / English (`language` `it` / `en`): lingua dell'interfaccia | Italiano |
 | Cartella dei brani | una cartella scelta con il selettore; pulsante per tornare agli esempi inclusi | esempi inclusi |
 | Cartella per i PDF | cartella da cui parte il dialogo *Esporta PDF*; si può togliere | nessuna (decide il dialogo) |
-| Formato | Real Book / Clean (`theme`) | Real Book |
+| Formato | Fake Book / Clean (`theme` `realbook` / `clean`) | Fake Book |
 | Larghezza delle battute | Griglia / Riempi (`bar_width` `uniform` / `fit`) | Griglia |
 | Spazio fra le righe | Compatta / Normale / Ampia / Molto ampia (`row_spacing` `compact` / `normal` / `wide` / `extra`); un brano con `{row_spacing}` usa il suo | Normale |
 | Battute notate | Pentagramma / Entrambi / Tablatura (`notation` `staff` / `both` / `tab`, §4.8b); anche nella barra sopra lo spartito, per il brano aperto | Pentagramma |
 | Sigle degli accordi | Standard / Jazz (`chord_symbols` `text` / `jazz`) | Standard |
+| Nomi delle note | C D E / Do Re Mi (`note_names` `letters` / `italian`); anche con l'interruttore *Do Re Mi* sopra lo spartito, per il brano aperto | C D E |
 | Colori per sezione | sì / no (`label_colors` `by_type` / `theme`) | no |
 
 **Lingua.** L'interfaccia è in **italiano** (predefinito) o **inglese**, scelta in *Impostazioni › Generale › Lingua* e salvata nelle preferenze (`language`); un valore sconosciuto torna all'italiano. Tutti i testi dell'app (menu, pulsanti, suggerimenti, dialoghi, messaggi, descrizioni del completamento) stanno nel catalogo `i18n.py`, una voce per testo con tutte le lingue (`tr(chiave, **valori)`, `tr_count` per singolare/plurale); i test controllano che ogni voce abbia tutte le lingue con gli stessi segnaposto e che ogni chiave usata dall'app esista. Cambiando lingua le schermate vengono ricostruite (dalle Impostazioni, quindi senza documenti aperti) e la lingua passa anche ai controlli di Flutter (`locale_configuration`). Seguono la lingua anche le etichette proposte per le sezioni nel completamento (`{start_of_verse: Strofa}` / `Verse`) e nel modello di "Nuovo brano". **Restano in inglese** i warning del parser (come nella riga di comando); restano in italiano le note di conversione dell'importazione da chordsheet.com e il contenuto degli esempi.
@@ -846,7 +858,7 @@ Le quattro opzioni di visualizzazione sono i **valori iniziali** di ogni brano a
 | Impostazioni: cartella dei brani, cartella dei PDF, formato, griglia/riempi, sigle, colori per sezione | ✅ |
 | Editor scuro con evidenziazione della sintassi e completamento delle direttive dopo `{` | ✅ |
 | Trasposizione −/+ dal vivo | ✅ |
-| Tema Real Book / Clean, griglia `uniform` / `fit`, simboli jazz, colori per sezione | ✅ |
+| Tema Fake Book / Clean, griglia `uniform` / `fit`, simboli jazz, colori per sezione | ✅ |
 | Avvisi del parser mostrati sopra lo spartito | ✅ |
 | Cambio pagina da tastiera e **pedaliera Bluetooth** (Pagina giù/su, frecce, spazio) | ✅ (da provare con la pedaliera reale) |
 | Esportazione PDF identica allo schermo | ✅ |
@@ -900,7 +912,7 @@ Obiettivo: la stessa libreria su tutti i dispositivi, **funzionante anche senza 
 - **Token**: il refresh token sta in `FLET_APP_STORAGE_DATA/google/token.json`, leggibile solo dall'utente (permessi 600); l'access token si rinnova da solo (anche su una risposta 401). Se l'accesso è revocato o scaduto la sincronizzazione si ferma con "Accesso a Google Drive scaduto o revocato: ricollega l'account" (non viene scambiato per assenza di rete).
 - **Cartella su Drive**: *Impostazioni › Sincronizzazione › Google Drive › Cartella su Drive* (predefinita **Modern Sheet**; si conferma con Invio o uscendo dal campo; spazi in eccesso e `/` tolti, vuoto = predefinita). È una cartella della radice del Drive; **un nome diverso è un'altra libreria**, con la sua copia locale (`gdrive:<e-mail>:<cartella>`; con il nome predefinito la chiave resta `gdrive:<e-mail>` delle versioni precedenti). Cambiandola mentre l'account è collegato l'app chiede conferma e poi, come al collegamento, se aggiungere i brani della libreria attuale; la vecchia cartella resta com'è, su Drive e in locale. Gli altri dispositivi devono usare lo stesso nome per condividere la libreria.
 - **Nel Drive**: la cartella scelta nella radice (creata se manca, ritrovata dagli altri dispositivi), con le sottocartelle della libreria (create quando serve). Revisione di un file = il suo **MD5** su Drive. Prima di sovrascrivere o cancellare si controlla che l'MD5 sia ancora quello atteso (altrimenti si rimanda). Le **cancellazioni** spostano il file nel **cestino di Drive**. Due file con lo stesso percorso: vale il più recente.
-- La copia locale è per account (`sync/<hash di "gdrive:e-mail">/library`); nel percorso della libreria la cartella principale si chiama "Google Drive".
+- La copia locale è per account (`sync/<hash di "gdrive:e-mail">/library`); nel percorso della libreria la cartella principale si chiama "Google Drive" Su iPad/iPhone la copia sta invece nella cartella Documenti, visibile in *File* (§8.6, dalla 0.52).
 - **Verificato** con un vero account Google (progetto Google Cloud pubblicato, senza logo) nell'app macOS compilata con `flet build macos`; i test usano un finto server Drive.
 
 **Impostazioni › Sincronizzazione › Cartella sincronizzata.** Scegliendo una cartella:
@@ -945,7 +957,12 @@ Obiettivo: la stessa libreria su tutti i dispositivi, **funzionante anche senza 
 - **APK Android** (sperimentale): compilato da `release.yml` in un job separato (`flet build apk --split-per-abi`, si pubblica la versione arm64 come `ModernSheet-android.apk`) e firmato con la **chiave di rilascio** del progetto, così ogni versione si installa sopra la precedente. La chiave (`.jks`, PKCS12, alias `modernsheet`) la crea e la conserva l'autore, fuori dal repository; arriva alla pipeline dai secret `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` (le password passano per variabili d'ambiente, mai sulla riga di comando). Senza secret il job viene saltato; un suo errore non blocca la Release delle app desktop. Fino alla 0.42 l'APK era compilato a mano con la chiave di debug di un Mac e caricato su Google Drive: chi l'ha installato deve disinstallarlo una volta (firma diversa).
 - **Test automatici**: `.github/workflows/tests.yml` esegue `--check` sugli esempi e `pytest` a ogni push e pull request, con Python 3.10 (il minimo) e 3.13.
 - **Sito** `https://modernsheet.app` su **GitHub Pages** (sorgente: ramo `main`, cartella `docs/`; dominio in `docs/CNAME`). È HTML statico generato da `python tools/build_site.py` a partire da `site/`: un modello comune (`site/template.html`) e pagine Markdown in **italiano** (`site/it/`) e **inglese** (`site/en/`), con intestazione `title`, `slug`, `nav`, `other` (la pagina corrispondente nell'altra lingua) e `description`. Pagine: home, download, guida all'app, il formato `.chs`, importazione da chordsheet.com, **changelog** (le versioni pubblicate, dalla più recente, con il link alla Release di GitHub e un'ancora `#v<versione>` per ognuna; le versioni solo locali non compaiono: una pubblicazione che ne raccoglie più d'una le riassume insieme), privacy. La radice `/` porta a `/it/` o `/en/` secondo la lingua del browser; il generatore scrive anche `404.html`, `sitemap.xml`, `robots.txt` e `.nojekyll` (niente Jekyll). Stile in `docs/assets/style.css` (tema chiaro e scuro automatico, menu a scomparsa sotto i 1100 px, voci mai a capo, nessuna risorsa esterna); accanto agli esempi di `.chs` della pagina del formato (blocchi marcati `{ .chs .render }` nel Markdown) lo **spartito disegnato dal motore stesso** durante la costruzione del sito (`tools/build_site.py`: parse → impaginazione → SVG ritagliato, su una pagina larga 440 pt perché resti leggibile accanto al codice; i frammenti ricevono una sezione senza etichetta e l'intestazione `{key: C}` `{time: 4/4}`; un esempio con warning ferma la costruzione), con i font dell'app copiati in `docs/assets/fonts/`; sotto il codice sul telefono; nei blocchi di codice un'**icona di copia** in basso a destra, dentro il riquadro (`docs/assets/copy.js`: copia il testo esatto negli appunti, con ripiego per i browser senza Clipboard API; per un istante diventa una spunta verde; etichetta "Copia"/"Copy" come suggerimento e per i lettori di schermo; sempre visibile sugli schermi touch); immagini in `docs/assets/img/` (spartiti dagli esempi, schermate dell'app con i soli brani di esempio).
-- La pagina **privacy** descrive i dati trattati (tutto sul dispositivo; Google Drive con `drive.file`; password di chordsheet.com mai salvata) ed è quella da indicare nel *Branding* della schermata di consenso Google insieme alla home.
+- **Pubblico del sito**: il sito è per chi **usa** l'app (installazione, guida, formato `.chs`, privacy, novità).
+  I dettagli per sviluppatori stanno solo su GitHub: avvio dai sorgenti, `flet build`, riga di comando, lo strumento
+  di importazione da chordsheet.com (`tools/chordsheet_import/README.md`), la configurazione delle API Google
+  (README), la specifica. Il sito può solo rimandare a GitHub. Eccezione: la pagina privacy dichiara l'uso delle API
+  di Google (permesso `drive.file`, *Limited Use*), come richiede Google per la schermata di consenso.
+- La pagina **privacy** descrive i dati trattati (tutto sul dispositivo; Google Drive con `drive.file`; l'app non si collega ad altri servizi) ed è quella da indicare nel *Branding* della schermata di consenso Google insieme alla home.
 - Repository: `https://github.com/supermariolabs/modernsheet` (`REPO` in `tools/build_site.py`, link nel README); autore dei commit pubblicati con l'indirizzo *noreply* di GitHub.
 
 ### 8.4 Limiti noti e cose da verificare sul dispositivo
@@ -953,8 +970,8 @@ Obiettivo: la stessa libreria su tutti i dispositivi, **funzionante anche senza 
 - **Provato su desktop (macOS), non ancora su iPad/Android**: libreria, editor e anteprima sono stati verificati in una finestra reale (schermate catturate dall'app); su tablet e telefono vanno controllati il comportamento grafico di Flutter e la tastiera a schermo nell'editor.
 - **Editor con evidenziazione**: il testo colorato sta sotto un campo trasparente; i due devono avere font, interlinea e spaziatura identici (`letter_spacing` 0, perché il tema Material ne aggiunge 0,5 ai campi di testo) e il campo disegna le righe 4 px più in alto (`HIGHLIGHT_SHIFT`, misurato su macOS): da ricontrollare su iPad/Android. La posizione del popup di completamento è calcolata simulando l'a capo tra le parole con il font a spaziatura fissa (`syntax.caret_row_col`), con una colonna di margine: al più il popup finisce una riga più in basso, mai sopra la riga del cursore. Con la tastiera a schermo Tab e frecce possono mancare: resta il tocco sul suggerimento.
 - **Posizione verticale dei testi**: calcolata dalle metriche del font (§7); se su un dispositivo un font risultasse spostato di qualche pixel, si corregge in `screen.py` con un fattore per font.
-- **Cartella dei brani su mobile**: su desktop la cartella scelta si legge e si scrive direttamente. Su iPad il percorso restituito dal selettore è valido solo finché l'app ha l'accesso alla cartella (*security-scoped*), su Android servono i permessi di archiviazione: da verificare; in alternativa, usare la cartella documenti dell'app (visibile in *File* / condivisione file).
-- **MusicXML su mobile**: un `.chs` aperto dal selettore di file del telefono/tablet arriva da solo, senza la sua cartella, quindi i `{musicxml: …}` non si trovano. Soluzioni previste: importare una cartella o un archivio `.zip` del brano, oppure incorporare il MusicXML nel `.chs`.
+- **Cartella dei brani su mobile**: su desktop la cartella scelta si legge e si scrive direttamente. Su iPad il percorso restituito dal selettore è valido solo finché l'app ha l'accesso alla cartella (*security-scoped*), su Android servono i permessi di archiviazione: per questo su mobile la libreria sta dentro l'app (**modalità store**, §8.6, dalla 0.50).
+- **MusicXML su mobile**: un `.chs` aperto dal selettore di file del telefono/tablet arriva da solo, senza la sua cartella, quindi i `{musicxml: …}` non si trovano. Soluzione (0.51): il brano viaggia come **`.zip`** con i suoi MusicXML (§8.6, *Archivi .zip*).
 - **Dimensione dell'app**: il runtime di Flutter + Python aggiunge decine di MB rispetto a un'app nativa.
 - **Prestazioni**: impaginazione e disegno di un brano di 3 pagine in ~0,2 s su desktop; da misurare sui dispositivi.
 
@@ -967,23 +984,187 @@ Obiettivo: la stessa libreria su tutti i dispositivi, **funzionante anche senza 
 - **Validazione nell'editor**: i warning di §2.11 mostrati accanto alla riga.
 - Da definire: libreria/setlist, sincronizzazione, autoscroll, modalità palco/tema scuro, import (ChordPro, testo, PDF).
 
+### 8.6 Pubblicazione negli store (piano, analisi del 26 novembre 2026)
+
+Obiettivo: App Store (iPad/iPhone), Google Play (Android), Mac fuori dallo store con firma Apple; Windows e Linux
+restano come oggi (download dal sito). Le regole cambiano spesso (Apple le ha riscritte più volte nel 2026): vanno
+ricontrollate sui testi ufficiali al momento dell'invio.
+
+**Problema principale, comune a iOS e Android: l'accesso alle cartelle.** Negli store l'app è isolata
+(*sandbox*): una cartella scelta dall'utente resta accessibile solo finché l'app è aperta, a meno di salvarne il
+permesso (*security-scoped bookmark* su Apple, URI persistente del selettore su Android), mentre l'app salva solo
+il percorso (`settings.library_root`). Su Android il permesso "accesso a tutti i file" (`MANAGE_EXTERNAL_STORAGE`)
+è concesso solo a gestori di file, backup e simili: per un'app di spartiti sarebbe rifiutato. Soluzione per le
+versioni mobili: **libreria dentro l'app** (cartella documenti dell'app, visibile in *File* su iPad), **import ed
+export** dei brani (anche `.zip` con i MusicXML, §8.4), sincronizzazione con **Google Drive** (già funzionante).
+Su desktop la libreria su cartella resta com'è.
+
+**Modalità store** (dalla 0.50; `library.store_mode`): attiva su iPad/iPhone, Android e in una build del Mac App
+Store (processo in sandbox: macOS imposta `APP_SANDBOX_CONTAINER_ID`); desktop normale e Mac con Developer ID restano
+come prima. La stessa app, senza versioni separate:
+
+- **Libreria**: sempre quella dell'app; un `library_root` salvato da una versione precedente è ignorato
+  (dopo un riavvio non sarebbe leggibile). Su **iPad/iPhone** la libreria "Modern Sheet" sta nella cartella
+  **Documenti** dell'app (`StoragePaths.get_application_documents_directory`), che con `UIFileSharingEnabled` e
+  `LSSupportsOpeningDocumentsInPlace` (`[tool.flet.ios.info]` in `pyproject.toml`) l'app **File** mostra in
+  *Sul mio iPad › Modern Sheet*: i brani si possono trascinare dentro e fuori. Una libreria creata prima nei dati
+  nascosti dell'app viene spostata lì una volta (`library.move_library`). Su **Android** resta nei dati dell'app
+  (Android non mostra le cartelle delle app): i brani entrano con *Importa* ed escono con *Condividi* o Google Drive.
+- **Impostazioni**: la riga *Cartella dei brani* dice dove sta la libreria, senza pulsanti; *Cartella per i PDF* e
+  la sincronizzazione su cartella non compaiono (resta **Google Drive**; un `sync_mode = folder` salvato è ignorato).
+- **File in uscita**: *Esporta PDF* e *Salva con nome › Altra posizione* passano sempre dal dialogo di sistema con il
+  contenuto (nessuna cartella ricordata); su iPad/iPhone e Android il pulsante **Condividi** dell'editor manda il PDF
+  (come mostrato: trasposizione e opzioni comprese) o il sorgente `.chs` al foglio di condivisione (Mail, File,
+  AirDrop, WhatsApp…). Su iPad il foglio parte dal pulsante (`share_position_origin`, obbligatorio nei popover).
+- **File in entrata**: *Importa file .chs o .zip* (un `.chs` da solo arriva come contenuto, senza i MusicXML
+  citati; con uno `.zip` arrivano anche quelli).
+- `ITSAppUsesNonExemptEncryption = false` (solo HTTPS) evita la domanda sulla crittografia a ogni invio.
+
+**Archivi .zip** (dalla 0.51, su tutte le piattaforme; `library.song_zip`, `library_zip`, `import_zip`):
+
+- **Un brano**: nel menu *Condividi* dell'editor, *Brano con MusicXML (.zip)*: il sorgente (com'è nell'editor) e i
+  MusicXML che cita, uno accanto all'altro in cima all'archivio; un riferimento esterno (`../shared/x.musicxml`) è
+  salvato come `x.musicxml` e riscritto, così l'archivio si apre ovunque; i file mancanti si saltano. Su
+  iPad/iPhone e Android va al foglio di condivisione, su desktop al dialogo di salvataggio.
+- **La libreria**: *Impostazioni › Cartelle › Esporta la libreria (.zip)* (`Modern Sheet AAAA-MM-GG.zip`): tutti i
+  `.chs` e i MusicXML (`.musicxml`, `.xml`, `.mxl`, le stesse estensioni della sincronizzazione) con le cartelle,
+  senza file nascosti né cestino. Serve da backup o per passare a un altro dispositivo senza Google Drive.
+- **Importazione** (*Importa* nella barra della libreria, nella cartella aperta, mai sovrascrivendo): con **un solo
+  brano** come *Importa file .chs* (nome libero, MusicXML dall'archivio copiati accanto, poi il brano si apre); con
+  **più brani** (per esempio una libreria esportata) in una **nuova cartella** con il nome dell'archivio ("Modern
+  Sheet 2" se esiste già), cartelle comprese. Una sola cartella che contiene tutto (come la crea il Finder) si
+  toglie.
+- **Sicurezza**: si estraggono solo `.chs` e MusicXML con percorsi relativi; nomi assoluti, `..`, lettere di unità,
+  file nascosti e `__MACOSX` si scartano; oltre 5000 file o 200 MB non compressi l'archivio è rifiutato prima di
+  scrivere qualcosa (`BadZip`, come un file che non è uno zip o uno zip senza brani: messaggio con il motivo).
+
+**Google Drive su iPad/iPhone** (dalla 0.52; `App.local_copy`): la copia locale della libreria sincronizzata sta
+anch'essa nella cartella Documenti, visibile in *File* come *Sul mio iPad › Modern Sheet › Modern Sheet (Google Drive
+· account)*: una per cartella su Drive e account, come le cartelle di stato (manifesto e cestino restano nei dati
+nascosti). Una copia creata prima in `sync/<hash>/library` viene spostata lì una volta. Altrove (desktop, Android)
+resta in `sync/<hash>/library`; la sincronizzazione su cartella non cambia. Le impostazioni dicono dove trovarla
+(*Sul mio iPad › Modern Sheet › nome della cartella*: l'app File mostra la cartella Documenti con il nome dell'app).
+
+Resta da fare: prove su iPad e Android veri.
+
+**Rischi di rifiuto e correzioni (tutti gli store)**
+
+| Punto | Regola | Correzione |
+|---|---|---|
+| Import da account chordsheet.com: password di un servizio di terzi e lettura delle sue pagine | Apple 5.2.2 (permesso del servizio); Google: dati utente e proprietà intellettuale | **Fatto (0.49)**: tolto dall'app in tutte le versioni, anche la conversione da testo; è lo strumento a riga di comando `chordsheet_cli.py` (§9) |
+| Nome del tema "Real Book" (marchio di Hal Leonard) nell'interfaccia e nelle schede | Apple 5.2.1 / 2.3; Google: proprietà intellettuale | **Fatto (0.53)**: ovunque si legge **Fake Book** (nome generico di queste raccolte, non un marchio): app, guida, sito, README; il nome interno `realbook` e l'opzione `--theme realbook` restano (impostazioni salvate compatibili) |
+| La parola "beta" in app e schede | Apple 2.2: la beta si fa con TestFlight | Tolta dalle versioni store |
+| Privacy | Apple 5.1.1 + privacy manifest; Google: scheda "Sicurezza dei dati" | Pagina privacy sul sito (it/en); probabilmente "nessun dato raccolto": i file restano sul dispositivo e sul Drive dell'utente. Verificare il `PrivacyInfo.xcprivacy` generato da `flet build` (date dei file, preferenze) |
+| Accesso a Google | Apple 4.8 (Accedi con Apple) non si applica: Google serve solo per il Drive, non come account dell'app | Spiegarlo nelle note per il revisore; l'app funziona anche senza account |
+| App "di poco valore" (Apple, regole più severe da giugno 2026) | Apple 4.2 / 4.3 | Schede e schermate che mostrano ciò che è unico (formato `.chs`, impaginazione lead sheet, ritornelli e volte, tablatura, PDF); esempi già inclusi |
+| Python incluso nell'app | Apple 2.5.2: ammesso se il codice è nell'app | Mai scaricare ed eseguire codice (oggi non succede) |
+| Crittografia | Esportazione USA | Solo HTTPS: `ITSAppUsesNonExemptEncryption = NO` |
+| Pubblico | Classificazione per età / pubblico di riferimento | 13+ o 18+ su Play, per evitare le regole per le app per bambini |
+| Funzioni a pagamento (futuro) | Apple 3.1.1, Google Play Billing | Vendute con gli acquisti in-app degli store, non con chiavi comprate sul sito |
+| Licenza GPL-3.0 | Rischio legale, non di revisione | Come unico autore si può pubblicare; contributi esterni solo con un accordo (CLA); valutare un font OFL al posto di FreeSerif (GPL) |
+
+**Requisiti tecnici**
+
+- **Apple**: firma con il certificato sviluppatore (licenza acquistata); prove con **TestFlight** su un iPad vero
+  (mai provata, §8.4); schermate per ogni dispositivo, URL di supporto e privacy.
+- **Mac**: distribuzione **fuori dal Mac App Store** con firma *Developer ID* e notarizzazione (*hardened runtime*,
+  firma di tutte le librerie di Python incluse): niente revisione né sandbox, la libreria su cartella funziona, e
+  spariscono gli avvisi di app non firmata della pagina Download. Il Mac App Store eventualmente dopo, con lo
+  stesso lavoro sulla sandbox fatto per iOS.
+- **Google Play**:
+  - pacchetto **`.aab`** (`flet build aab`, da aggiungere alla build di GitHub; l'APK resta per il sito);
+  - target **Android 16 (API 36)**, obbligatorio per le app nuove dal 31 agosto 2026: da verificare con Flet 1.1.2;
+  - librerie native allineate a **pagine da 16 KB**: il Play Console segnala quelle non conformi al caricamento;
+  - **Play App Signing**: la chiave attuale diventa la chiave di caricamento, gestita solo da Mario;
+  - account personale nuovo: **test chiuso con almeno 12 tester per 14 giorni di fila** prima della pubblicazione
+    (l'account di organizzazione non ne ha bisogno, ma richiede il D-U-N-S); mai provata su un telefono vero (§8.4).
+- **APK sul sito**: con la *verifica dello sviluppatore* di Google (dal 30 settembre 2026 in Brasile, Indonesia,
+  Singapore e Thailandia, nel resto del mondo nel 2027) anche le app installate fuori da Play devono essere
+  registrate: registrare per tempo il pacchetto `app.modernsheet` e la sua chiave nella console di Google.
+
+**Riepilogo per piattaforma**
+
+| Lavoro | iPad/iPhone | Android | Mac |
+|---|---|---|---|
+| Libreria dentro l'app + import/export + Drive | obbligatorio | obbligatorio | solo per il Mac App Store |
+| Niente import da chordsheet.com nell'app | fatto (0.49) | fatto (0.49) | fatto (0.49) |
+| Tema rinominato (fatto, 0.53), niente "beta" (l'app non la mostra; nastro del sito da togliere all'uscita) | sì | sì | sì |
+| Privacy policy + moduli privacy | sì | sì | sì |
+| Prove su dispositivo vero | TestFlight | test chiuso, 12 tester per 14 giorni | — |
+| Pacchetto e firma | firma Apple | `.aab`, API 36, 16 KB | Developer ID + notarizzazione |
+
+**Ordine di lavoro**
+
+1. Libreria interna all'app su mobile (**modalità store fatta nella 0.50**, archivi `.zip` nella 0.51); tema rinominato, "beta" tolta,
+   (l'import da chordsheet.com è già fuori dall'app, 0.49).
+2. Pagina privacy sul sito (it/en): **completata nella 0.53** (permessi, file condivisi, cancellazione dei dati,
+   minori, modifiche); contatto **privacy@modernsheet.app** (inoltro ImprovMX verso la Gmail dello sviluppatore: record MX
+   `mx1/mx2.improvmx.com` e SPF nei DNS di GoDaddy).
+3. Build automatica: **preparata nella 0.53** in `.github/workflows/release.yml`, ogni parte attiva solo con i suoi
+   segreti di GitHub (senza, tutto come prima):
+   - **Mac**: certificato *Developer ID Application* (`MACOS_CERTIFICATE_P12` in base64, `MACOS_CERTIFICATE_PASSWORD`)
+     in un portachiavi temporaneo, poi `flet build macos --macos-distribution developer-id` (firma con *hardened
+     runtime*, notarizzazione, *staple*); la notarizzazione usa una chiave API di App Store Connect
+     (`APPLE_API_KEY_P8` contenuto del file `.p8`, `APPLE_API_KEY_ID`, `APPLE_API_ISSUER`). Le note della release
+     dicono se l'app per macOS è firmata.
+   - **Google Play**: `flet build aab` firmato con la stessa chiave dell'APK (la chiave di caricamento di Play App
+     Signing); il `.aab` è un artefatto del workflow (*google-play*) da caricare nel Play Console, non un file
+     della release.
+   - **iOS**: job `ios` con certificato *Apple Distribution* (`IOS_CERTIFICATE_P12`, `IOS_CERTIFICATE_PASSWORD`),
+     profilo App Store (`IOS_PROVISIONING_PROFILE` in base64) e `APPLE_TEAM_ID`: `flet build ipa` (metodo
+     `app-store-connect`) e, per le etichette di versione, caricamento su **TestFlight** con la stessa chiave API
+     (`xcrun altool`). L'`.ipa` non è un file della release.
+   - Fatto su Apple (27 novembre 2026): App ID esplicito `app.modernsheet` (nessuna capacità aggiuntiva), team
+     `593848N93N` (account individuale), app "Modern Sheet" in App Store Connect (iOS, italiano, SKU `modernsheet`).
+     Poi: stato DSA **non operatore commerciale** (app gratuita e open source; si può cambiare in seguito da *Azienda ›
+     Conformità*); certificati *Developer ID Application* e *Apple Distribution* (scadenza novembre/dicembre 2027,
+     intermedi Apple G2 e WWDR G3 nel Portachiavi), profilo **Modern Sheet App Store** (scade 27 novembre 2027),
+     chiave API "GitHub Actions" (Admin); tutti i segreti Apple impostati su GitHub. Manca `GOOGLE_CLIENT_JSON`
+     (senza, le app compilate su GitHub non hanno Google Drive).
+   - Da verificare alla prima esecuzione con i segreti: il workflow non è stato provato con certificati veri;
+     livello API di destinazione e pagine da 16 KB si controllano nel Play Console al primo caricamento.
+4. In parallelo: TestFlight e test chiuso su Play (il più lento, da far partire presto); poi l'invio.
+
 ---
 
 ## 9. Importazione da Chord Sheet Maker (chordsheet.com)
 
-Converte il testo del campo **"Chords"** di chordsheet.com in un sorgente `.chs` (`src/modernsheet/importers/chordsheet_com.py`). Chord Sheet Maker tiene titolo, artista, tonalità, BPM e metro in campi separati del modulo: si possono scrivere come **righe d'intestazione** in cima al file (`Title:`, `Artist:`, `Key:`, `BPM:`, `Time:` — anche in italiano: `Titolo`, `Artista`, `Tonalità`, `Tempo`, `Metro`) oppure passare da riga di comando.
+Dalla 0.49 l'importazione è uno **strumento a riga di comando separato**, fuori dall'app (`chordsheet_cli.py`,
+pacchetto `tools/chordsheet_import/`, che `flet build` non include): le regole degli store sui login a servizi di
+terzi (§8.6) sconsigliano di tenerla nell'app, che non si collega più a chordsheet.com. Lo strumento usa il motore
+(`src/modernsheet`) e scrive `.chs` che l'app apre come gli altri.
+
+**Da un testo** (`convert`, modulo `convert.py`): converte il testo del campo **"Chords"** di chordsheet.com salvato
+in un file. Chord Sheet Maker tiene titolo, artista, tonalità, BPM e metro in campi separati del modulo: si possono
+scrivere come **righe d'intestazione** in cima al file (`Title:`, `Artist:`, `Key:`, `BPM:`, `Time:` — anche in
+italiano: `Titolo`, `Artista`, `Tonalità`, `Tempo`, `Metro`) oppure passare come opzioni.
 
 ```
-python modernsheet_cli.py --from-chordsheet brano.txt                 # → brano.chs
-python modernsheet_cli.py --from-chordsheet --pdf brano.txt           # → brano.chs + brano.pdf
-python modernsheet_cli.py --from-chordsheet *.txt -o convertiti/ --key G --time 3/4
+python chordsheet_cli.py convert brano.txt                   # → brano.chs
+python chordsheet_cli.py convert --pdf brano.txt             # → brano.chs + brano.pdf
+python chordsheet_cli.py convert *.txt -o convertiti/ --key G --time 3/4
 ```
 
-**Dal proprio account** (app, pulsante **"Importa da chordsheet.com"** nella libreria; modulo `importers/chordsheet_account.py`, solo libreria standard, quindi anche su iPad e Android):
+**Dal proprio account** (`account`, modulo `account.py`, solo libreria standard):
 
-1. **Accesso**: email (precompilata se ricordata) e password; casella **"Ricorda l'email"** (salvata nelle impostazioni, `csm_email`). La **password non viene mai salvata**: serve solo per il login e si chiede ogni volta; i cookie della sessione restano in memoria. Il login è quello del sito (modulo Symfony: `_username`, `_password`, `_csrf_token` letto dalla pagina `/login`); credenziali sbagliate → messaggio, sito irraggiungibile o cambiato → messaggio con il motivo.
-2. **Scelta**: finestra con **tutti i brani dell'account** (titolo — artista, dalla pagina "My Chord Sheets"), casella per ciascuno, filtro per titolo o artista, **"Tutti i nuovi"** / **"Nessuno"**, contatore sul pulsante **Importa (N)**, cartella di destinazione indicata. I brani **già importati** (riconosciuti dal commento `# chordsheet.com: /song/<id>/…` dei file della libreria) sono segnati "già importato" e non selezionati da "Tutti i nuovi".
-3. **Importazione** nella **cartella aperta** (nella principale durante una ricerca): i sorgenti si leggono **uno alla volta** dalla pagina "view source" (`/song/source/<id>`), con una pausa di 0,25 s tra l'uno e l'altro per non pesare sul sito; ognuno è convertito come qui sotto e scritto senza sovrascrivere ("Titolo 2.chs"…), con il commento `# chordsheet.com: /song/<id>/<slug>` e il tag **`import_warn`** se la conversione lascia note o warning (o il foglio è vuoto). Finestra di avanzamento con **Interrompi** (si ferma tra un brano e l'altro); alla fine un riepilogo (importati, da controllare, non letti) e la sincronizzazione.
+```
+python chordsheet_cli.py account me@example.com -o ~/Brani/chordsheet --list     # elenco (* = già nella cartella)
+python chordsheet_cli.py account me@example.com -o ~/Brani/chordsheet            # scarica i brani nuovi
+python chordsheet_cli.py account me@example.com -o ~/Brani/chordsheet --match blues
+```
+
+1. **Accesso**: la password si chiede nel terminale (senza mostrarla) e **non viene mai salvata**; i cookie della
+   sessione restano in memoria. Il login è quello del sito (modulo Symfony: `_username`, `_password`, `_csrf_token`
+   letto dalla pagina `/login`); credenziali sbagliate o sito irraggiungibile → messaggio ed exit 1.
+2. **Scelta**: tutti i brani dell'account (dalla pagina "My Chord Sheets"), filtrabili con `--match` (titolo o
+   artista). I brani **già importati** nella cartella `-o` (riconosciuti dal commento `# chordsheet.com: /song/<id>/…`)
+   sono segnati con `*` in `--list` e saltati, salvo `--again`.
+3. **Importazione**: i sorgenti si leggono **uno alla volta** dalla pagina "view source" (`/song/source/<id>`), con
+   una pausa di 0,25 s tra l'uno e l'altro per non pesare sul sito; ognuno è convertito come qui sotto e scritto
+   senza sovrascrivere ("Titolo 2.chs"…), con il commento `# chordsheet.com: /song/<id>/<slug>` e il tag
+   **`import_warn`** se la conversione lascia note o warning (o il foglio è vuoto). Alla fine un riepilogo
+   (importati, da controllare, non letti; exit 1 se qualcuno non è stato letto). Con la cartella dentro la
+   libreria dell'app, i brani compaiono al prossimo aggiornamento e si sincronizzano come gli altri.
 
 chordsheet.com **non ha un'API**: l'importazione legge le stesse pagine di un browser e va adattata se il sito cambia. Provata (lettura e conversione) su 241 brani di un account reale: 230 puliti, 11 con `import_warn` (7 fogli vuoti, 2 scritti in ChordPro, 2 con errori nel sorgente originale).
 
@@ -1023,6 +1204,21 @@ Testi (lyrics) di chordsheet.com: stanno in una pagina separata del sito e non v
 
 ---
 
+## 9b. Decisioni per la versione 1.0 del formato
+
+Prima che l'app esca dalla beta il formato `.chs` viene consolidato: dopo l'uscita ogni modifica incompatibile richiederà un formato v2 con conversione (§2.14). Qui le decisioni prese, una per punto (analisi del 26 novembre 2026).
+
+| # | Questione | Decisione |
+|---|---|---|
+| 1 | `{comment}` / `{c}`: in ChordPro è stampato, nel `.chs` era nascosto | **Stampato**, sinonimo di `{text}` (0.47). Le note nascoste si scrivono con `#`. |
+| 2 | Dove vale una direttiva (intestazione, sezione, "da qui in avanti") | **Una regola per le direttive di impaginazione** (`bar_width`, `notation`, `bars_per_line`): nell'intestazione valgono per tutto il brano, **fra le sezioni da lì in avanti** (le sezioni che seguono, finché non cambiano), **dentro una sezione solo per lei** (0.47; prima `bar_width` e `notation` fra le sezioni valevano per tutto il brano, anche all'indietro). Le direttive che descrivono il brano (`title`, `subtitle`, `artist`, `composer`, `tempo`, `capo`, `row_spacing`, `label_colors`, `section_colors`, `tuning`) vanno nell'intestazione: dopo l'inizio della prima sezione valgono comunque per tutto il brano, con un warning. `{key}` e `{time}` sono eventi musicali: prima della musica tonalità e metro del brano, dopo cambi (§2.8). |
+| 3 | Unità delle durate nei tempi composti (oggi quarti anche in 6/8) | **La nota del denominatore** (0.47): quarti in 4/4, ottavi in 6/8 e 7/8, minime in 2/2; una regola per ogni metro, anche irregolare. Mezza unità è il minimo; le divisioni automatiche arrotondano a mezza unità. L'importazione da chordsheet.com scrive le durate in questa unità. |
+| 4 | Volte che si chiudono a fine riga del sorgente | **Solo con un segno** (0.47): `:\|`, la volta seguente, `{volta_end}` o la fine della sezione. Gli a capo del file non cambiano mai la musica; una volta può occupare più righe. Nei brani esistenti nessuna volta si chiudeva solo per la fine della riga (verificato su 275 file). |
+| 5 | Caratteri che non si possono scrivere nel testo (barra verticale, parentesi, graffe, virgolette nelle annotazioni) | **Barra rovesciata davanti al carattere** (0.47; elenco in §2.1, *Caratteri speciali come testo*). Aggiunta compatibile: prima la barra rovesciata non aveva significato. |
+| 6 | Sinonimi italiani delle parole chiave | **Inglese più i termini musicali internazionali** (0.47): direttive e valori in inglese come in ChordPro (`title`, `key`, `start_of_verse`, `bar_width: fit`, `volta_end: hook`); restano i termini musicali italiani d'uso internazionale (`volta`, `fermata`, `segno`, `coda`, `fine`, D.C., D.S.). Nessun sinonimo italiano per direttive e valori: `{volta_end: chiusa}` / `closed` danno un warning (la parentesi si chiude comunque). I **tipi** di sezione restano liberi (anche `strofa`, `ritornello`…), riconosciuti per i colori per tipo; i nomi mostrati sono testo libero. |
+| 7 | Forma delle sigle (qualità libera o canonica: `F#-`, `F#m`, `F#min`) | **Scrittura libera, resa uniforme** (0.47): le scritture equivalenti della qualità sono riconosciute e disegnate in un solo modo (`theory.normalize_quality`): `Maj7` `M7` `ma7` `Δ` → maj7; `-` `min` `mi` → m; `ø` `-7b5` → m7b5; `°` `o` → dim; `+` → aug; poi, con i simboli jazz, Δ – ø ° +. Il file resta come scritto; trasposizione e accordi non cambiano. |
+| 8 | Estensione dei file (`.chs` provvisoria) | **`.chs`, definitiva.** Verificato il 26 novembre 2026: è usata anche da file di sistema o di vecchi programmi (InstallShield, Corel WordPerfect/Presentations, componenti Adobe, dati di Windows e di giochi), mai da formati di testo che un utente apre; i formati di spartito testuale usano altro (ChordPro: `.cho`, `.crd`, `.chopro`, `.chordpro`, `.pro`). Breve, già in tutti i brani e nella documentazione. |
+
 ## 10. Questioni aperte
 
 1. **Strofe multiple dentro un ritornello** (`|: … :|` con testo diverso a ogni giro): righe di testo sovrapposte come negli spartiti? Oggi si mostra solo il testo scritto.
@@ -1032,7 +1228,7 @@ Testi (lyrics) di chordsheet.com: stanno in una pagina separata del sito e non v
 5. **D.S. / Coda / Fine**: disponibili da v0.23 come indicazioni (§2.8b); da valutare uno "srotolamento" del brano (lista delle battute nell'ordine in cui si suonano) per la riproduzione o la pedaliera.
 6. **Anacrusi** (battuta in levare): non ancora prevista.
 7. **MusicXML avanzato**: più voci, chiave di basso/altre chiavi, abbellimenti, dinamiche e articolazioni (oggi ignorati); testo **sopra** le note invece che sotto, per uniformità con le battute a sole sigle.
-8. **Nome definitivo** del formato e dell'estensione (`.chs` provvisoria).
+8. ~~**Nome definitivo** del formato e dell'estensione~~: deciso, `.chs` (§9b punto 8).
 9. **Lingua delle etichette** generate (oggi inglese: "Key", "reprise", "p."): fissa o localizzabile.
 10. **Token di Google Drive nel portachiavi di sistema** (valutato il 24 novembre 2026). Oggi il token di accesso (refresh token) è in `<dati dell'app>/google/token.json`, leggibile solo dall'utente (§8.3b). Il pacchetto ufficiale **`flet-secure-storage`** (classe `SecureStorage`, metodi asincroni `set`/`get`/`remove`, basato su `flutter_secure_storage`) lo terrebbe nel portachiavi: Keystore su Android, Keychain su iOS e macOS, Gestione credenziali su Windows, libsecret su Linux. Guadagno reale **solo su desktop** (oggi un programma dello stesso utente può leggere il file); su Android e iPad la cartella dell'app è già isolata. Da fare, se si fa: portachiavi dove funziona e **ripiego sul file** dove no (Linux senza portachiavi attivo, web), migrazione del token esistente, accesso al token in `gdrive.py` reso iniettabile (oggi sincrono e senza Flet, il portachiavi è asincrono e passa dall'app). **Rischio principale da provare prima**: su macOS `flutter_secure_storage` potrebbe richiedere l'entitlement *keychain-sharing*, legato alla firma, e le app scaricabili non sono firmate (§8.3c). Non riguarda il *client secret*, che resta nell'app per scelta (§8.3b): cifrarlo, per esempio con `flet.security.encrypt`, richiederebbe di mettere anche la chiave nell'app, quindi non lo proteggerebbe.
 11. **Modifica dei brani con un agente AI** (valutato il 24 novembre 2026). Un server MCP **dentro l'app** non conviene: i brani sono già file di testo che un agente sul computer (Claude Code, Claude Desktop con accesso ai file) legge e modifica direttamente; funzionerebbe solo ad app aperta, su iPad/Android richiederebbe una porta di rete aperta da proteggere, e andrebbe in conflitto con le modifiche non salvate nell'editor. (Il server MCP di Flet, `flet mcp` / `flet-mcp`, non c'entra: serve agli assistenti di programmazione per consultare le API di Flet, non a pilotare un'app.) Quello che manca a un agente è la **verifica del risultato**. Da fare, se si fa:
@@ -1066,17 +1262,18 @@ Testi (lyrics) di chordsheet.com: stanno in una pagina separata del sito e non v
 | `tests/test_*.py`, `tests/helpers.py` | Test di regressione, un file per area (§7). |
 | `src/examples/demo.chs` + `demo_intro.musicxml` | **Brano demo** del tool (PDF: `examples-pdf/demo.pdf`): intro in notazione da MusicXML (terzina, punto, taglio addizionale), ritornelli con volte 1./2., `x3`, cambio di tonalità e di tempo, `%`, stop, ripresa con `{ref}`, colori personalizzati, 4 battute per riga. |
 | `examples-pdf/` | PDF generati dagli esempi. |
-| `src/modernsheet/importers/` | Importatori da altri formati (oggi: chordsheet.com, §9). |
+| `chordsheet_cli.py`, `tools/chordsheet_import/` | Strumento a riga di comando per importare da chordsheet.com (§9), fuori dall'app. |
 | `examples-import/` | Esempio di testo chordsheet.com con il `.chs` e il PDF risultanti. |
 | `src/examples/amazing_grace.chs` / `.pdf` | 3/4, ritornello, `%`, divisione in parti uguali, modulazione G → Ab con `ref` trasposto, 4/4 a metà, stop, `x3`. |
 | `src/examples/blues_del_lunedi.chs` / `.pdf` | Jazz blues in F: modalità implicita, mezzi movimenti, accordi jazz (`m7b5`, `7b9`, `7#9`, `dim7`), cambio di tempo 2/4, `\|\|`, `{br}`, testo troncato. |
 | `src/examples/quattro_accordi.chs` | Test di leggibilità: 4 accordi per battuta (triadi, settime, sigle jazz lunghe, con testo, misto). |
 | `src/examples/blues_con_melodia.chs` / `.pdf` | Il blues con **zone notate**: intro (riff con crome, semicrome, alterazioni, punto, legatura di valore, pausa), tema del ritornello con testo, *shout chorus* con terzine e casse di volta da MusicXML, *vamp* con casse di volta scritte nel `.chs`, coda con un estratto di misure (`\| 3-4`). |
 | `src/examples/blues_intro_riff.musicxml`, `blues_tema.musicxml`, `blues_shout.musicxml` | I file MusicXML richiamati dall'esempio (lo *shout chorus* contiene terzine di crome e di semiminime, ritornello e casse di volta 1./2.). |
-| `src/examples/formato_base.chs` | Guida alle basi: intestazione completa (`subtitle`, `composer`, `capo`, `tags`), `bar_width: fit` (e `uniform` solo per il ritornello), `row_spacing: wide`, `label_colors: by_type`, `bars_per_line`, `{comment}`, modalità implicita ed esplicita, durate (anche mezzi movimenti), testo prima del primo accordo, `[%]`, stop, battuta vuota, accordi con basso, tonalità minore. |
+| `src/examples/formato_base.chs` | Guida alle basi: intestazione completa (`subtitle`, `composer`, `capo`, `tags`), `bar_width: fit` (e `uniform` solo per il ritornello), `row_spacing: wide`, `label_colors: by_type`, `bars_per_line`, `{c: …}` (riga stampata), modalità implicita ed esplicita, durate (anche mezzi movimenti), testo prima del primo accordo, `[%]`, stop, battuta vuota, accordi con basso, tonalità minore. |
 | `src/examples/ripetizioni_e_volte.chs` | Ritornelli `\|: :\|` e `:\| x3`, volte `{volta: 1, 2}` / 3ª volta più lunga della 1ª, `{volta_end}` e `{volta_end: hook}`, `{bars_per_line}` in una sezione, `{br}`, `{ref: … \| nota}`, `{ref: … x2 \| nota}`, `{ref: … $volta 2 = nome}` (un giro dritto alla 2ª volta) e `{ref: … $once = nome}` (senza ritornelli). |
 | `src/examples/tempi_e_tonalita.chs` | 3/4, 6/8 e 2/4, cambi di metro in linea, modulazioni con bequadri di cortesia, tonalità con diesis e bemolle, richiamo trasposto automaticamente, richiamo corto (`short`) con la tonalità nel box. |
 | `src/examples/segno_e_coda.chs`, `segni_con_testo.chs`, `da_capo_al_fine.chs` | Segni di navigazione e righe `{text}` (§2.8b). |
 | `src/examples/segni_ritmici.chs`, `accordi_opzionali.chs`, `annotazioni.chs` | Segni ritmici, accordi opzionali e annotazioni (§2.4b). |
 | `examples-pdf/blues_del_lunedi_jazz.pdf` | Lo stesso blues con `--chord-symbols jazz`. |
+| `examples-pdf/tempi_e_tonalita_do_re_mi.pdf` | `tempi_e_tonalita.chs` con `--note-names italian`. |
 | `src/assets/fonts/` | Petaluma, Petaluma Script, FreeSerif, DejaVu Sans (+ licenze). |

@@ -3,15 +3,15 @@ title: Modern Sheet
 slug:
 nav: 1
 other:
-description: Write chords in a plain text file, get a Real Book style lead sheet. Library, editor with live preview, PDF, Google Drive sync.
+description: Write chords in a plain text file, get a Fake Book style lead sheet. Library, editor with live preview, PDF, Google Drive sync.
 ---
 
 <div class="hero" markdown="1">
 <div markdown="1">
 
-# Real Book style lead sheets, from a text file
+# Fake Book style lead sheets, from a text file
 
-<p class="lead">Write the chords in a simple format (<code>.chs</code>) and Modern Sheet lays them out like a Real Book: staff, chord symbols, repeats, signs, lyrics. On screen and as PDF.</p>
+<p class="lead">Write the chords in a simple format (<code>.chs</code>) and Modern Sheet lays them out like a Fake Book: staff, chord symbols, repeats, signs, lyrics. On screen and as PDF.</p>
 
 <div class="cta">
 <a class="btn primary" href="/en/download/">Download</a>
@@ -22,7 +22,7 @@ description: Write chords in a plain text file, get a Real Book style lead sheet
 <span class="tag">Free software (GPL-3.0) · macOS, Windows, Linux · iPad and Android in testing</span>
 
 </div>
-<img src="/assets/img/sheet-demo.png" alt="A song laid out by Modern Sheet in Real Book style">
+<img src="/assets/img/sheet-demo.png" alt="A song laid out by Modern Sheet in Fake Book style">
 </div>
 
 ## What it does
@@ -33,7 +33,7 @@ description: Write chords in a plain text file, get a Real Book style lead sheet
 Chords in square brackets, bar lines, sections, lyrics. Write it with any editor; it reads well even without the app.
 </div>
 <div class="card" markdown="1"><span class="ico">🎼</span>
-### Real Book look
+### Fake Book look
 Handwritten Petaluma font, chord extensions in superscript, coloured section boxes, a uniform bar grid. Or the *Clean* theme.
 </div>
 <div class="card" markdown="1"><span class="ico">🔁</span>
@@ -46,7 +46,7 @@ Intros, riffs and heads written right in the song (`G8 Bb D F`) or imported from
 </div>
 <div class="card" markdown="1"><span class="ico">↕️</span>
 ### Transposition and jazz symbols
-One click to transpose (key signatures included); standard or jazz chord symbols (Δ, –, ø, °); rhythm marks, optional chords, annotations.
+One click to transpose (key signatures included); standard or jazz chord symbols (Δ, –, ø, °), with letters or Italian names (Do, Re, Mi); rhythm marks, optional chords, annotations.
 </div>
 <div class="card" markdown="1"><span class="ico">🗂️</span>
 ### Song library
@@ -60,9 +60,9 @@ Syntax highlighting, directive suggestions, tabs for MusicXML files, a preview t
 ### Always with you, even offline
 The library is local and syncs with Google Drive or a folder (iCloud, Dropbox…). No song gets lost: conflicts and deletions go through the trash.
 </div>
-<div class="card" markdown="1"><span class="ico">📥</span>
-### Import from chordsheet.com
-Log in to your account, pick the songs and import them converted, with repeats, endings, signs and annotations.
+<div class="card" markdown="1"><span class="ico">📤</span>
+### Share and export
+PDFs to print or send, songs with their MusicXML files in a `.zip`, a backup of the whole library in one file.
 </div>
 </div>
 
@@ -113,6 +113,6 @@ Log in to your account, pick the songs and import them converted, with repeats, 
 
 ## Project status
 
-Modern Sheet is under active development. The apps for **macOS, Windows and Linux** can be [downloaded here](/en/download/) (not signed yet: the page explains how to open them); iPad and Android are in testing. It also runs from source, as the [guide](/en/guide/) explains.
+Modern Sheet is under active development. The apps for **macOS, Windows and Linux** can be [downloaded here](/en/download/) (not signed yet: the page explains how to open them); iPad and Android are in testing.
 
 The code is on [GitHub]({{repo}}) under the **GPL-3.0** license. Reports and ideas are welcome in the *Issues*.

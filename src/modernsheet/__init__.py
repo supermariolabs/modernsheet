@@ -18,13 +18,13 @@ from .layout import THEMES, Layout
 from .model import Bar, Event, Section, Song
 from .parser import parse
 
-__version__ = "0.46.1"
+__version__ = "0.53.0"
 
 
 def layout(song: Song, **opts) -> DisplayList:
     """Lay out a parsed song. Options: bars_per_line, bar_width (uniform|fit), row_spacing (compact|normal|
     wide|extra or a factor / percentage), notation (staff|both|tab: guitar tablature), paper (A4|Letter),
-    theme (realbook|clean), chord_symbols (text|jazz), label_colors (theme|by_type|#RRGGBB)."""
+    theme (realbook|clean), chord_symbols (text|jazz), note_names (letters|italian: Do Re Mi), label_colors (theme|by_type|#RRGGBB)."""
     return Layout(song, **opts).run()
 
 

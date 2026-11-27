@@ -12,6 +12,47 @@ The released versions of Modern Sheet, newest first. The apps are on the
 [Download](/en/download/) page; every version with built apps has its own
 [release on GitHub]({{repo}}/releases).
 
+## 0.53.0 — 27 November 2026 {#v0.53.0}
+
+[Release on GitHub]({{repo}}/releases/tag/v0.53.0) · apps for macOS, Windows, Linux and Android
+
+Gathers versions 0.47 to 0.53, getting ready for 1.0 and the stores.
+
+**.chs format, final for 1.0**
+
+- `{comment}` and `{c}` are **printed**, as in ChordPro (like `{text}`); notes you don't want printed are
+  written with `#`.
+- `{bar_width}`, `{notation}` and `{bars_per_line}` written **between sections** hold from there on; inside a
+  section, for that section only. Song directives (title, key…) after the first section give a warning.
+- `:n` durations count notes of the time signature's **denominator**: quarters in 4/4, eighths in 6/8, halves in 2/2.
+- An ending closes only with a sign (`:|`, the next ending, `{volta_end}`, the end of the section), never
+  because a line of the file ends.
+- Special characters are written as text with a **backslash**: `\|`, `\[spoken\]`, `{c: Chorus \{x2\}}`, `\#1`.
+- Keywords in English, as in ChordPro (`{volta_end: hook}`; `chiusa` gives a warning).
+- **Equivalent chord spellings** all look the same: `CMaj7` like `Cmaj7`, `F#-` like `F#m`, `Dø` like `Dm7b5`.
+- The `.chs` extension is final.
+
+**Sheet**
+
+- **Do Re Mi**: chords and keys with Italian note names (a switch above the sheet and a default setting); the
+  song is still written with letters.
+- The handwritten theme is now called **Fake Book**.
+
+**App**
+
+- **Share**: on iPad, iPhone and Android the PDF or the source go to Mail, Files, AirDrop, WhatsApp…
+- **.zip archives**: a song with its MusicXML files (*Song with MusicXML (.zip)*) and the **whole library**
+  (*Settings › Export the library*), as a backup or to change device; *Import* also takes `.zip` files.
+- On **iPad, iPhone and Android** the library lives inside the app (on iPad and iPhone visible in the **Files**
+  app), syncs with Google Drive, and files come in and go out with Import and Share.
+- Importing from chordsheet.com is no longer in the app: it is a separate tool, on GitHub.
+- The **macOS** app is now signed and notarized by Apple: it opens without warnings.
+
+**Website**
+
+- Privacy policy completed, with the contact **privacy@modernsheet.app**.
+- The website is for people who use the app; developer details are on GitHub.
+
 ## 0.46.1 — 25 November 2026 {#v0.46.1}
 
 [Release on GitHub]({{repo}}/releases/tag/v0.46.1) · apps for macOS, Windows, Linux and Android

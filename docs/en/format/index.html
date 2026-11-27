@@ -24,7 +24,7 @@
     <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Menu">
     <label for="nav-toggle" class="nav-button" aria-hidden="true"><span></span><span></span><span></span></label>
     <nav class="menu">
-      <a href="/en/">Home</a><a href="/en/download/">Download</a><a href="/en/guide/">App guide</a><a href="/en/format/" aria-current="page">The .chs format</a><a href="/en/chordsheet/">chordsheet.com</a><a href="/en/changelog/">Changelog</a>
+      <a href="/en/">Home</a><a href="/en/download/">Download</a><a href="/en/guide/">App guide</a><a href="/en/format/" aria-current="page">The .chs format</a><a href="/en/changelog/">Changelog</a>
       <a class="lang" href="/it/formato/" hreflang="it">Italiano</a>
       <a class="gh" href="https://github.com/supermariolabs/modernsheet">GitHub</a>
     </nav>
@@ -62,8 +62,10 @@
 </div>
 <h2 id="general-rules">General rules<a class="headerlink" href="#general-rules">#</a></h2>
 <ul>
-<li>Lines starting with <code>#</code> are <strong>comments</strong> (even when meant as lyrics: "#1 in the charts" goes after the chord, <code>| [C]#1 in the charts |</code>); blank lines do not count.</li>
+<li>Lines starting with <code>#</code> are <strong>comments</strong> (even when meant as lyrics: "#1 in the charts" is written <code>\#1 in the charts</code>, or after the chord); blank lines do not count.</li>
+<li>The characters that have a meaning (<code>|</code> <code>[</code> <code>]</code> <code>{</code> <code>}</code> <code>"</code>, and <code>#</code> at the start of a line) are written as text with a backslash in front: <code>| [C]her \| him |</code>, <code>[G]\[spoken\]</code>, <code>{c: Chorus \{x2\}}</code>, <code>[A "\"loud\""]</code>, <code>\\</code> for the backslash itself.</li>
 <li>Lyrics live in bars, after a chord or a bar line: a line of text only, with no chords and no bar lines, has no bar to belong to and gives a warning. For a line of text in the sheet there is <code>{text: …}</code>.</li>
+<li>Directive names and values are in <strong>English</strong>, as in ChordPro (<code>{title}</code>, <code>{key}</code>, <code>{bar_width: fit}</code>), plus the musical terms used everywhere (<code>volta</code>, <code>fermata</code>, <code>segno</code>, <code>coda</code>, <code>fine</code>). Section <strong>kinds</strong> and <strong>names</strong> are free, in any language.</li>
 <li>A directive is <code>{name}</code> or <code>{name: value}</code>: on a line of its own or <strong>inside</strong> a line of music. Directive names ignore case, chord names do not.</li>
 <li>Music goes <strong>inside a section</strong> (<code>{start_of_…}</code> … <code>{end_of_…}</code>); outside one, the app opens an untitled section and says so.</li>
 <li>A file never "breaks": what cannot be understood becomes a <strong>warning</strong> with its line number, shown under the editor, and the rest is drawn anyway (see <a href="#diagnostics">Diagnostics</a>).</li>
@@ -192,7 +194,7 @@
 <line x1="396.40" y1="326.10" x2="396.40" y2="348.50" stroke="#6b6b6b" stroke-width="3.20" stroke-linecap="butt"/>
 </svg></figure></div>
 <h2 id="header">Header<a class="headerlink" href="#header">#</a></h2>
-<p>The directives at the top of the file describe the song. Those that drive the layout (<code>bar_width</code>, <code>notation</code>, <code>bars_per_line</code>) apply to the whole song, but written <strong>inside a section</strong> they apply to that section only.</p>
+<p>The directives at the top of the file, before the first section, describe the song and apply to all of it. Those that drive the layout (<code>bar_width</code>, <code>notation</code>, <code>bars_per_line</code>) can also be written further down: <strong>between two sections</strong> they hold from there on, <strong>inside a section</strong> for that section only. The others (title, tempo, colours, tuning…) belong in the header: written further down they give a warning.</p>
 <table>
 <thead>
 <tr>
@@ -274,8 +276,8 @@
 </tr>
 <tr>
 <td><code>comment</code> (or <code>c</code>)</td>
-<td><code>{comment: …}</code></td>
-<td>Comment, not printed.</td>
+<td><code>{c: Guitar only}</code></td>
+<td>A <strong>printed</strong> line of text, like <code>{text}</code> (and as in ChordPro). For a note that is not printed: a line starting with <code>#</code>.</td>
 </tr>
 </tbody>
 </table>
@@ -628,9 +630,9 @@
 </svg></figure></div>
 <h2 id="chords-and-durations">Chords and durations<a class="headerlink" href="#chords-and-durations">#</a></h2>
 <ul>
-<li><code>[Am7]</code> a chord: root (<code>A</code>–<code>G</code> with <code>#</code> or <code>b</code>), free quality (<code>m</code>, <code>maj7</code>, <code>m7b5</code>, <code>7#9</code>, <code>sus4</code>, <code>dim7</code>, <code>6/9</code>…) and an optional bass after <code>/</code> (<code>[C/E]</code>). On the sheet <code>b</code> and <code>#</code> become ♭ and ♯.</li>
-<li><code>[C:2]</code> lasts 2 <strong>beats</strong> (quarter notes); the shortest is half a beat (<code>[G:1.5]</code>, <code>[D:0.5]</code>).</li>
-<li>In a bar, chords without a duration share the remaining time equally, rounded to half beats; the last one takes the rest. In 4/4: <code>| [C] [G] |</code> = 2 + 2; <code>| [C] [G] [D] |</code> = 1.5 + 1.5 + 1; <code>| [C:3] [G] [D] |</code> = 3 + 0.5 + 0.5.</li>
+<li><code>[Am7]</code> a chord: root (<code>A</code>–<code>G</code> with <code>#</code> or <code>b</code>), free quality (<code>m</code>, <code>maj7</code>, <code>m7b5</code>, <code>7#9</code>, <code>sus4</code>, <code>dim7</code>, <code>6/9</code>…) and an optional bass after <code>/</code> (<code>[C/E]</code>). On the sheet <code>b</code> and <code>#</code> become ♭ and ♯, and equivalent spellings all look the same: <code>Maj7</code>, <code>M7</code>, <code>Δ</code> as <code>maj7</code>; <code>-</code>, <code>min</code> as <code>m</code>; <code>ø</code> as <code>m7b5</code>; <code>°</code> as <code>dim</code>; <code>+</code> as <code>aug</code> (or all as the jazz symbols Δ – ø ° +, with the <em>Jazz symbols</em> option).</li>
+<li><code>[C:2]</code> lasts 2 notes of the time signature's <strong>denominator</strong>: 2 quarters in 4/4 and 3/4, 2 eighths in 6/8 and 7/8, 2 halves in 2/2 (<code>[C:3] [G:3]</code> splits a 6/8 bar in half). The shortest is half a unit (<code>[G:1.5]</code>, <code>[D:0.5]</code>).</li>
+<li>In a bar, chords without a duration share the remaining time equally, rounded to half a unit; the last one takes the rest. In 4/4: <code>| [C] [G] |</code> = 2 + 2; <code>| [C] [G] [D] |</code> = 1.5 + 1.5 + 1; <code>| [C:3] [G] [D] |</code> = 3 + 0.5 + 0.5.</li>
 <li><code>[/]</code> is a <strong>stop</strong> (silence until the next chord; also with a duration: <code>[/:2]</code>); <code>[%]</code> says explicitly "no new chord".</li>
 <li>A bar <strong>without chords</strong> (<code>| |</code> or lyrics only) carries the previous chord on and shows as <strong>%</strong>.</li>
 <li>The <strong>lyrics</strong> after a chord are sung on that chord; lyrics before the first chord of a bar go with that first chord.</li>
@@ -866,7 +868,7 @@
 <line x1="246.50" y1="123.00" x2="246.50" y2="134.00" stroke="#0f0f0f" stroke-width="0.90" stroke-linecap="butt"/>
 <text x="249.50" y="133.00" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.45" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:10.00px" xml:space="preserve">2.</text>
 </svg></figure></div>
-<p>An ending closes by itself at the <code>:|</code> (with the hook), when the next ending opens, with <code>{volta_end}</code> or <strong>at the end of the file's line</strong>. The 2nd ending starts a new row, right-aligned under the 1st, and the last ending gets the double bar line.</p>
+<p>An ending closes by itself at the <code>:|</code> (with the hook), when the next ending opens, with <code>{volta_end}</code> or at the end of the section; line breaks in the file do not close it, so a long ending can take several lines. The 2nd ending starts a new row, right-aligned under the 1st, and the last ending gets the double bar line.</p>
 <h2 id="key-and-time-changes">Key and time changes<a class="headerlink" href="#key-and-time-changes">#</a></h2>
 <p><code>{key: …}</code> and <code>{time: …}</code> go on a line of their own or right after a bar line, and apply from the next bar:</p>
 <div class="example"><pre><code class="language-chs">| [G7]last time round || {key: Db} [Db]modulation | [Gb] |
@@ -948,8 +950,8 @@
 <td>6 bars per row in that section</td>
 </tr>
 <tr>
-<td><code>{bars_per_line: 6}</code> outside sections</td>
-<td>6 bars per row from there on</td>
+<td><code>{bars_per_line: 6}</code> between two sections</td>
+<td>6 bars per row from there on (the same for <code>{bar_width}</code> and <code>{notation}</code>)</td>
 </tr>
 <tr>
 <td><code>{bars_per_line}</code> (no value)</td>
@@ -973,7 +975,7 @@
 </tr>
 </tbody>
 </table>
-<p><code>bar_width</code> and <code>bars_per_line</code> in the header apply to the song, inside a section to that section only; in the app, the settings and the bar above the sheet give the default.</p>
+<p><code>bar_width</code> and <code>bars_per_line</code> in the header apply to the song, between two sections from there on, inside a section to that section only; in the app, the settings and the bar above the sheet give the default.</p>
 <h2 id="navigation-signs">Navigation signs<a class="headerlink" href="#navigation-signs">#</a></h2>
 <table>
 <thead>
@@ -1558,8 +1560,6 @@
 </ul>
 <h2 id="format-versions">Format versions<a class="headerlink" href="#format-versions">#</a></h2>
 <p><code>{format: v1}</code> declares the version. Additions land in the current version without changing the meaning of existing files; should the syntax ever change incompatibly, the app will still read v1 files and offer to upgrade them.</p>
-<hr />
-<p>For every detail (layout rules, special cases) see the <a href="https://github.com/supermariolabs/modernsheet/blob/main/SPEC.md">full specification</a> in the repository (in Italian).</p>
 </main>
 <footer class="foot">
   <div class="wrap">

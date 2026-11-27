@@ -72,7 +72,7 @@ def _replay(c, op):
         _, x, y, s, font, size, rgb, outline = op
         c.setFillColorRGB(*rgb)
         if outline:
-            # simulated bold (the Real Book chord style): fill and stroke the glyph outline with a thin
+            # simulated bold (the Fake Book chord style): fill and stroke the glyph outline with a thin
             # line (render mode 2), since the handwritten fonts have no bold face
             c.saveState()
             c.setStrokeColorRGB(*rgb)

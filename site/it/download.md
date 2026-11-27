@@ -47,7 +47,7 @@ Telefoni e tablet a 64 bit (APK). **Sperimentale**: ancora poco provato.
 </div>
 </div>
 
-Tutte le versioni, con le novità, sono nella pagina [Releases]({{repo}}/releases) del progetto. L'app per iPad è in prova: per ora si prova con l'app *Flet* (vedi la [guida](/it/guida/)).
+Tutte le versioni, con le novità, sono nella pagina [Releases]({{repo}}/releases) del progetto. Le versioni per iPad e iPhone arriveranno sull'App Store.
 
 ## Installare e aprire
 

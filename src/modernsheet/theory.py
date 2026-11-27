@@ -85,6 +85,38 @@ def semitones_between(from_key: str, to_key: str) -> int:
     return d - 12 if d > 6 else d
 
 
+# Equivalent spellings of a chord quality (SPEC §2.4, §9b point 7): written freely in the file, shown in
+# one way. Only the start of the quality is rewritten; what follows (7, 9, add9, sus4, #11…) stays.
+_QUALITY_FORMS = [
+    (r"^(?:ø7?|m7b5|-7b5|min7b5|mi7b5)", "m7b5"),    # half-diminished
+    (r"^Δ(?=\d)", "maj"), (r"^Δ", "maj7"),          # Δ alone is a major seventh
+    (r"^(?:maj|Maj|MAJ|ma(?=\d)|Ma(?=\d))", "maj"),     # ma7 = maj7, but madd9 is m + add9
+    (r"^M(?=\d)", "maj"), (r"^M$", ""),              # CM7 = Cmaj7, CM = C
+    (r"^(?:°|o(?=\d|$)|dim)", "dim"),
+    (r"^(?:\+|aug)", "aug"),
+    (r"^(?:min|mi|-)", "m"),                          # minor
+]
+
+
+def normalize_quality(quality: str) -> str:
+    """The standard spelling of a chord quality: Maj7/M7/ma7/Δ → maj7, -/min/mi → m, ø → m7b5,
+    °/o → dim, + → aug (the rest of the quality is kept as written)."""
+    for pat, rep in _QUALITY_FORMS:
+        new = re.sub(pat, rep, quality)
+        if new != quality:
+            return new
+    return quality
+
+
+# Italian (solfège) note names, a display option (note_names = italian): the source keeps the letters.
+ITALIAN_NAMES = {"C": "Do", "D": "Re", "E": "Mi", "F": "Fa", "G": "Sol", "A": "La", "B": "Si"}
+
+
+def note_name(letter: str, names: str = "letters") -> str:
+    """The name of a note letter (A-G) in the chosen naming: C → C (letters) or Do (italian)."""
+    return ITALIAN_NAMES.get(letter, letter) if names == "italian" else letter
+
+
 def pretty_chord(text: str) -> str:
     """Typographic accidentals: Bb7b9 -> B♭7♭9, F#m -> F♯m."""
     text = re.sub(r"(?<=[A-G])b", "♭", text)

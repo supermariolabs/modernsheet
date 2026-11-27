@@ -2,7 +2,7 @@
 from pathlib import Path
 
 from modernsheet import parse
-from modernsheet.importers import from_chordsheet_com
+from chordsheet_import import from_chordsheet_com
 
 EX = Path(__file__).resolve().parents[1] / "src" / "examples"
 SONGS = sorted(EX.glob("*.chs"))

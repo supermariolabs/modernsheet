@@ -7,18 +7,21 @@ so a folder is re-read only for the files that changed since the last scan (see 
 from __future__ import annotations
 
 import hashlib
+import io
 import json
 import os
 import re
 import shutil
+import tempfile
 import time
 import unicodedata
+import zipfile
 from datetime import datetime
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
 from .formats import FORMAT_LINE_RE, VALUE_RE
-from .formats.v1 import add_tags, format_stamp, parse_stamp
+from .formats.v1 import add_tags, escape_line, format_stamp, parse_stamp, unescape
 from .i18n import tr
 from .parser import CURRENT, DIRECTIVE_LINE_RE, split_directive
 from .theory import KEY_RE, PITCH
@@ -114,7 +117,7 @@ def read_info(path: Path) -> SongFile:
             v = VALUE_RE.fullmatch(f.group(1).strip())
             info.format = int(v.group(1)) if v and int(v.group(1)) >= 1 else 1
             continue
-        m = DIRECTIVE_LINE_RE.match(line)
+        m = DIRECTIVE_LINE_RE.match(escape_line(line))      # "\}" inside a value does not end it
         if not m:
             music = music or bool(line) and not line.startswith("#")
             continue
@@ -123,11 +126,11 @@ def read_info(path: Path) -> SongFile:
         if name in ("key", "time") and music:
             continue
         if name == "tags":
-            add_tags(info.tags, value)
+            add_tags(info.tags, unescape(value))
         elif name == "composer" and not composer:
-            composer = value
+            composer = unescape(value)
         elif name in ("title", "artist", "key", "time", "tempo") and value and not getattr(info, name):
-            setattr(info, name, value)
+            setattr(info, name, unescape(value))                  # "\{demo\}" → "{demo}"
         elif name in ("created", "modified") and parse_stamp(value) and not getattr(info, name):
             setattr(info, name, value)
     info.artist = info.artist or composer
@@ -358,6 +361,26 @@ def safe_filename(name: str) -> str:
     return name or tr("new_song")
 
 
+def store_mode(platform: str, environ=None) -> bool:
+    """True where the app is isolated in a sandbox (SPEC §8.6, "store mode"): iPad/iPhone, Android, and a
+    Mac App Store build (macOS sets APP_SANDBOX_CONTAINER_ID in a sandboxed process). There a folder chosen
+    by the user stays readable only while the app runs, so the library lives inside the app and files go
+    in and out through the system dialogs (import, save, share) instead of folders kept in the settings."""
+    environ = os.environ if environ is None else environ
+    return platform in ("ios", "android", "android_tv") or (
+        platform == "macos" and bool(environ.get("APP_SANDBOX_CONTAINER_ID")))
+
+
+def move_library(old: Path, new: Path) -> bool:
+    """Move a library folder to a new place when the new one does not exist yet (iOS: from the hidden app
+    data to the Documents folder that the Files app shows); True if moved."""
+    if not old.is_dir() or new.exists():
+        return False
+    new.parent.mkdir(parents=True, exist_ok=True)
+    shutil.move(str(old), str(new))
+    return True
+
+
 def new_song_path(folder: Path, title: str) -> Path:
     """A path for a new song in `folder` that does not overwrite an existing file."""
     base = safe_filename(title)
@@ -584,20 +607,146 @@ def import_song(dest: Path, name: str, text: str, src_dir: Path | None = None) -
             target.write_bytes(data)
             copied.append(target.name)
         mapping[ref] = target.name
-    if mapping:
-        lines = text.split("\n")
-        for i, line in enumerate(lines):
-            m = DIRECTIVE_LINE_RE.match(line.strip())
-            if not m:
-                continue
-            d_name, value = split_directive(m.group(1))
-            file, bar, opts = value.partition("|")
-            if d_name == "musicxml" and file.strip() in mapping and mapping[file.strip()] != file.strip():
-                indent = line[:len(line) - len(line.lstrip())]
-                lines[i] = f"{indent}{{musicxml: {mapping[file.strip()]}{' |' + opts if bar else ''}}}"
-        text = "\n".join(lines)
-    path.write_text(text, encoding="utf-8")
+    path.write_text(rewrite_musicxml_refs(text, mapping), encoding="utf-8")
     return ImportResult(path, copied, missing)
+
+
+def rewrite_musicxml_refs(text: str, mapping: dict[str, str]) -> str:
+    """The source with its {musicxml: …} references renamed as in `mapping` (bar ranges kept)."""
+    if not mapping:
+        return text
+    lines = text.split("\n")
+    for i, line in enumerate(lines):
+        m = DIRECTIVE_LINE_RE.match(line.strip())
+        if not m:
+            continue
+        d_name, value = split_directive(m.group(1))
+        file, bar, opts = value.partition("|")
+        if d_name == "musicxml" and file.strip() in mapping and mapping[file.strip()] != file.strip():
+            indent = line[:len(line) - len(line.lstrip())]
+            lines[i] = f"{indent}{{musicxml: {mapping[file.strip()]}{' |' + opts if bar else ''}}}"
+    return "\n".join(lines)
+
+
+# ---- .zip archives (SPEC §8.6): a song with its MusicXML files, or the whole library, in one file that
+# goes in and out of the app through the system dialogs (iPad/Android have no shared folders)
+LIBRARY_EXTENSIONS = (".chs", ".musicxml", ".xml", ".mxl")     # files of a library (as synced, sync.py)
+ZIP_MAX_FILES = 5000
+ZIP_MAX_BYTES = 200 * 1024 * 1024          # uncompressed: a "zip bomb" is refused before anything is written
+
+
+def song_zip(text: str, name: str, base_dir: Path | None) -> bytes:
+    """A song as a .zip: the source (as `name`.chs) and the MusicXML files it cites, read from `base_dir`,
+    side by side at the top of the archive (a "../shared/x.musicxml" is stored as "x.musicxml" and the
+    reference rewritten, so the archive opens anywhere). Missing files are left out."""
+    files: dict[str, bytes] = {}
+    mapping: dict[str, str] = {}
+    for ref in musicxml_refs(text):
+        src = Path(os.path.normpath(base_dir / ref)) if base_dir else None
+        if src is None or not src.is_file():
+            continue
+        data, target, n = src.read_bytes(), src.name, 2
+        while target in files and files[target] != data:
+            target = f"{src.stem} {n}{src.suffix}"
+            n += 1
+        files[target], mapping[ref] = data, target
+    stem = Path(name).stem if name.lower().endswith(EXT) else name
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+        z.writestr(safe_filename(stem) + EXT, rewrite_musicxml_refs(text, mapping).encode("utf-8"))
+        for target, data in files.items():
+            z.writestr(target, data)
+    return buf.getvalue()
+
+
+def library_files(root: Path) -> list[str]:
+    """Paths (relative, with "/") of the library's songs and MusicXML files, hidden ones excluded."""
+    out = []
+    for p in sorted(root.rglob("*")):
+        rel = p.relative_to(root).as_posix()
+        if p.is_file() and rel.lower().endswith(LIBRARY_EXTENSIONS) and not any(
+                part.startswith(".") for part in rel.split("/")):
+            out.append(rel)
+    return out
+
+
+def library_zip(root: Path) -> bytes:
+    """The whole library as a .zip (folders kept): a backup, or a way to move it to another device."""
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+        for rel in library_files(root):
+            z.write(root / rel, rel)
+    return buf.getvalue()
+
+
+@dataclass
+class ZipImport:
+    songs: list[Path]                # the songs written into the library
+    folder: Path | None              # an archive of several songs: the new folder that holds them
+    copied: list[str] = field(default_factory=list)    # one song: MusicXML files copied next to it
+    missing: list[str] = field(default_factory=list)   # one song: references not found in the archive
+    skipped: int = 0                 # entries left out (other file types, hidden, unsafe paths)
+
+
+class BadZip(Exception):
+    """Not a usable archive: unreadable, too big, or without songs."""
+
+
+def _zip_members(z: zipfile.ZipFile) -> tuple[list[tuple[zipfile.ZipInfo, str]], int]:
+    """The archive's library files with safe relative paths, and how many entries were skipped.
+    Unsafe names (absolute, "..", drive letters), hidden files, macOS "__MACOSX" metadata and other
+    file types are left out; a single folder around everything (as made by Finder) is removed."""
+    keep, skipped = [], 0
+    for info in z.infolist():
+        if info.is_dir():
+            continue
+        parts = [p for p in info.filename.replace("\\", "/").split("/") if p not in ("", ".")]
+        if (not parts or info.filename.startswith(("/", "\\")) or ":" in parts[0] or ".." in parts
+                or parts[0] == "__MACOSX" or any(p.startswith(".") for p in parts)
+                or not parts[-1].lower().endswith(LIBRARY_EXTENSIONS)):
+            skipped += 1
+            continue
+        keep.append((info, "/".join(parts)))
+    tops = {rel.split("/")[0] for _, rel in keep}
+    if len(tops) == 1 and all("/" in rel for _, rel in keep):
+        keep = [(info, rel.split("/", 1)[1]) for info, rel in keep]
+    return keep, skipped
+
+
+def import_zip(dest: Path, data: bytes, name: str = "") -> ZipImport:
+    """Import a .zip into the library folder `dest`, never overwriting. One song: like import_song (free
+    name, its MusicXML from the archive copied next to it). Several songs (e.g. an exported library): a
+    new folder named after the archive, with the archive's folders inside. Raises BadZip."""
+    try:
+        z = zipfile.ZipFile(io.BytesIO(data))
+    except zipfile.BadZipFile as err:
+        raise BadZip(str(err)) from err
+    with z:
+        members, skipped = _zip_members(z)
+        if len(members) > ZIP_MAX_FILES or sum(i.file_size for i, _ in members) > ZIP_MAX_BYTES:
+            raise BadZip("too big")
+        songs = [rel for _, rel in members if rel.lower().endswith(EXT)]
+        if not songs:
+            raise BadZip("no songs")
+        if len(songs) == 1:
+            with tempfile.TemporaryDirectory() as tmp:
+                for info, rel in members:
+                    target = Path(tmp) / rel
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    target.write_bytes(z.read(info))
+                src = Path(tmp) / songs[0]
+                text = src.read_text(encoding="utf-8", errors="replace")
+                r = import_song(dest, src.name, text, src.parent)
+            return ZipImport([r.path], None, r.copied, r.missing, skipped)
+        folder = new_folder_path(dest, Path(name).stem if name else "")
+        written = []
+        for info, rel in members:
+            target = folder / rel
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(z.read(info))
+            if rel.lower().endswith(EXT):
+                written.append(target)
+        return ZipImport(written, folder, skipped=skipped)
 
 
 def file_created(path: Path) -> datetime | None:

@@ -24,7 +24,7 @@
     <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Menu">
     <label for="nav-toggle" class="nav-button" aria-hidden="true"><span></span><span></span><span></span></label>
     <nav class="menu">
-      <a href="/it/">Home</a><a href="/it/download/">Download</a><a href="/it/guida/" aria-current="page">Guida all&#x27;app</a><a href="/it/formato/">Il formato .chs</a><a href="/it/chordsheet/">chordsheet.com</a><a href="/it/changelog/">Changelog</a>
+      <a href="/it/">Home</a><a href="/it/download/">Download</a><a href="/it/guida/" aria-current="page">Guida all&#x27;app</a><a href="/it/formato/">Il formato .chs</a><a href="/it/changelog/">Changelog</a>
       <a class="lang" href="/en/guide/" hreflang="en">English</a>
       <a class="gh" href="https://github.com/supermariolabs/modernsheet">GitHub</a>
     </nav>
@@ -34,7 +34,7 @@
 <h1 id="guida-allapp">Guida all'app<a class="headerlink" href="#guida-allapp">#</a></h1>
 <div class="toc">
 <ul>
-<li><a href="#avviare-modern-sheet">Avviare Modern Sheet</a></li>
+<li><a href="#installare-modern-sheet">Installare Modern Sheet</a></li>
 <li><a href="#la-libreria">La libreria</a><ul>
 <li><a href="#la-ricerca">La ricerca</a></li>
 </ul>
@@ -45,57 +45,8 @@
 <li><a href="#impostazioni">Impostazioni</a></li>
 </ul>
 </div>
-<h2 id="avviare-modern-sheet">Avviare Modern Sheet<a class="headerlink" href="#avviare-modern-sheet">#</a></h2>
-<p>Il modo più semplice è <strong>scaricare l'app</strong> per macOS, Windows o Linux dalla pagina <a href="/it/download/">Download</a>. In alternativa si avvia dai sorgenti, con <strong>Python 3.10 o successivo</strong>:</p>
-<pre><code>git clone https://github.com/supermariolabs/modernsheet.git
-cd modernsheet
-python3 -m venv .venv &amp;&amp; source .venv/bin/activate     # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-flet run                                               # l'app desktop
-</code></pre>
-<p>Per creare un'app vera e propria si usa <code>flet build</code>:</p>
-<table>
-<thead>
-<tr>
-<th>Comando</th>
-<th>Risultato</th>
-<th>Serve</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>flet build macos</code></td>
-<td>app per Mac</td>
-<td>Xcode completo e CocoaPods (<code>brew install cocoapods</code>)</td>
-</tr>
-<tr>
-<td><code>flet build windows</code></td>
-<td>app per Windows</td>
-<td>Visual Studio con gli strumenti C++</td>
-</tr>
-<tr>
-<td><code>flet build linux</code></td>
-<td>app per Linux</td>
-<td>i pacchetti di sviluppo GTK</td>
-</tr>
-<tr>
-<td><code>flet build ipa</code></td>
-<td>iPad e iPhone</td>
-<td>un Mac con Xcode e un account Apple Developer</td>
-</tr>
-<tr>
-<td><code>flet build apk</code></td>
-<td>Android</td>
-<td>niente: Flet scarica l'Android SDK</td>
-</tr>
-</tbody>
-</table>
-<p>Per provare l'app su iPad o Android senza compilarla: installa l'app <strong>Flet</strong> dallo store, avvia <code>flet run --ios</code> (o <code>--android</code>) e inquadra il QR code.</p>
-<p>Dalla riga di comando, senza app, si producono i PDF:</p>
-<pre><code>python modernsheet_cli.py brano.chs -o pdf/              # un PDF per brano
-python modernsheet_cli.py *.chs --theme clean -t 3       # tema Clean, trasposto di 3 semitoni
-python modernsheet_cli.py --check *.chs                  # solo controllo degli errori
-</code></pre>
+<h2 id="installare-modern-sheet">Installare Modern Sheet<a class="headerlink" href="#installare-modern-sheet">#</a></h2>
+<p>Scarica l'app per macOS, Windows, Linux o Android dalla pagina <a href="/it/download/">Download</a>, che spiega anche come aprirla la prima volta. Le versioni per iPad e iPhone arriveranno sull'App Store.</p>
 <h2 id="la-libreria">La libreria<a class="headerlink" href="#la-libreria">#</a></h2>
 <p>Al primo avvio la libreria contiene la cartella <strong>examples</strong> con i brani di esempio: sono un buon modo per vedere tutte le funzioni. I tuoi brani vanno accanto, in cartelle a piacere.</p>
 <ul>
@@ -147,7 +98,7 @@ python modernsheet_cli.py --check *.chs                  # solo controllo degli 
 <h2 id="leggere-e-modificare-un-brano">Leggere e modificare un brano<a class="headerlink" href="#leggere-e-modificare-un-brano">#</a></h2>
 <p>Toccando una card il brano si apre in <strong>modalità vista</strong>: solo lo spartito, con le opzioni in alto.</p>
 <ul>
-<li><strong>Trasposizione</strong> – / +: cambia sigle e armature; <strong>Real Book</strong> o <strong>Clean</strong>; <strong>Griglia</strong> (battute tutte uguali) o <strong>Riempi</strong> (un brano o una sezione possono fissarne una nel sorgente con <code>{bar_width}</code>); <strong>sigle jazz</strong>; <strong>colori per sezione</strong>.</li>
+<li><strong>Trasposizione</strong> – / +: cambia sigle e armature; <strong>Fake Book</strong> o <strong>Clean</strong>; <strong>Griglia</strong> (battute tutte uguali) o <strong>Riempi</strong> (un brano o una sezione possono fissarne una nel sorgente con <code>{bar_width}</code>); <strong>sigle jazz</strong>; <strong>Do Re Mi</strong> (accordi e tonalità con i nomi italiani; il sorgente resta con le lettere); <strong>colori per sezione</strong>.</li>
 <li><strong>Pentagramma / Entrambi / Tablatura</strong>: per chi suona la chitarra, le parti in notazione anche in <strong>tablatura</strong>, sotto il pentagramma o al suo posto (con il ritmo sotto i numeri). Corda e tasto li sceglie l'app, per restare in una posizione comoda; con <code>{capo}</code> i tasti partono dal capotasto. Dove serve si corregge nel brano: <code>{tab_position: 5}</code> (la mano attorno al 5° tasto), <code>~3</code> dopo una nota (quella corda), <code>{tuning: drop D}</code> (accordatura, anche basso e ukulele).</li>
 <li><strong>⛶ Schermo intero</strong>: restano solo le pagine. Per uscire c'è il pulsante in alto a destra, oppure il tasto <strong>Esc</strong>.</li>
 <li>Le frecce, Pagina su/giù, lo spazio e le <strong>pedaliere Bluetooth</strong> girano le pagine.</li>
@@ -160,23 +111,24 @@ python modernsheet_cli.py --check *.chs                  # solo controllo degli 
 <li>l'anteprima si aggiorna mentre scrivi; i <strong>warning</strong> sono elencati sotto l'editor e toccandoli si va alla riga;</li>
 <li>una <strong>scheda per ogni MusicXML</strong> citato dal brano, in <strong>sola lettura</strong>: il file si vede già indentato e colorato, e il pulsante <strong>Converti in note nel brano</strong> scrive le sue battute nel <code>.chs</code> come note (<code>{start_of_notes}</code>), al posto del riferimento, che resta come commento per traccia (il file MusicXML non viene toccato); controlla l'anteprima e salva;</li>
 <li><strong>Salva</strong> (⌘S / Ctrl+S) diventa verde quando c'è qualcosa da salvare; <strong>Salva con nome</strong> crea una copia accanto al brano;</li>
-<li><strong>Esporta PDF</strong>; il <strong>cestino rosso</strong> elimina il brano e i suoi MusicXML, dopo una conferma con l'elenco dei file.</li>
+<li><strong>Esporta PDF</strong>; su iPad, iPhone e Android <strong>Condividi</strong> manda il PDF o il sorgente <code>.chs</code> a Mail, File, AirDrop, WhatsApp…; <em>Brano con MusicXML (.zip)</em> esporta il brano insieme ai suoi MusicXML; il <strong>cestino rosso</strong> elimina il brano e i suoi MusicXML, dopo una conferma con l'elenco dei file.</li>
 </ul>
 <p>L'app scrive da sola nel file le date <code>{created}</code> e <code>{modified}</code>.</p>
 <h2 id="sincronizzazione">Sincronizzazione<a class="headerlink" href="#sincronizzazione">#</a></h2>
 <p>La libreria è sempre <strong>locale</strong>: l'app funziona anche senza rete. In <em>Impostazioni › Sincronizzazione</em> puoi tenerla allineata con:</p>
 <ul>
-<li><strong>Google Drive</strong>: <em>Collega</em>, poi inserisci il codice mostrato su google.com/device. L'app vede solo i file che crea lei (permesso <code>drive.file</code>), in una cartella "Modern Sheet" del tuo Drive (il nome si può cambiare).</li>
+<li><strong>Google Drive</strong>: <em>Collega</em>, poi inserisci il codice mostrato su google.com/device. L'app vede solo i file che crea lei, in una cartella "Modern Sheet" del tuo Drive (il nome si può cambiare).</li>
 <li><strong>una cartella</strong>: per esempio dentro iCloud Drive, Dropbox o Google Drive per desktop, il cui programma la porta sugli altri computer.</li>
 </ul>
 <p>La sincronizzazione parte all'avvio, dopo ogni salvataggio, ogni 5 minuti e con <em>Sincronizza ora</em>. Non si perde nulla: se lo stesso brano cambia su due dispositivi restano <strong>entrambe le versioni</strong>, e i file cancellati finiscono nel <strong>cestino</strong> (dell'app o di Drive). Collegando un secondo dispositivo, l'app scarica prima quello che c'è già e poi aggiunge solo i brani mancanti.</p>
 <h2 id="importare-brani">Importare brani<a class="headerlink" href="#importare-brani">#</a></h2>
 <ul>
-<li><strong>Importa file .chs</strong> (icona nella barra della libreria): copia un <code>.chs</code> nella cartella aperta, con i MusicXML che cita, senza sovrascrivere nulla.</li>
-<li><strong>Importa da chordsheet.com</strong>: accedi al tuo account, scegli i brani da un elenco e vengono importati convertiti. Dettagli nella pagina <a href="/it/chordsheet/">chordsheet.com</a>.</li>
+<li><strong>Importa file .chs o .zip</strong> (icona nella barra della libreria): copia un <code>.chs</code> nella cartella aperta, con i MusicXML che cita, senza sovrascrivere nulla. Uno <strong><code>.zip</code></strong> con un brano porta con sé anche i suoi MusicXML (utile su iPad e Android); uno <code>.zip</code> con più brani, per esempio una libreria esportata, finisce in una nuova cartella con il nome dell'archivio.</li>
+<li><strong>Esporta la libreria</strong> (<em>Impostazioni › Cartelle</em>): tutti i brani e i MusicXML in un <code>.zip</code>, con le cartelle: un backup, o il modo per passare a un altro dispositivo.</li>
+<li><strong>Da chordsheet.com</strong>: chi ha i brani su Chord Sheet Maker può convertirli con uno <a href="https://github.com/supermariolabs/modernsheet/tree/main/tools/chordsheet_import">strumento a riga di comando</a> (richiede Python), poi aprirli nell'app come gli altri.</li>
 </ul>
 <h2 id="impostazioni">Impostazioni<a class="headerlink" href="#impostazioni">#</a></h2>
-<p>Lingua (italiano o inglese), cartella dei brani, cartella per i PDF, opzioni di visualizzazione predefinite (tema, griglia, spazio fra le righe, sigle, colori) e sincronizzazione. Un brano può fissare il suo spazio fra le righe con <code>{row_spacing}</code>. Le impostazioni restano salvate sul dispositivo.</p>
+<p>Lingua (italiano o inglese), cartella dei brani, cartella per i PDF, opzioni di visualizzazione predefinite (tema, griglia, spazio fra le righe, sigle, nomi delle note, colori) e sincronizzazione. Su <strong>iPad, iPhone e Android</strong> la libreria sta dentro l'app: su iPad e iPhone la trovi nell'app <strong>File</strong> in <em>Sul mio iPad › Modern Sheet</em> (puoi trascinarci dentro i brani; con Google Drive è la cartella <em>Modern Sheet (Google Drive · account)</em>); le cartelle non si scelgono e si sincronizza con Google Drive. Un brano può fissare il suo spazio fra le righe con <code>{row_spacing}</code>. Le impostazioni restano salvate sul dispositivo.</p>
 </main>
 <footer class="foot">
   <div class="wrap">

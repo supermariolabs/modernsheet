@@ -2,7 +2,7 @@
 import pytest
 
 from modernsheet import parse
-from modernsheet.importers import from_chordsheet_com
+from chordsheet_import import from_chordsheet_com
 
 from helpers import SONGS, V1_SONG
 

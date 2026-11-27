@@ -13,13 +13,14 @@ def env(name: str) -> str | None:
     return os.environ.get(f"MODERNSHEET_{name}") or os.environ.get(f"CHORDSHEET_{name}")
 
 
-LAYOUT_KEYS = ("theme", "bar_width", "row_spacing", "notation", "chord_symbols", "label_colors")
+LAYOUT_KEYS = ("theme", "bar_width", "row_spacing", "notation", "chord_symbols", "note_names", "label_colors")
 CHOICES = {
     "theme": ("realbook", "clean"),
     "bar_width": ("uniform", "fit"),
     "row_spacing": ("compact", "normal", "wide", "extra"),
     "notation": ("staff", "both", "tab"),
     "chord_symbols": ("text", "jazz"),
+    "note_names": ("letters", "italian"),
     "label_colors": ("theme", "by_type"),
     "library_view": ("cards", "list"),
     "sort_by": ("title", "artist", "key", "tempo", "modified"),
@@ -37,6 +38,7 @@ class Settings:
     row_spacing: str = "normal"         # space between rows (a song's {row_spacing} wins)
     notation: str = "staff"             # notated bars: staff, staff + guitar tablature, tablature
     chord_symbols: str = "text"
+    note_names: str = "letters"         # chord names on the sheet: letters (C D E) or italian (Do Re Mi)
     label_colors: str = "theme"
     library_view: str = "cards"         # library screen: cards or list
     sort_by: str = "title"
@@ -46,7 +48,6 @@ class Settings:
     sync_folder: str | None = None      # folder mode: the remote folder (e.g. inside iCloud Drive)
     sync_account: str | None = None     # gdrive mode: the Google account (e-mail) the library belongs to
     sync_drive_folder: str = "Modern Sheet"   # gdrive mode: name of the app's folder in the Drive root
-    csm_email: str = ""                       # chordsheet.com login remembered for the import (never the password)
 
     def layout_options(self) -> dict:
         """Keyword arguments for `layout()`."""

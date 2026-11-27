@@ -1,7 +1,7 @@
 [project]
 name = "modernsheet"
-version = "0.46.1"
-description = "Modern Sheet: chord sheets (.chs) → lead sheets in Real Book style: CLI, PDF and Flet app"
+version = "0.53.0"
+description = "Modern Sheet: chord sheets (.chs) → lead sheets in Fake Book style: CLI, PDF and Flet app"
 readme = "README.md"
 license = "GPL-3.0-or-later"
 license-files = ["LICENSE"]
@@ -27,7 +27,7 @@ dev = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["src"]
+pythonpath = ["src", "tools"]
 
 [tool.flet]
 org = "app.modernsheet"        # reverse of the domain modernsheet.app
@@ -39,6 +39,13 @@ copyright = "Copyright (C) 2026"
 # App icon: src/assets/icon.png (+ icon_ios / icon_windows / icon_linux / icon_web.png), made from
 # "MS icon.jpeg" by tools/make_icons.py; this colour is the tile behind the logo (iOS, Android, macOS)
 icon_background = "#F6F1E6"
+
+# iPad/iPhone: the library (in the app's Documents folder) is visible in the Files app, and .chs files
+# can be opened in place from there (SPEC §8.6, store mode)
+[tool.flet.ios.info]
+UIFileSharingEnabled = true
+LSSupportsOpeningDocumentsInPlace = true
+ITSAppUsesNonExemptEncryption = false
 
 [tool.flet.app]
 path = "src"

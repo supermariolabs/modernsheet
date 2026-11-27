@@ -1,6 +1,6 @@
 # Brano originale: guida alle basi del formato .chs
 #   intestazione completa, opzioni per brano ({row_spacing}: spazio fra le righe; {bar_width}, anche per una sola sezione), righe con e senza stanghette, durate, continuazioni,
-#   stop, battuta vuota, accordi con basso, tonalità minore, {comment} (non stampato)
+#   stop, battuta vuota, accordi con basso, tonalità minore, {c: …} (riga stampata, come in ChordPro)
 {format: v1}
 {title: Formato base}
 {subtitle: guida alle basi del .chs}
@@ -14,9 +14,9 @@
 {row_spacing: wide}
 {label_colors: by_type}
 {bars_per_line: 4}
-{comment: questo commento resta nel file ma non viene stampato}
 
 {start_of_intro: Intro}
+{c: Solo pianoforte}
 # Modalità implicita (nessuna |): ogni accordo dura una battuta, o la durata scritta in movimenti
 [Am] [Am/G] [F:2] [E7:2] [Am]
 {end_of_intro}

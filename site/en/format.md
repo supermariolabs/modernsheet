@@ -14,8 +14,10 @@ A song is a UTF-8 text file with the `.chs` extension. It holds **directives** i
 
 ## General rules
 
-- Lines starting with `#` are **comments** (even when meant as lyrics: "#1 in the charts" goes after the chord, `| [C]#1 in the charts |`); blank lines do not count.
+- Lines starting with `#` are **comments** (even when meant as lyrics: "#1 in the charts" is written `\#1 in the charts`, or after the chord); blank lines do not count.
+- The characters that have a meaning (`|` `[` `]` `{` `}` `"`, and `#` at the start of a line) are written as text with a backslash in front: `| [C]her \| him |`, `[G]\[spoken\]`, `{c: Chorus \{x2\}}`, `[A "\"loud\""]`, `\\` for the backslash itself.
 - Lyrics live in bars, after a chord or a bar line: a line of text only, with no chords and no bar lines, has no bar to belong to and gives a warning. For a line of text in the sheet there is `{text: …}`.
+- Directive names and values are in **English**, as in ChordPro (`{title}`, `{key}`, `{bar_width: fit}`), plus the musical terms used everywhere (`volta`, `fermata`, `segno`, `coda`, `fine`). Section **kinds** and **names** are free, in any language.
 - A directive is `{name}` or `{name: value}`: on a line of its own or **inside** a line of music. Directive names ignore case, chord names do not.
 - Music goes **inside a section** (`{start_of_…}` … `{end_of_…}`); outside one, the app opens an untitled section and says so.
 - A file never "breaks": what cannot be understood becomes a **warning** with its line number, shown under the editor, and the rest is drawn anyway (see [Diagnostics](#diagnostics)).
@@ -43,7 +45,7 @@ A song is a UTF-8 text file with the `.chs` extension. It holds **directives** i
 
 ## Header
 
-The directives at the top of the file describe the song. Those that drive the layout (`bar_width`, `notation`, `bars_per_line`) apply to the whole song, but written **inside a section** they apply to that section only.
+The directives at the top of the file, before the first section, describe the song and apply to all of it. Those that drive the layout (`bar_width`, `notation`, `bars_per_line`) can also be written further down: **between two sections** they hold from there on, **inside a section** for that section only. The others (title, tempo, colours, tuning…) belong in the header: written further down they give a warning.
 
 | Directive | Example | Notes |
 |---|---|---|
@@ -61,7 +63,7 @@ The directives at the top of the file describe the song. Those that drive the la
 | `label_colors`, `section_colors` | `{label_colors: by_type}` | Colours of the section boxes. See [Section colours](#section-colours). |
 | `notation`, `tuning`, `tab_position` | `{notation: both}` | Staff and/or tablature for bars with notes. See [Tablature](#guitar-tablature). |
 | `created`, `modified` | | Creation and last-save dates: written by the app, no need to touch them. |
-| `comment` (or `c`) | `{comment: …}` | Comment, not printed. |
+| `comment` (or `c`) | `{c: Guitar only}` | A **printed** line of text, like `{text}` (and as in ChordPro). For a note that is not printed: a line starting with `#`. |
 
 ## Sections
 
@@ -151,9 +153,9 @@ In `section_colors` a key can be a section's **label** (`Chorus`), its **kind** 
 
 ## Chords and durations
 
-- `[Am7]` a chord: root (`A`–`G` with `#` or `b`), free quality (`m`, `maj7`, `m7b5`, `7#9`, `sus4`, `dim7`, `6/9`…) and an optional bass after `/` (`[C/E]`). On the sheet `b` and `#` become ♭ and ♯.
-- `[C:2]` lasts 2 **beats** (quarter notes); the shortest is half a beat (`[G:1.5]`, `[D:0.5]`).
-- In a bar, chords without a duration share the remaining time equally, rounded to half beats; the last one takes the rest. In 4/4: `| [C] [G] |` = 2 + 2; `| [C] [G] [D] |` = 1.5 + 1.5 + 1; `| [C:3] [G] [D] |` = 3 + 0.5 + 0.5.
+- `[Am7]` a chord: root (`A`–`G` with `#` or `b`), free quality (`m`, `maj7`, `m7b5`, `7#9`, `sus4`, `dim7`, `6/9`…) and an optional bass after `/` (`[C/E]`). On the sheet `b` and `#` become ♭ and ♯, and equivalent spellings all look the same: `Maj7`, `M7`, `Δ` as `maj7`; `-`, `min` as `m`; `ø` as `m7b5`; `°` as `dim`; `+` as `aug` (or all as the jazz symbols Δ – ø ° +, with the *Jazz symbols* option).
+- `[C:2]` lasts 2 notes of the time signature's **denominator**: 2 quarters in 4/4 and 3/4, 2 eighths in 6/8 and 7/8, 2 halves in 2/2 (`[C:3] [G:3]` splits a 6/8 bar in half). The shortest is half a unit (`[G:1.5]`, `[D:0.5]`).
+- In a bar, chords without a duration share the remaining time equally, rounded to half a unit; the last one takes the rest. In 4/4: `| [C] [G] |` = 2 + 2; `| [C] [G] [D] |` = 1.5 + 1.5 + 1; `| [C:3] [G] [D] |` = 3 + 0.5 + 0.5.
 - `[/]` is a **stop** (silence until the next chord; also with a duration: `[/:2]`); `[%]` says explicitly "no new chord".
 - A bar **without chords** (`| |` or lyrics only) carries the previous chord on and shows as **%**.
 - The **lyrics** after a chord are sung on that chord; lyrics before the first chord of a bar go with that first chord.
@@ -200,7 +202,7 @@ They combine with each other and with the duration, in this order: push, name (o
 {volta: 2} [Gm7] [C7] | [F7] ||
 ```
 
-An ending closes by itself at the `:|` (with the hook), when the next ending opens, with `{volta_end}` or **at the end of the file's line**. The 2nd ending starts a new row, right-aligned under the 1st, and the last ending gets the double bar line.
+An ending closes by itself at the `:|` (with the hook), when the next ending opens, with `{volta_end}` or at the end of the section; line breaks in the file do not close it, so a long ending can take several lines. The 2nd ending starts a new row, right-aligned under the 1st, and the last ending gets the double bar line.
 
 ## Key and time changes
 
@@ -220,14 +222,14 @@ Line breaks in the file **do not** decide the rows of the sheet: bars per row do
 | Write | Effect |
 |---|---|
 | `{bars_per_line: 6}` inside a section | 6 bars per row in that section |
-| `{bars_per_line: 6}` outside sections | 6 bars per row from there on |
+| `{bars_per_line: 6}` between two sections | 6 bars per row from there on (the same for `{bar_width}` and `{notation}`) |
 | `{bars_per_line}` (no value) | back to the settings' value (4) |
 | `{br}` in a row of bars | the bar it is in starts a new row |
 | `{bar_width: uniform}` | **Grid**: all bars equally wide and aligned in columns, even across sections; a crowded bar takes two places instead of shrinking the chords |
 | `{bar_width: fit}` | **Fit**: each bar as wide as it needs (in proportion to its beats); a row wraps only when the bars do not fit |
 | `{row_spacing: wide}` | more space between rows (`compact`, `normal`, `wide`, `extra`, or `50%`–`300%`) |
 
-`bar_width` and `bars_per_line` in the header apply to the song, inside a section to that section only; in the app, the settings and the bar above the sheet give the default.
+`bar_width` and `bars_per_line` in the header apply to the song, between two sections from there on, inside a section to that section only; in the app, the settings and the bar above the sheet give the default.
 
 ## Navigation signs
 
@@ -366,6 +368,3 @@ The app never stops on an error: it shows the sheet with what it can read and, u
 
 `{format: v1}` declares the version. Additions land in the current version without changing the meaning of existing files; should the syntax ever change incompatibly, the app will still read v1 files and offer to upgrade them.
 
----
-
-For every detail (layout rules, special cases) see the [full specification]({{repo}}/blob/main/SPEC.md) in the repository (in Italian).

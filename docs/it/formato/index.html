@@ -24,7 +24,7 @@
     <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Menu">
     <label for="nav-toggle" class="nav-button" aria-hidden="true"><span></span><span></span><span></span></label>
     <nav class="menu">
-      <a href="/it/">Home</a><a href="/it/download/">Download</a><a href="/it/guida/">Guida all&#x27;app</a><a href="/it/formato/" aria-current="page">Il formato .chs</a><a href="/it/chordsheet/">chordsheet.com</a><a href="/it/changelog/">Changelog</a>
+      <a href="/it/">Home</a><a href="/it/download/">Download</a><a href="/it/guida/">Guida all&#x27;app</a><a href="/it/formato/" aria-current="page">Il formato .chs</a><a href="/it/changelog/">Changelog</a>
       <a class="lang" href="/en/format/" hreflang="en">English</a>
       <a class="gh" href="https://github.com/supermariolabs/modernsheet">GitHub</a>
     </nav>
@@ -62,8 +62,10 @@
 </div>
 <h2 id="regole-generali">Regole generali<a class="headerlink" href="#regole-generali">#</a></h2>
 <ul>
-<li>Le righe che iniziano con <code>#</code> sono <strong>commenti</strong> (anche se volevano essere testo: "#1 in classifica" va scritto dopo l'accordo, <code>| [C]#1 in classifica |</code>); le righe vuote non contano.</li>
+<li>Le righe che iniziano con <code>#</code> sono <strong>commenti</strong> (anche se volevano essere testo: "#1 in classifica" si scrive <code>\#1 in classifica</code>, o dopo l'accordo); le righe vuote non contano.</li>
+<li>I caratteri che hanno un significato (<code>|</code> <code>[</code> <code>]</code> <code>{</code> <code>}</code> <code>"</code>, e <code>#</code> a inizio riga) si scrivono come testo con una barra rovesciata davanti: <code>| [C]lei \| lui |</code>, <code>[G]\[parlato\]</code>, <code>{c: Ritornello \{x2\}}</code>, <code>[A "\"forte\""]</code>, <code>\\</code> per la barra stessa.</li>
 <li>Il testo cantato sta nelle battute, dopo un accordo o una stanghetta: una riga di solo testo, senza accordi né stanghette, non ha una battuta a cui appartenere e dà un avviso. Per una riga di testo nello spartito c'è <code>{text: …}</code>.</li>
+<li>Nomi delle direttive e valori sono in <strong>inglese</strong>, come in ChordPro (<code>{title}</code>, <code>{key}</code>, <code>{bar_width: fit}</code>), più i termini musicali d'uso internazionale (<code>volta</code>, <code>fermata</code>, <code>segno</code>, <code>coda</code>, <code>fine</code>). I <strong>tipi</strong> e i <strong>nomi</strong> delle sezioni sono liberi, anche in italiano.</li>
 <li>Una direttiva è <code>{nome}</code> oppure <code>{nome: valore}</code>: può stare su una riga propria o <strong>dentro</strong> una riga di musica. I nomi delle direttive non distinguono maiuscole e minuscole, quelli degli accordi sì.</li>
 <li>La musica sta <strong>dentro una sezione</strong> (<code>{start_of_…}</code> … <code>{end_of_…}</code>); fuori, l'app ne apre una senza titolo e lo segnala.</li>
 <li>Il file non si "rompe" mai: ciò che non si capisce diventa un <strong>avviso</strong> (warning) con il numero di riga, mostrato sotto l'editor, e il resto si disegna comunque (vedi <a href="#diagnostica">Diagnostica</a>).</li>
@@ -192,7 +194,7 @@
 <line x1="396.40" y1="326.10" x2="396.40" y2="348.50" stroke="#6b6b6b" stroke-width="3.20" stroke-linecap="butt"/>
 </svg></figure></div>
 <h2 id="intestazione">Intestazione<a class="headerlink" href="#intestazione">#</a></h2>
-<p>Le direttive in cima al file descrivono il brano. Quelle che regolano l'impaginazione (<code>bar_width</code>, <code>notation</code>, <code>bars_per_line</code>) valgono per tutto il brano, ma scritte <strong>dentro una sezione</strong> valgono solo per quella.</p>
+<p>Le direttive in cima al file, prima della prima sezione, descrivono il brano e valgono per tutto il brano. Quelle che regolano l'impaginazione (<code>bar_width</code>, <code>notation</code>, <code>bars_per_line</code>) si possono scrivere anche più avanti: <strong>fra due sezioni</strong> valgono da lì in avanti, <strong>dentro una sezione</strong> solo per quella. Le altre (titolo, tempo, colori, accordatura…) vanno nell'intestazione: scritte più in basso danno un avviso.</p>
 <table>
 <thead>
 <tr>
@@ -274,8 +276,8 @@
 </tr>
 <tr>
 <td><code>comment</code> (o <code>c</code>)</td>
-<td><code>{comment: …}</code></td>
-<td>Commento, non stampato.</td>
+<td><code>{c: Solo chitarra}</code></td>
+<td>Riga di testo <strong>stampata</strong>, come <code>{text}</code> (e come in ChordPro). Per una nota che non va stampata: una riga che inizia con <code>#</code>.</td>
 </tr>
 </tbody>
 </table>
@@ -628,9 +630,9 @@
 </svg></figure></div>
 <h2 id="accordi-e-durate">Accordi e durate<a class="headerlink" href="#accordi-e-durate">#</a></h2>
 <ul>
-<li><code>[Am7]</code> un accordo: radice (<code>A</code>–<code>G</code> con <code>#</code> o <code>b</code>), qualità libera (<code>m</code>, <code>maj7</code>, <code>m7b5</code>, <code>7#9</code>, <code>sus4</code>, <code>dim7</code>, <code>6/9</code>…) e basso facoltativo dopo <code>/</code> (<code>[C/E]</code>). Nello spartito <code>b</code> e <code>#</code> diventano ♭ e ♯.</li>
-<li><code>[C:2]</code> dura 2 <strong>movimenti</strong> (quarti); la durata minima è mezzo movimento (<code>[G:1.5]</code>, <code>[D:0.5]</code>).</li>
-<li>In una battuta, gli accordi senza durata si dividono il tempo che resta in parti uguali, arrotondate al mezzo movimento; l'ultimo prende il resto. In 4/4: <code>| [C] [G] |</code> = 2 + 2; <code>| [C] [G] [D] |</code> = 1,5 + 1,5 + 1; <code>| [C:3] [G] [D] |</code> = 3 + 0,5 + 0,5.</li>
+<li><code>[Am7]</code> un accordo: radice (<code>A</code>–<code>G</code> con <code>#</code> o <code>b</code>), qualità libera (<code>m</code>, <code>maj7</code>, <code>m7b5</code>, <code>7#9</code>, <code>sus4</code>, <code>dim7</code>, <code>6/9</code>…) e basso facoltativo dopo <code>/</code> (<code>[C/E]</code>). Nello spartito <code>b</code> e <code>#</code> diventano ♭ e ♯, e le scritture equivalenti si vedono tutte allo stesso modo: <code>Maj7</code>, <code>M7</code>, <code>Δ</code> come <code>maj7</code>; <code>-</code>, <code>min</code> come <code>m</code>; <code>ø</code> come <code>m7b5</code>; <code>°</code> come <code>dim</code>; <code>+</code> come <code>aug</code> (o tutte nei simboli jazz Δ – ø ° +, con l'opzione <em>Simboli jazz</em>).</li>
+<li><code>[C:2]</code> dura 2 note del <strong>denominatore del metro</strong>: 2 quarti in 4/4 e 3/4, 2 ottavi in 6/8 e 7/8, 2 minime in 2/2 (<code>[C:3] [G:3]</code> divide a metà una battuta di 6/8). La durata minima è mezza unità (<code>[G:1.5]</code>, <code>[D:0.5]</code>).</li>
+<li>In una battuta, gli accordi senza durata si dividono il tempo che resta in parti uguali, arrotondate a mezza unità; l'ultimo prende il resto. In 4/4: <code>| [C] [G] |</code> = 2 + 2; <code>| [C] [G] [D] |</code> = 1,5 + 1,5 + 1; <code>| [C:3] [G] [D] |</code> = 3 + 0,5 + 0,5.</li>
 <li><code>[/]</code> è uno <strong>stop</strong> (silenzio fino all'accordo seguente; anche con durata: <code>[/:2]</code>); <code>[%]</code> dice esplicitamente "nessun accordo nuovo".</li>
 <li>Una battuta <strong>senza accordi</strong> (<code>| |</code> o solo testo) continua l'accordo precedente e si vede come <strong>%</strong>.</li>
 <li>Il <strong>testo</strong> dopo un accordo è quello cantato su quell'accordo; il testo prima del primo accordo di una battuta va con il primo accordo.</li>
@@ -867,7 +869,7 @@
 <line x1="246.50" y1="123.00" x2="246.50" y2="134.00" stroke="#0f0f0f" stroke-width="0.90" stroke-linecap="butt"/>
 <text x="249.50" y="133.00" fill="#0f0f0f" stroke="#0f0f0f" stroke-width="0.45" stroke-linejoin="round" style="font-family:'ms-Petaluma Script';font-size:10.00px" xml:space="preserve">2.</text>
 </svg></figure></div>
-<p>Una volta si chiude da sola al <code>:|</code> (con il gancio), all'apertura della volta seguente, con <code>{volta_end}</code> o <strong>a fine riga del file</strong>. La 2ª volta va a capo, allineata a destra sotto la 1ª, e l'ultima volta riceve la doppia stanghetta.</p>
+<p>Una volta si chiude da sola al <code>:|</code> (con il gancio), all'apertura della volta seguente, con <code>{volta_end}</code> o a fine sezione; gli a capo del file non la chiudono, quindi una volta lunga può stare su più righe. La 2ª volta va a capo, allineata a destra sotto la 1ª, e l'ultima volta riceve la doppia stanghetta.</p>
 <h2 id="cambi-di-tonalita-e-di-metro">Cambi di tonalità e di metro<a class="headerlink" href="#cambi-di-tonalita-e-di-metro">#</a></h2>
 <p><code>{key: …}</code> e <code>{time: …}</code> possono stare su una riga propria o subito dopo una stanghetta, e valgono dalla battuta seguente:</p>
 <div class="example"><pre><code class="language-chs">| [G7]ultimo giro || {key: Db} [Db]modulazione | [Gb] |
@@ -949,8 +951,8 @@
 <td>6 battute per riga in quella sezione</td>
 </tr>
 <tr>
-<td><code>{bars_per_line: 6}</code> fuori dalle sezioni</td>
-<td>6 battute per riga da lì in avanti</td>
+<td><code>{bars_per_line: 6}</code> fra due sezioni</td>
+<td>6 battute per riga da lì in avanti (lo stesso per <code>{bar_width}</code> e <code>{notation}</code>)</td>
 </tr>
 <tr>
 <td><code>{bars_per_line}</code> (senza valore)</td>
@@ -974,7 +976,7 @@
 </tr>
 </tbody>
 </table>
-<p><code>bar_width</code> e <code>bars_per_line</code> scritti nell'intestazione valgono per il brano, dentro una sezione solo per quella; nell'app le impostazioni e la barra sopra lo spartito danno il valore predefinito.</p>
+<p><code>bar_width</code> e <code>bars_per_line</code> nell'intestazione valgono per il brano, fra due sezioni da lì in avanti, dentro una sezione solo per quella; nell'app le impostazioni e la barra sopra lo spartito danno il valore predefinito.</p>
 <h2 id="segni-di-navigazione">Segni di navigazione<a class="headerlink" href="#segni-di-navigazione">#</a></h2>
 <table>
 <thead>
@@ -1559,8 +1561,6 @@
 </ul>
 <h2 id="versioni-del-formato">Versioni del formato<a class="headerlink" href="#versioni-del-formato">#</a></h2>
 <p><code>{format: v1}</code> dichiara la versione. Le aggiunte arrivano nella versione corrente senza cambiare il significato dei file esistenti; se un giorno la sintassi cambiasse in modo incompatibile, l'app saprà ancora leggere i file v1 e offrirà di aggiornarli.</p>
-<hr />
-<p>Per tutti i dettagli (regole di impaginazione, casi particolari) c'è la <a href="https://github.com/supermariolabs/modernsheet/blob/main/SPEC.md">specifica completa</a> nel repository.</p>
 </main>
 <footer class="foot">
   <div class="wrap">

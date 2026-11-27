@@ -24,7 +24,7 @@
     <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Menu">
     <label for="nav-toggle" class="nav-button" aria-hidden="true"><span></span><span></span><span></span></label>
     <nav class="menu">
-      <a href="/en/">Home</a><a href="/en/download/">Download</a><a href="/en/guide/">App guide</a><a href="/en/format/">The .chs format</a><a href="/en/chordsheet/">chordsheet.com</a><a href="/en/changelog/" aria-current="page">Changelog</a>
+      <a href="/en/">Home</a><a href="/en/download/">Download</a><a href="/en/guide/">App guide</a><a href="/en/format/">The .chs format</a><a href="/en/changelog/" aria-current="page">Changelog</a>
       <a class="lang" href="/it/changelog/" hreflang="it">Italiano</a>
       <a class="gh" href="https://github.com/supermariolabs/modernsheet">GitHub</a>
     </nav>
@@ -35,6 +35,44 @@
 <p>The released versions of Modern Sheet, newest first. The apps are on the
 <a href="/en/download/">Download</a> page; every version with built apps has its own
 <a href="https://github.com/supermariolabs/modernsheet/releases">release on GitHub</a>.</p>
+<h2 id="v0.53.0">0.53.0 — 27 November 2026<a class="headerlink" href="#v0.53.0">#</a></h2>
+<p><a href="https://github.com/supermariolabs/modernsheet/releases/tag/v0.53.0">Release on GitHub</a> · apps for macOS, Windows, Linux and Android</p>
+<p>Gathers versions 0.47 to 0.53, getting ready for 1.0 and the stores.</p>
+<p><strong>.chs format, final for 1.0</strong></p>
+<ul>
+<li><code>{comment}</code> and <code>{c}</code> are <strong>printed</strong>, as in ChordPro (like <code>{text}</code>); notes you don't want printed are
+  written with <code>#</code>.</li>
+<li><code>{bar_width}</code>, <code>{notation}</code> and <code>{bars_per_line}</code> written <strong>between sections</strong> hold from there on; inside a
+  section, for that section only. Song directives (title, key…) after the first section give a warning.</li>
+<li><code>:n</code> durations count notes of the time signature's <strong>denominator</strong>: quarters in 4/4, eighths in 6/8, halves in 2/2.</li>
+<li>An ending closes only with a sign (<code>:|</code>, the next ending, <code>{volta_end}</code>, the end of the section), never
+  because a line of the file ends.</li>
+<li>Special characters are written as text with a <strong>backslash</strong>: <code>\|</code>, <code>\[spoken\]</code>, <code>{c: Chorus \{x2\}}</code>, <code>\#1</code>.</li>
+<li>Keywords in English, as in ChordPro (<code>{volta_end: hook}</code>; <code>chiusa</code> gives a warning).</li>
+<li><strong>Equivalent chord spellings</strong> all look the same: <code>CMaj7</code> like <code>Cmaj7</code>, <code>F#-</code> like <code>F#m</code>, <code>Dø</code> like <code>Dm7b5</code>.</li>
+<li>The <code>.chs</code> extension is final.</li>
+</ul>
+<p><strong>Sheet</strong></p>
+<ul>
+<li><strong>Do Re Mi</strong>: chords and keys with Italian note names (a switch above the sheet and a default setting); the
+  song is still written with letters.</li>
+<li>The handwritten theme is now called <strong>Fake Book</strong>.</li>
+</ul>
+<p><strong>App</strong></p>
+<ul>
+<li><strong>Share</strong>: on iPad, iPhone and Android the PDF or the source go to Mail, Files, AirDrop, WhatsApp…</li>
+<li><strong>.zip archives</strong>: a song with its MusicXML files (<em>Song with MusicXML (.zip)</em>) and the <strong>whole library</strong>
+  (<em>Settings › Export the library</em>), as a backup or to change device; <em>Import</em> also takes <code>.zip</code> files.</li>
+<li>On <strong>iPad, iPhone and Android</strong> the library lives inside the app (on iPad and iPhone visible in the <strong>Files</strong>
+  app), syncs with Google Drive, and files come in and go out with Import and Share.</li>
+<li>Importing from chordsheet.com is no longer in the app: it is a separate tool, on GitHub.</li>
+<li>The <strong>macOS</strong> app is now signed and notarized by Apple: it opens without warnings.</li>
+</ul>
+<p><strong>Website</strong></p>
+<ul>
+<li>Privacy policy completed, with the contact <strong>privacy@modernsheet.app</strong>.</li>
+<li>The website is for people who use the app; developer details are on GitHub.</li>
+</ul>
 <h2 id="v0.46.1">0.46.1 — 25 November 2026<a class="headerlink" href="#v0.46.1">#</a></h2>
 <p><a href="https://github.com/supermariolabs/modernsheet/releases/tag/v0.46.1">Release on GitHub</a> · apps for macOS, Windows, Linux and Android</p>
 <ul>

@@ -37,6 +37,9 @@ TOKEN_RE = re.compile(
 DIRECTIVE_LINE_RE = re.compile(r"^\{([^}]*)\}$")
 META_KEYS = {"title", "subtitle", "artist", "composer", "tempo", "capo", "bar_width", "row_spacing", "label_colors",
              "section_colors"}
+# directives that describe the whole song: they belong in the header, before the first section
+SONG_ONLY = {"title", "subtitle", "artist", "composer", "tempo", "capo", "row_spacing", "label_colors",
+             "section_colors", "tuning"}
 HALF = 0.5
 START_MARKS = ("segno", "coda")                  # signs at the start of the next bar
 END_MARKS = ("to_coda", "fine", "dc", "ds")      # instructions at the end of the current bar
@@ -72,6 +75,24 @@ def format_stamp(when: datetime) -> str:
     return when.strftime("%Y-%m-%d %H:%M:%S")
 
 
+# Escapes (SPEC §2.1, §9b point 5): \| \[ \] \{ \} \" \\ \# write the character itself in lyrics, {text}/{c},
+# annotations and names. Each line is read with these sequences swapped for private-use characters,
+# which the grammar treats as plain text; unescape() puts the characters back in the finished song.
+ESCAPABLE = '|[]{}"\\#'
+_ESC = {ch: chr(0xE100 + i) for i, ch in enumerate(ESCAPABLE)}
+_UNESC = {v: k for k, v in _ESC.items()}
+
+
+def escape_line(line: str) -> str:
+    """The line with every backslash + escapable character replaced by its placeholder."""
+    return re.sub(r"\\(.)", lambda m: _ESC.get(m.group(1), m.group(0)), line)
+
+
+def unescape(text: str) -> str:
+    """Placeholders back to the characters they stand for."""
+    return "".join(_UNESC.get(c, c) for c in text) if text else text
+
+
 def split_directive(body: str) -> tuple[str, str]:
     name, _, value = body.partition(":")
     return name.strip().lower(), value.strip()
@@ -97,6 +118,9 @@ class Parser:
         self.notes: notes_mod.NoteReader | None = None   # inside {start_of_notes} … {end_of_notes}
         self.notes_row: list[Bar] = []           # bars of the last row of notes (for its w: line)
         self.tab_pos: int | None = None          # {tab_position: N}: hand position for the tablature
+        # {bar_width} / {notation} written between sections: they hold "from here on", for the sections
+        # that follow (in the header they are the song's, inside a section that section's only)
+        self.running: dict[str, str | None] = {"bar_width": None, "notation": None}
 
     # -- helpers ---------------------------------------------------------------
     def warn(self, msg: str) -> None:
@@ -195,8 +219,9 @@ class Parser:
                      strokes=tail.count(","), fermata="fermata" in marks, diamond="diamond" in marks, note=note)
 
     def chord(self, raw: str) -> tuple[str, float | None]:
-        """`Name:duration` → (transposed chord or None for %, duration in beats or None). Durations
-        are multiples of half a beat: the grid cannot place anything finer (SPEC §2.4)."""
+        """`Name:duration` → (transposed chord or None for %, duration in quarters or None). The
+        duration is written in notes of the time signature's denominator, multiples of half of one
+        (the grid cannot place anything finer): [C:3] in 6/8 = three eighths (SPEC §2.4)."""
         name, _, dur = raw.partition(":")
         name = name.strip()
         d = None
@@ -206,6 +231,9 @@ class Parser:
                 if d <= 0 or (d * 2) % 1:
                     self.warn(f"duration '{dur}' must be a positive multiple of 0.5")
                     d = max(HALF, round(d * 2) / 2)
+                # written in notes of the time signature's denominator (quarters in 4/4, eighths in 6/8,
+                # halves in 2/2: SPEC §2.4, §9b point 3); the engine counts in quarters
+                d = d * 4 / self.den
             except ValueError:
                 self.warn(f"invalid duration '{dur}'")
         if name not in ("/", "%") and not CHORD_RE.match(name):
@@ -218,9 +246,13 @@ class Parser:
     def directive(self, body: str) -> None:
         """Apply one `{name: value}`. A {key} or {time} before the first bar is the song's (header);
         once a bar exists it is always a change, attached to the next bar (pending), even in a song
-        without a header (the bars before it are then in C, 4/4, which becomes the song's). Many directives mean "this section" inside
-        a section and "the whole song" in the header ({bar_width}, {notation}, {bars_per_line})."""
+        without a header (the bars before it are then in C, 4/4, which becomes the song's).
+        Layout directives ({bar_width}, {notation}, {bars_per_line}): in the header the whole song's,
+        between sections from there on, inside a section that section's only (SPEC §2.10, §9b).
+        Song-wide directives (SONG_ONLY) after the first section still apply, with a warning."""
         name, value = split_directive(body)
+        if name in SONG_ONLY and self.song.sections:
+            self.warn(f"{{{name}}} applies to the whole song: write it in the header, before the first section")
         if name == "key":
             new = self.set_key(value)
             if "key" not in self.song.meta and not self.song.bars:
@@ -269,15 +301,19 @@ class Parser:
             if mode not in NOTATIONS:
                 self.warn(f"notation '{value}': expected staff, both or tab")
             elif self.section is not None:
-                self.section.notation = mode        # this section only; in the header: the whole song
+                self.section.notation = mode        # this section only
+            elif self.song.sections:
+                self.running["notation"] = mode     # between sections: from here on
             else:
-                self.song.meta["notation"] = mode
-        elif name == "bar_width" and self.section is not None:
+                self.song.meta["notation"] = mode   # header: the whole song
+        elif name == "bar_width" and (self.section is not None or self.song.sections):
             mode = value.strip().lower()
-            if mode in ("uniform", "fit"):
-                self.section.bar_width = mode       # this section only; in the header: the whole song
-            else:
+            if mode not in ("uniform", "fit"):
                 self.warn(f"bar_width '{value}': expected uniform or fit")
+            elif self.section is not None:
+                self.section.bar_width = mode       # this section only (in the header: the whole song, META_KEYS)
+            else:
+                self.running["bar_width"] = mode    # between sections: from here on
         elif name == "br":
             self.pending["br"] = True
         elif name == "volta":
@@ -285,7 +321,12 @@ class Parser:
             nums = [x.strip().rstrip(".") for x in value.split(",") if x.strip()] or ["1"]
             self.pending["volta"] = ", ".join(f"{x}." for x in nums)
         elif name == "volta_end":
-            self.close_volta("hook" if value.strip().lower() in ("hook", "closed", "chiusa") else "open")
+            how = value.strip().lower()
+            if how in ("closed", "chiusa"):          # synonyms of earlier versions: English only now (§9b point 6)
+                self.warn(f"volta_end '{value.strip()}': write {{volta_end: hook}}")
+            elif how not in ("", "hook"):
+                self.warn(f"volta_end '{value.strip()}': expected hook (closed bracket) or nothing (open)")
+            self.close_volta("hook" if how in ("hook", "closed", "chiusa") else "open")
         elif name == "row_spacing" and row_spacing_factor(value) is None:
             self.warn(f"row_spacing '{value}': expected compact, normal, wide, extra or a percentage (50%-300%)")
         elif name in META_KEYS:
@@ -318,7 +359,7 @@ class Parser:
             self.pending.setdefault("marks", []).append(name)
         elif name in END_MARKS:
             self.end_mark(name, value, self.song.bars[-1] if self.song.bars else None)
-        elif name == "text":
+        elif name in ("text", "comment", "c"):        # {comment}/{c}: printed, as in ChordPro (hidden: #)
             if self.section is None:
                 self.warn("{text} outside a section: ignored")
             elif value:
@@ -332,7 +373,7 @@ class Parser:
             self.reference(value)
         elif name == "musicxml":
             self.musicxml(value)
-        elif name in ("comment", "c", "format"):
+        elif name == "format":
             pass                          # format: read by formats.detect() before parsing
         else:
             self.warn(f"unknown directive '{name}'")
@@ -353,7 +394,8 @@ class Parser:
         if self.section is not None:
             self.warn(f"section '{self.section.label}' not closed before '{kind}'")
         self.section = Section(kind=kind, label=label or kind.replace("_", " ").capitalize(),
-                               key=self.key, bars_per_line=self.bpl)
+                               key=self.key, bars_per_line=self.bpl, bar_width=self.running["bar_width"],
+                               notation=self.running["notation"])
         self.song.sections.append(self.section)
 
     def reference(self, value: str) -> None:
@@ -682,7 +724,8 @@ class Parser:
             close(force=False)
         for name, value in ends:
             self.end_mark(name, value, self.song.bars[-1] if self.song.bars else None)
-        self.close_volta("open")
+        # an ending goes on past the end of the line: it closes at :|, at the next {volta}, at
+        # {volta_end} or at the end of the section (SPEC §2.7, §9b point 4)
 
     def notes_lyrics(self, text: str) -> None:
         """`w: …` under a row of notes: one syllable per note of the row just read (notes_row)."""
@@ -695,16 +738,18 @@ class Parser:
     # -- music lines -----------------------------------------------------------
     def resolve(self, bar: Bar) -> None:
         """Give every chord of a bar its start and duration: chords with `:n` keep it, the others
-        share what is left equally, rounded down to half beats, the last one taking the remainder
-        ([C] [G] in 3/4 → 1.5 + 1.5; [C] [F] [G] in 4/4 → 1 + 1 + 2)."""
+        share what is left equally, rounded down to half a note of the denominator, the last one
+        taking the remainder ([C] [G] in 3/4 → 1.5 + 1.5; [C] [F] [G] in 4/4 → 1 + 1 + 2). Durations
+        here are in quarters (the written ones were converted by chord())."""
         fixed = sum(e.dur for e in bar.events if e.dur is not None)
         free = [e for e in bar.events if e.dur is None]
         rest = bar.beats - fixed
         if rest < -1e-9:
-            self.warn(f"bar too long: {fixed:g} beats in {bar.num}/{bar.den}")
+            self.warn(f"bar too long: {fixed * bar.den / 4:g}/{bar.den} in {bar.num}/{bar.den}")   # in the written unit
             rest = 0
         if free:
-            share = int(rest / len(free) / HALF) * HALF
+            step = 2 / bar.den                    # half a note of the denominator, in quarters
+            share = int(rest / len(free) / step + 1e-9) * step
             for e in free[:-1]:
                 e.dur = share
             free[-1].dur = rest - share * (len(free) - 1)
@@ -771,7 +816,8 @@ class Parser:
         close(force=False)
         for name, value in ends:                 # only text after the last bar line: no bar was closed
             self.end_mark(name, value, self.song.bars[-1] if self.song.bars else None)
-        self.close_volta("open")          # an ending bracket never runs past its source line
+        # an ending goes on past the end of the line (closed by :|, the next {volta}, {volta_end} or the
+        # end of the section): line breaks in the file never change the music (SPEC §2.7, §9b point 4)
 
     def implicit_line(self, tokens: list[str]) -> None:
         """No bar lines: each chord lasts its duration (default: one bar) and
@@ -835,6 +881,7 @@ class Parser:
             line = raw.strip()
             if not line or line.startswith("#"):
                 continue
+            line = escape_line(line)               # \| \[ … are text from here on
             m = DIRECTIVE_LINE_RE.match(line)
             if m:
                 self.directive(m.group(1))
@@ -862,8 +909,26 @@ class Parser:
             self.warn(f"section '{self.section.label}' not closed at end of file")
         self.song.meta.setdefault("key", self.key)
         self.song.meta.setdefault("time", f"{self.num}/{self.den}")
+        self.restore_escapes()
         return self.song
 
+
+    def restore_escapes(self) -> None:
+        """Put the escaped characters back in every text of the song (see escape_line)."""
+        song = self.song
+        song.meta = {k: unescape(v) if isinstance(v, str) else v for k, v in song.meta.items()}
+        song.warnings[:] = [unescape(w) for w in song.warnings]
+        for sec in song.sections:
+            sec.label, sec.note, sec.ref_label = unescape(sec.label), unescape(sec.note), unescape(sec.ref_label)
+            sec.text_after = [unescape(t) for t in sec.text_after]
+        for b in song.bars:
+            b.text_before = [unescape(t) for t in b.text_before]
+            b.marks_end = [(n, unescape(v)) for n, v in b.marks_end]
+            for e in b.events:
+                e.lyric, e.note = unescape(e.lyric), unescape(e.note)
+            if b.notation:
+                for n in b.notation.notes:
+                    n.lyric = unescape(n.lyric)
 
 def parse(text: str, transpose: int = 0, base_dir: Path | str | None = None,
           files: dict[Path, str] | None = None) -> Song:

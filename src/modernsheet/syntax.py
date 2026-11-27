@@ -25,11 +25,12 @@ _NOTES_RE = re.compile(                # a row of bars inside {start_of_notes} �
     r"|(?P<text>\s+|.)"
 )
 _PIECE_RE = re.compile(
-    r"(?P<directive>\{[^}\n]*\}?)"
-    r"|(?P<chord>\[[^\]\n]*\]?)"
+    r"(?P<escape>\\[|\[\]{}\"\\#])"            # \| \[ … : the character as text (SPEC §2.1)
+    r"|(?P<directive>\{(?:\\.|[^}\n])*\}?)"
+    r"|(?P<chord>\[(?:\\.|[^\]\n])*\]?)"
     # a repeat end glued to a word ("Dico:|") is lyrics and a bar line, as in the parser (formats/v1.py)
     r"|(?P<bar>\|:|(?<![^\s\]|}]):\|(?:\s*x\d+)?|\|\||\|)"
-    r"|(?P<text>[^{\[|:\n]+|:)"
+    r"|(?P<text>[^{\[|:\n\\]+|:|\\)"           # stops at \ so that an escape is seen
 )
 _NAME_RE = re.compile(r"[A-Za-z_]*")
 
@@ -76,7 +77,7 @@ def tokens(text: str) -> list[tuple[str, str]]:
                 elif kind == "chord":
                     _chord(s, add)
                 else:
-                    add(kind, s)
+                    add("text" if kind == "escape" else kind, s)   # an escaped character is plain text
         add("text", eol)
         if stripped.startswith("{start_of_notes"):
             in_notes = True

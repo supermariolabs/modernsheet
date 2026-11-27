@@ -19,7 +19,7 @@ def test_settings_roundtrip_and_validation():
                  notation="both", chord_symbols="jazz", label_colors="by_type")
     assert Settings.from_json(s.to_json()) == s
     assert s.layout_options() == dict(theme="clean", bar_width="fit", row_spacing="wide", notation="both",
-                                      chord_symbols="jazz", label_colors="by_type")
+                                      chord_symbols="jazz", note_names="letters", label_colors="by_type")
     bad = Settings.from_json('{"theme": "neon", "row_spacing": "huge", "pdf_dir": 3, "library_root": "  ", "extra": 1}')
     assert bad == Settings()
     assert Settings.from_json(None) == Settings() == Settings.from_json("not json") == Settings.from_json("[1]")

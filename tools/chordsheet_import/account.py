@@ -1,9 +1,9 @@
 """Import from a chordsheet.com account: log in, list the user's chord sheets, read their sources.
 
-chordsheet.com has no API: this reads the same pages a browser does (standard library only, so it
-also works on iPad and Android). The password is used for the login and never stored; the session
-cookies live in memory only. Sources are read one at a time with a short pause, to be gentle with
-the site. The conversion itself is chordsheet_com.convert (SPEC §9).
+chordsheet.com has no API: this reads the same pages a browser does (standard library only). It is part
+of the command-line tool, not of the app (store rules on third-party logins, SPEC §8.6). The password is
+used for the login and never stored; the session cookies live in memory only. Sources are read one at a
+time with a short pause, to be gentle with the site. The conversion itself is convert.convert (SPEC §9).
 """
 from __future__ import annotations
 
@@ -16,8 +16,9 @@ import urllib.parse
 import urllib.request
 from dataclasses import dataclass
 
-from ..formats import parse
-from .chordsheet_com import convert
+from modernsheet.formats import parse
+
+from .convert import convert
 
 BASE = "https://www.chordsheet.com"
 USER_AGENT = "ModernSheet/1.0 (chordsheet.com import)"

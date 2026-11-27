@@ -332,7 +332,7 @@ def test_reference_shown_under_another_label():
 def test_reference_straight_to_one_ending():
     """{ref: Label volta N}: one pass through the section straight to its ending N, without the repeat,
     the other endings or the brackets; repeats outside the endings stay; no such ending: a warning."""
-    src = ("{start_of_chorus: Rit}\n|: [C] | [D] |\n{volta: 1} [E] :|\n{volta: 2} [F] | [G] ||\n| [A] |\n{end_of_chorus}\n"
+    src = ("{start_of_chorus: Rit}\n|: [C] | [D] |\n{volta: 1} [E] :|\n{volta: 2} [F] | [G] || {volta_end}\n| [A] |\n{end_of_chorus}\n"
            "{start_of_verse: V}\n|: [C] :|\n{end_of_verse}\n")
     s = parse(src + "{ref: Rit $volta 2 = Finale | dritti}\n{ref: Rit x2 $volta 1}\n{ref: V $volta 2}\n")
     rit, verse, fin, twice, whole = s.sections
@@ -364,7 +364,7 @@ def test_reference_once_without_repeats():
     """{ref: Label $once}: the section without repeats, each repeated part once; at a group of endings
     the last one (the way out), or ending N with `volta N`; combines with xN and = label."""
     src = ("{start_of_intro: I}\n|: [G] | [C] :| x3\n{end_of_intro}\n"
-           "{start_of_chorus: Rit}\n|: [C] | [D] |\n{volta: 1} [E] :|\n{volta: 2} [F] ||\n| [A] |\n|: [B] :|\n"
+           "{start_of_chorus: Rit}\n|: [C] | [D] |\n{volta: 1} [E] :|\n{volta: 2} [F] || {volta_end}\n| [A] |\n|: [B] :|\n"
            "{end_of_chorus}\n")
     s = parse(src + "{ref: I $once}\n{ref: Rit $once = Fine | piano}\n{ref: Rit $once $volta 1}\n{ref: Rit x2 $once}\n"
                     "{ref: Rit $volta 3 $once}\n")
@@ -445,3 +445,119 @@ def test_repeat_end_glued_to_lyrics_is_text():
     assert b[3].repeat_end == 2                              # [G]:| right after a chord
     assert b[5].repeat_end == 2                              # right after a directive
     assert b[6].repeat_end == 3                              # at the start of a line
+
+
+def test_comment_is_printed_like_chordpro():
+    """{comment: …} and {c: …} print a line of text, as in ChordPro (same as {text}); hidden notes are #."""
+    s = parse("{start_of_verse: V}\n{c: Solo chitarra}\n# nascosto\n| [C] |\n{comment: Tutti}\n| [G] |\n{end_of_verse}\n")
+    assert s.warnings == [] and [b.text_before for b in s.bars] == [["Solo chitarra"], ["Tutti"]]
+    texts = [op[3] for op in layout(s).pages[0] if op[0] == "text"]
+    assert "Solo chitarra" in texts and "Tutti" in texts and not any("nascosto" in t for t in texts)
+
+
+def test_layout_directives_between_sections_hold_from_there_on():
+    """Between sections {bar_width}, {notation} and {bars_per_line} hold for the sections that follow;
+    inside a section only for it; song-wide directives after the first section warn."""
+    s = parse("{start_of_verse: A}\n| [C] |\n{end_of_verse}\n{bar_width: fit}\n{notation: tab}\n{bars_per_line: 2}\n"
+              "{start_of_verse: B}\n| [C] |\n{end_of_verse}\n{start_of_chorus: C}\n{bar_width: uniform}\n| [C] |\n"
+              "{end_of_chorus}\n{start_of_outro: D}\n| [C] |\n{end_of_outro}\n{tempo: 90}\n")
+    assert [(x.label, x.bar_width, x.notation, x.bars_per_line) for x in s.sections] == [
+        ("A", None, None, None), ("B", "fit", "tab", 2), ("C", "uniform", "tab", 2), ("D", "fit", "tab", 2)]
+    assert "bar_width" not in s.meta and "notation" not in s.meta and s.meta["tempo"] == "90"
+    assert s.warnings == ["line 17: {tempo} applies to the whole song: write it in the header, before the first section"]
+
+
+def test_durations_count_notes_of_the_denominator():
+    """[C:n] counts notes of the time signature's denominator: quarters in 4/4, eighths in 6/8 and 7/8,
+    halves in 2/2; chords without a duration share the rest in steps of half such a note."""
+    def durs(time, row):
+        s = parse(f"{{time: {time}}}\n{{start_of_verse: V}}\n{row}\n{{end_of_verse}}\n")
+        assert s.warnings == []
+        return [(e.chord, e.dur) for b in s.bars for e in b.events]    # in quarters
+    assert durs("4/4", "| [C:3] [G] |") == [("C", 3.0), ("G", 1.0)]
+    assert durs("6/8", "| [C:3] [G:3] |") == [("C", 1.5), ("G", 1.5)]
+    assert durs("6/8", "| [C:4] [G] |") == [("C", 2.0), ("G", 1.0)]
+    assert durs("7/8", "| [C:4] [G:3] |") == [("C", 2.0), ("G", 1.5)]
+    assert durs("2/2", "| [C:1] [G:1] |") == [("C", 2.0), ("G", 2.0)]
+    assert durs("2/2", "| [C] [G] [D] |") == [("C", 1.0), ("G", 1.0), ("D", 2.0)]
+    s = parse("{time: 6/8}\n{start_of_verse: V}\n| [C:7] |\n{end_of_verse}\n")
+    assert s.warnings and "bar too long" in s.warnings[0]
+
+
+def test_ending_goes_on_past_the_end_of_the_line():
+    """An ending closes at :|, at the next {volta}, at {volta_end} or at the end of the section, never at
+    the end of a line of the file: a long ending can take several lines."""
+    s = parse("{start_of_chorus: R}\n|: [C] | [D] |\n{volta: 1} [E] :|\n{volta: 2} [F] | [G] |\n| [A] | [B] |\n"
+              "| [C] || {volta_end}\n| [D] |\n{end_of_chorus}\n")
+    assert s.warnings == []
+    b = s.bars
+    assert [x.volta for x in b] == [None, None, "1.", "2.", None, None, None, None, None]
+    assert b[7].volta_end == "open" and all(x.volta_end is None for x in b[3:7])   # 2nd ending: F G A B C
+    assert b[8].events[0].chord == "D"                        # after {volta_end}: outside the ending
+
+
+def test_backslash_escapes(tmp_path):
+    r"""\| \[ \] \{ \} \" \\ \# write the character itself in lyrics, {text}/{c}, annotations, names and
+    the header; the editor colours them as text; the library card shows the plain title."""
+    src = ('{title: Brano \\{demo\\}}\n{start_of_verse: Strofa \\| 1}\n{c: Ritornello \\{x2\\}}\n'
+           '| [C]lei \\| lui | [G]\\[parlato\\] | [A "\\"forte\\""]\\#1 | [D]C:\\\\x |\n{end_of_verse}\n{ref: Strofa \\| 1}\n')
+    s = parse(src)
+    assert s.warnings == [] and s.meta["title"] == "Brano {demo}"
+    assert [x.label for x in s.sections] == ["Strofa | 1", "Strofa | 1"]
+    assert s.bars[0].text_before == ["Ritornello {x2}"]
+    assert [(e.lyric, e.note) for e in s.sections[0].bars[0].events + s.sections[0].bars[1].events
+            + s.sections[0].bars[2].events + s.sections[0].bars[3].events] == [
+        ("lei | lui", ""), ("[parlato]", ""), ("#1", '"forte"'), ("C:\\x", "")]
+    from modernsheet import syntax, library
+    toks = syntax.tokens(src)
+    assert "".join(t for _, t in toks) == src and ("bar", "|") not in [t for t in toks if "lei" in t[1]]
+    assert any(k == "text" and "lei \\| lui" in t for k, t in toks)
+    f = tmp_path / "a.chs"
+    f.write_text(src, encoding="utf-8")
+    assert library.read_info(f).title == "Brano {demo}"
+
+
+def test_volta_end_takes_hook_only():
+    """{volta_end} takes hook or nothing (English keywords only); closed/chiusa still close it, with a warning."""
+    def last(v):
+        s = parse(f"{{start_of_verse: V}}\n{{volta: 1}} [C] | {{volta_end{v}}}\n{{end_of_verse}}\n")
+        return s.bars[0].volta_end, s.warnings
+    assert last("") == ("open", []) and last(": hook") == ("hook", [])
+    assert last(": chiusa") == ("hook", ["line 2: volta_end 'chiusa': write {volta_end: hook}"])
+    assert last(": boh")[0] == "open" and "expected hook" in last(": boh")[1][0]
+
+
+def test_equivalent_chord_spellings_are_drawn_alike():
+    """Chord qualities are written freely and drawn one way: Maj7/M7/ma7/Δ = maj7, -/min/mi = m, ø = m7b5,
+    °/o = dim, + = aug; standard or jazz symbols; transposition and the file are untouched."""
+    from modernsheet.theory import normalize_quality
+    cases = {"Maj7": "maj7", "M7": "maj7", "ma7": "maj7", "Δ": "maj7", "Δ9": "maj9", "M": "", "-": "m",
+             "-7": "m7", "min7": "m7", "mi7": "m7", "ø": "m7b5", "ø7": "m7b5", "-7b5": "m7b5", "°7": "dim7",
+             "o7": "dim7", "+": "aug", "+7": "aug7", "madd9": "madd9", "m(maj7)": "m(maj7)", "7#9": "7#9", "sus4": "sus4"}
+    assert {q: normalize_quality(q) for q in cases} == cases
+    row = lambda chords: "{start_of_verse: V}\n| " + " | ".join(f"[{c}]" for c in chords) + " |\n{end_of_verse}\n"
+    written = ["CMaj7", "F#-", "Bmin7", "Dø", "G+", "Eb°7", "AΔ", "Cmadd9"]
+    standard = ["Cmaj7", "F#m", "Bm7", "Dm7b5", "Gaug", "Ebdim7", "Amaj7", "Cmadd9"]
+    texts = lambda src, **o: [op[3:6] for op in layout(parse(src), **o).pages[0] if op[0] == "text"]
+    for opts in ({}, {"chord_symbols": "jazz"}, {"theme": "clean"}):
+        assert texts(row(written), **opts) == texts(row(standard), **opts)
+    assert [e.chord for b in parse(row(written)).bars for e in b.events] == written   # the song keeps them as written
+
+
+def test_italian_note_names_are_display_only():
+    """note_names = italian draws roots, basses and keys as Do Re Mi (with ♯/♭, quality untouched, jazz too);
+    the song keeps the letters and the default stays letters."""
+    src = ("{key: Bb}\n{start_of_verse: V}\n| [F#m7/C#] | [Bbmaj7] | [G] | [N.C.] |\n{end_of_verse}\n"
+           "{start_of_chorus: R}\n{key: Em}\n| [B7] |\n{end_of_chorus}\n")
+    texts = lambda **o: [op[3] for op in layout(parse(src), **o).pages[0] if op[0] == "text"]
+    it, en = texts(note_names="italian"), texts()
+    for s in ("Fa", "♯", "m", "7", "/Do", "Si", "♭", "maj7", "Sol", "N.C.", "Key Si♭", "Key Mim"):
+        assert s in it, s
+    assert "Key B♭" in en and "/C" in en and "Fa" not in en and "Key Em" in en
+    jazz = texts(note_names="italian", chord_symbols="jazz")
+    assert "Si" in jazz and "maj7" not in jazz and jazz != it      # Δ (a music-font glyph in realbook)
+    assert [e.chord for b in parse(src).bars for e in b.events][:2] == ["F#m7/C#", "Bbmaj7"]
+    from modernsheet.settings import Settings
+    assert Settings().note_names == "letters" and Settings().layout_options()["note_names"] == "letters"
+    assert Settings.from_json('{"note_names": "italian"}').note_names == "italian"
+    assert Settings.from_json('{"note_names": "greek"}').note_names == "letters"

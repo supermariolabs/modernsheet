@@ -5,7 +5,7 @@
 <h1 align="center">Modern Sheet</h1>
 
 <p align="center">
-  <b>Lead sheet in stile Real Book, da un semplice file di testo.</b><br>
+  <b>Lead sheet in stile Fake Book, da un semplice file di testo.</b><br>
   Libreria di brani · editor con anteprima dal vivo · PDF · sincronizzazione con Google Drive
 </p>
 
@@ -26,9 +26,9 @@
   <img src="docs/assets/img/app-editor.jpg" alt="L'editor di Modern Sheet: sorgente a sinistra, spartito aggiornato dal vivo a destra" width="860">
 </p>
 
-Scrivi gli accordi in un formato di testo leggibile (`.chs`) e Modern Sheet li impagina come in un Real Book: pentagramma, sigle con le estensioni in apice, box colorati per le sezioni, ritornelli, case di volta, segni, testo cantato. Sullo schermo, mentre scrivi, e in PDF.
+Scrivi gli accordi in un formato di testo leggibile (`.chs`) e Modern Sheet li impagina come in un Fake Book: pentagramma, sigle con le estensioni in apice, box colorati per le sezioni, ritornelli, case di volta, segni, testo cantato. Sullo schermo, mentre scrivi, e in PDF.
 
-> *English*: Modern Sheet turns chord charts written in a plain text format into Real Book style lead sheets, on screen and as PDF. See the [English website](https://modernsheet.app/en/).
+> *English*: Modern Sheet turns chord charts written in a plain text format into Fake Book style lead sheets, on screen and as PDF. See the [English website](https://modernsheet.app/en/).
 
 ## Funzionalità
 
@@ -43,7 +43,7 @@ Scrivi gli accordi in un formato di testo leggibile (`.chs`) e Modern Sheet li i
 - Formato versionato (`{format: v1}`): i file di oggi resteranno leggibili.
 
 **L'impaginazione**
-- Tema **Real Book** (font Petaluma scritto a mano) o **Clean**; griglia uniforme delle battute, senza sovrapposizioni.
+- Tema **Fake Book** (font Petaluma scritto a mano) o **Clean**; griglia uniforme delle battute, senza sovrapposizioni.
 - Trasposizione, sigle standard o jazz (Δ, –, ø, °), colori per tipo di sezione.
 - Lo stesso motore produce lo schermo dell'app e il PDF: quello che vedi è quello che stampi.
 
@@ -52,7 +52,7 @@ Scrivi gli accordi in un formato di testo leggibile (`.chs`) e Modern Sheet li i
 - Modalità vista, schermo intero per il palco, pagine girate con tastiera o pedaliera.
 - Editor scuro con evidenziazione, parti modificate in verde fino al salvataggio, annulla/ripristina, suggerimenti delle direttive, schede per i MusicXML in sola lettura (con conversione in note nel `.chs`), anteprima dal vivo.
 - Sincronizzazione **local-first** con Google Drive o con una cartella (iCloud, Dropbox…): funziona offline, non perde nulla.
-- Importazione dal tuo account **chordsheet.com** e di singoli file `.chs`.
+- Importazione di singoli file `.chs`; i brani di **chordsheet.com** si convertono con lo strumento a riga di comando `chordsheet_cli.py`.
 - Interfaccia in italiano e inglese.
 
 <p align="center">
@@ -100,7 +100,8 @@ Dalla riga di comando:
 python modernsheet_cli.py src/examples/demo.chs -o out/          # PDF di un brano
 python modernsheet_cli.py src/examples/*.chs --theme clean -t 3  # tema Clean, trasposto di 3 semitoni
 python modernsheet_cli.py --check src/examples/*.chs             # solo controllo
-python modernsheet_cli.py --from-chordsheet --pdf brano.txt      # da un testo di chordsheet.com
+python chordsheet_cli.py convert --pdf brano.txt                 # da un testo di chordsheet.com
+python chordsheet_cli.py account EMAIL -o cartella/              # dal tuo account chordsheet.com
 python modernsheet_cli.py --help
 ```
 
@@ -121,7 +122,7 @@ flet run --ios        # anteprima su iPad con l'app "Flet" dallo store (stessa r
 |---|---|
 | [Guida all'app](https://modernsheet.app/it/guida/) · [App guide](https://modernsheet.app/en/guide/) | installazione, libreria, editor, sincronizzazione |
 | [Il formato .chs](https://modernsheet.app/it/formato/) · [The .chs format](https://modernsheet.app/en/format/) | riferimento della sintassi |
-| [chordsheet.com](https://modernsheet.app/it/chordsheet/) | importare i brani di Chord Sheet Maker |
+| [`tools/chordsheet_import/`](tools/chordsheet_import/README.md) | importare i brani di Chord Sheet Maker (chordsheet.com), strumento a riga di comando |
 | [`SPEC.md`](SPEC.md) | specifica completa: formato, regole di impaginazione, architettura, app (in italiano) |
 
 ## Struttura del progetto

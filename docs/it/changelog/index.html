@@ -24,7 +24,7 @@
     <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Menu">
     <label for="nav-toggle" class="nav-button" aria-hidden="true"><span></span><span></span><span></span></label>
     <nav class="menu">
-      <a href="/it/">Home</a><a href="/it/download/">Download</a><a href="/it/guida/">Guida all&#x27;app</a><a href="/it/formato/">Il formato .chs</a><a href="/it/chordsheet/">chordsheet.com</a><a href="/it/changelog/" aria-current="page">Changelog</a>
+      <a href="/it/">Home</a><a href="/it/download/">Download</a><a href="/it/guida/">Guida all&#x27;app</a><a href="/it/formato/">Il formato .chs</a><a href="/it/changelog/" aria-current="page">Changelog</a>
       <a class="lang" href="/en/changelog/" hreflang="en">English</a>
       <a class="gh" href="https://github.com/supermariolabs/modernsheet">GitHub</a>
     </nav>
@@ -35,6 +35,46 @@
 <p>Le versioni di Modern Sheet pubblicate, dalla più recente. Le app da scaricare sono nella pagina
 <a href="/it/download/">Download</a>; ogni versione con le app compilate ha la sua pagina di
 <a href="https://github.com/supermariolabs/modernsheet/releases">release su GitHub</a>.</p>
+<h2 id="v0.53.0">0.53.0 — 27 novembre 2026<a class="headerlink" href="#v0.53.0">#</a></h2>
+<p><a href="https://github.com/supermariolabs/modernsheet/releases/tag/v0.53.0">Release su GitHub</a> · app per macOS, Windows, Linux e Android</p>
+<p>Raccoglie le versioni da 0.47 a 0.53, in preparazione della 1.0 e degli store.</p>
+<p><strong>Formato .chs, versione definitiva per la 1.0</strong></p>
+<ul>
+<li><code>{comment}</code> e <code>{c}</code> si <strong>stampano</strong> come in ChordPro (come <code>{text}</code>); le note che non vuoi stampate si
+  scrivono con <code>#</code>.</li>
+<li><code>{bar_width}</code>, <code>{notation}</code> e <code>{bars_per_line}</code> scritti <strong>fra le sezioni</strong> valgono da lì in avanti; dentro
+  una sezione solo per lei. Le direttive del brano (titolo, tonalità…) dopo la prima sezione danno un avviso.</li>
+<li>Le durate <code>:n</code> contano le note del <strong>denominatore</strong>: quarti in 4/4, ottavi in 6/8, minime in 2/2.</li>
+<li>Una volta si chiude solo con un segno (<code>:|</code>, la volta seguente, <code>{volta_end}</code>, fine della sezione), mai
+  perché la riga del file va a capo.</li>
+<li>I caratteri speciali si scrivono come testo con la <strong>barra rovesciata</strong>: <code>\|</code>, <code>\[parlato\]</code>,
+  <code>{c: Ritornello \{x2\}}</code>, <code>\#1</code>.</li>
+<li>Parole chiave in inglese, come in ChordPro (<code>{volta_end: hook}</code>; <code>chiusa</code> dà un avviso).</li>
+<li>Le <strong>sigle equivalenti</strong> si vedono tutte allo stesso modo: <code>CMaj7</code> come <code>Cmaj7</code>, <code>F#-</code> come <code>F#m</code>, <code>Dø</code>
+  come <code>Dm7b5</code>.</li>
+<li>L'estensione <code>.chs</code> è definitiva.</li>
+</ul>
+<p><strong>Spartito</strong></p>
+<ul>
+<li><strong>Do Re Mi</strong>: accordi e tonalità con i nomi italiani delle note (interruttore sopra lo spartito e
+  impostazione predefinita); il brano resta scritto con le lettere.</li>
+<li>Il tema scritto a mano si chiama ora <strong>Fake Book</strong>.</li>
+</ul>
+<p><strong>App</strong></p>
+<ul>
+<li><strong>Condividi</strong>: su iPad, iPhone e Android il PDF o il sorgente vanno a Mail, File, AirDrop, WhatsApp…</li>
+<li><strong>Archivi .zip</strong>: un brano con i suoi MusicXML (<em>Brano con MusicXML (.zip)</em>) e la <strong>libreria intera</strong>
+  (<em>Impostazioni › Esporta la libreria</em>), per backup o per cambiare dispositivo; <em>Importa</em> accetta anche i <code>.zip</code>.</li>
+<li>Su <strong>iPad, iPhone e Android</strong> la libreria sta dentro l'app (su iPad e iPhone visibile nell'app <strong>File</strong>),
+  si sincronizza con Google Drive e i file entrano ed escono con Importa e Condividi.</li>
+<li>L'importazione da chordsheet.com non è più nell'app: è uno strumento a parte, su GitHub.</li>
+<li>L'app per <strong>macOS</strong> è ora firmata e notarizzata da Apple: si apre senza avvisi.</li>
+</ul>
+<p><strong>Sito</strong></p>
+<ul>
+<li>Informativa sulla privacy completata, con il contatto <strong>privacy@modernsheet.app</strong>.</li>
+<li>Il sito è dedicato a chi usa l'app; i dettagli per sviluppatori sono su GitHub.</li>
+</ul>
 <h2 id="v0.46.1">0.46.1 — 25 novembre 2026<a class="headerlink" href="#v0.46.1">#</a></h2>
 <p><a href="https://github.com/supermariolabs/modernsheet/releases/tag/v0.46.1">Release su GitHub</a> · app per macOS, Windows, Linux e Android</p>
 <ul>
