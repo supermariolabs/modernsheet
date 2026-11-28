@@ -28,6 +28,10 @@
 # job builds the .ipa and uploads it to TestFlight (App Store Connect). Secrets: IOS_CERTIFICATE_P12,
 # IOS_CERTIFICATE_PASSWORD, IOS_PROVISIONING_PROFILE (the .mobileprovision, base64), APPLE_TEAM_ID and the
 # same API key as above. Without them the job is skipped. The .ipa is never a file of the release.
+#
+# Microsoft Store (optional): with the repository variables MSIX_IDENTITY_NAME, MSIX_PUBLISHER and
+# MSIX_PUBLISHER_DISPLAY_NAME (the package identity the Store assigns, public values, not secrets) the Windows job
+# also packs the app as MSIX (tools/make_msix.py), a workflow artifact to upload in Partner Center; the Store signs it.
 name: Release
 
 on:
@@ -134,6 +138,21 @@ jobs:
         with:
           name: ${{ matrix.platform }}
           path: dist/${{ matrix.asset }}
+      - name: Microsoft Store package (MSIX)
+        if: matrix.platform == 'windows' && vars.MSIX_IDENTITY_NAME != ''
+        shell: bash
+        env:
+          MSIX_IDENTITY_NAME: ${{ vars.MSIX_IDENTITY_NAME }}
+          MSIX_PUBLISHER: ${{ vars.MSIX_PUBLISHER }}
+          MSIX_PUBLISHER_DISPLAY_NAME: ${{ vars.MSIX_PUBLISHER_DISPLAY_NAME }}
+        run: |
+          pip install pillow
+          python tools/make_msix.py build/windows store/ModernSheet-windows.msix
+      - uses: actions/upload-artifact@v4          # for the Microsoft Store (Partner Center), not for the release
+        if: matrix.platform == 'windows' && vars.MSIX_IDENTITY_NAME != ''
+        with:
+          name: microsoft-store
+          path: store/ModernSheet-windows.msix
       - name: Remove the signing keychain
         if: always() && matrix.platform == 'macos'
         shell: bash
@@ -325,9 +344,9 @@ jobs:
         with:
           path: dist
           merge-multiple: true
-      - name: Keep only the downloadable apps (.aab and .ipa go to the stores)
+      - name: Keep only the downloadable apps (.aab, .ipa and .msix go to the stores)
         shell: bash
-        run: rm -f dist/*.aab dist/*.ipa
+        run: rm -f dist/*.aab dist/*.ipa dist/*.msix
       - name: Release notes (only the files that were built)
         id: notes
         shell: bash
